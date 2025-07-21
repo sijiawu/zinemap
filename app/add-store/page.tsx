@@ -90,7 +90,6 @@ export default function AddStorePage() {
     }
     loadCountries()
   }, [])
-
   // Handle country search
   const handleCountrySearch = (value: string) => {
     if (!value.trim()) {
@@ -314,6 +313,7 @@ export default function AddStorePage() {
           permalink: permalink,
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
+          approved: false,
         })
         .select()
         .single()
@@ -376,7 +376,7 @@ export default function AddStorePage() {
               </div>
               <h1 className="text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
               <p className="text-stone-600 mb-6 leading-relaxed">
-                Your store submission has been received! It will be reviewed and added to the map soon. Thanks for
+                Your store submission has been received and is pending approval! Our team will review it shortly and add it to the map once approved. Thanks for
                 helping fellow zinesters discover new places to share their work and find new zines to read!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

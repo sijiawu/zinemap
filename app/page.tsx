@@ -37,6 +37,7 @@ export default function HomePage() {
         const { data, error } = await supabase
           .from('stores')
           .select('*')
+          .eq('approved', true)
           .order('created_at', { ascending: false })
 
         if (error) {

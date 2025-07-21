@@ -52,19 +52,21 @@ export default function StoreDetailPage() {
         setLoading(true)
         setError(null)
 
-        // First try to find by permalink
+        // First try to find by permalink (approved stores only)
         let { data: storeData, error: storeError } = await supabase
           .from('stores')
           .select('*')
           .eq('permalink', params.id)
+          .eq('approved', true)
           .single()
 
-        // If not found by permalink, try by ID
+        // If not found by permalink, try by ID (approved stores only)
         if (!storeData && storeError) {
           const { data: storeById, error: storeByIdError } = await supabase
             .from('stores')
             .select('*')
             .eq('id', params.id)
+            .eq('approved', true)
             .single()
 
           if (storeByIdError) {
