@@ -171,7 +171,18 @@ export default function HomePage() {
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">ZineMap</h1>
-          <p className="text-lg md:text-xl text-stone-600 italic">Drop your zines. Track your batches. Find your people.</p>
+          <div className="flex justify-center items-center mb-3">
+            <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
+            <div className="mx-3 text-rose-500">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
+          </div>
+          <p className="text-lg md:text-xl text-stone-600 italic">Drop your zines. Find your people.</p>
         </div>
       </header>
 
@@ -302,7 +313,7 @@ export default function HomePage() {
             <div className="mt-8 flex justify-center">
               <Link href="/add-store">
                 <Button className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-6 py-3 mt-4 text-lg rounded-lg shadow-md transition-colors max-w-xs mx-auto">
-                  Add a Store to the Map
+                  Add a Store to ZineMap
                 </Button>
               </Link>
             </div>
@@ -314,7 +325,7 @@ export default function HomePage() {
       <footer className="mt-16 bg-white border-t border-stone-200">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <p className="text-stone-600 text-sm">
-            © 2025 ZineMap. created by <a href="https://www.instagram.com/cjmakescomics/" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to indie publishers and the shops that stock them.
+            © 2025 ZineMap. created by <a href="https://ko-fi.com/cjwucomics" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops that carry us!
           </p>
         </div>
       </footer>
