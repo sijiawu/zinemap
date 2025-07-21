@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
+import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 interface Store {
   id: string
@@ -39,10 +40,15 @@ interface StoreTag {
 
 export default function StoreDetailPage() {
   const params = useParams()
+  const { user } = useSupabaseUser()
   const [store, setStore] = useState<Store | null>(null)
   const [storeTags, setStoreTags] = useState<StoreTag[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
+  const [feedback, setFeedback] = useState("")
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [feedbackError, setFeedbackError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -286,31 +292,74 @@ export default function StoreDetailPage() {
           </Card>
         )}
 
-
-
-        {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-4">
-          {store.email && (
-            <Button className="flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-sm">
-              <Mail className="h-4 w-4 mr-2" />
-              Contact Store
-            </Button>
-          )}
-          <Button variant="outline" className="flex-1 border-stone-300 text-stone-700 hover:bg-stone-50 bg-transparent">
-            <MapPin className="h-4 w-4 mr-2" />
-            Get Directions
-          </Button>
-        </div>
-
         {/* Community contribution note */}
         <div className="text-center pt-8 border-t border-stone-200">
-          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm inline-block">
-            <p className="text-stone-600 text-sm">
-              Is this information outdated or incorrect?{" "}
-              <button className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 hover:decoration-rose-400">
-                Help us improve it
-              </button>
-            </p>
+          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
+            {feedbackSubmitted ? (
+              <p className="text-green-600 text-sm">Thank you for your feedback!</p>
+            ) : showFeedbackForm ? (
+              <form
+                onSubmit={async e => {
+                  e.preventDefault()
+                  setFeedbackError(null)
+                  try {
+                    const { error } = await supabase.from('store_feedback').insert([
+                      {
+                        store_id: store.id,
+                        feedback,
+                        user_id: user?.id || null,
+                        // Optionally, add user_agent, etc.
+                      }
+                    ])
+                    if (error) {
+                      setFeedbackError('There was a problem submitting your feedback. Please try again.')
+                      return
+                    }
+                    setFeedbackSubmitted(true)
+                    setShowFeedbackForm(false)
+                    setFeedback("")
+                  } catch (err) {
+                    setFeedbackError('There was a problem submitting your feedback. Please try again.')
+                  }
+                }}
+                className="space-y-2"
+              >
+                <textarea
+                  className="w-full border border-stone-300 rounded p-2 text-sm min-h-[120px]"
+                  rows={6}
+                  placeholder="Share your experience at this store, or let us know what's outdated, incorrect, or missing..."
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  required
+                />
+                {feedbackError && <div className="text-red-600 text-xs">{feedbackError}</div>}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="text-xs text-stone-500 hover:text-stone-700 underline"
+                    onClick={() => setShowFeedbackForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 py-1 rounded"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-stone-600 text-sm">
+                Is this information outdated, incorrect, or do you have more notes & tips to share?{" "}
+                <button
+                  className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 hover:decoration-rose-400"
+                  onClick={() => setShowFeedbackForm(true)}
+                >
+                  Leave us a note
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>
