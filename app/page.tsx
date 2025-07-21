@@ -302,7 +302,7 @@ export default function HomePage() {
             <div className="mt-8 flex justify-center">
               <Link href="/add-store">
                 <Button className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-6 py-3 mt-4 text-lg rounded-lg shadow-md transition-colors max-w-xs mx-auto">
-                  Add Store
+                  Add a Store to the Map
                 </Button>
               </Link>
             </div>

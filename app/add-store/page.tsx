@@ -295,8 +295,6 @@ export default function AddStorePage() {
       // Generate ID and permalink for the store
       const id = nanoid(6)
       const permalink = generatePermalink(formData.storeName, formData.city)
-      console.log('Generated ID:', id)
-      console.log('Generated permalink:', permalink)
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
@@ -476,12 +474,6 @@ export default function AddStorePage() {
                     required
                     autoComplete="off"
                   />
-                  {formData.storeName && formData.city && (
-                    <div className="text-xs text-stone-500 font-mono space-y-1">
-                      <div>URL: /store/{generatePermalink(formData.storeName, formData.city)}</div>
-                      <div>ID: {previewId} (will be generated on submit)</div>
-                    </div>
-                  )}
                 </div>
                 {/* Country with autocomplete */}
                 <div className="space-y-2 relative">

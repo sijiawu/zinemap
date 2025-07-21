@@ -30,7 +30,7 @@ export default function NavBar() {
           )}
           {!loading && !user && (
             <Link href="/login">
-              <button className="ml-2 px-3 py-1 rounded bg-rose-500 text-white font-medium hover:bg-rose-600 transition-colors">Login</button>
+              <button className="ml-2 px-3 py-1 rounded bg-rose-500 text-white font-medium hover:bg-rose-600 transition-colors">Log In</button>
             </Link>
           )}
           {!loading && user && (
