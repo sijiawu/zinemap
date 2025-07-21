@@ -1,10 +1,11 @@
 "use client"
 
-import { Search, MapPin, Filter, ExternalLink } from "lucide-react"
+import { Search, MapPin, Filter, ExternalLink, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -25,28 +26,109 @@ interface Store {
   permalink?: string
   latitude?: number
   longitude?: number
+  store_tags?: {
+    id: string
+    tag_id: string
+    tag: {
+      id: string
+      label: string
+      category: string
+    }
+  }[]
+  user_name?: string
 }
 
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
+  const [filteredStores, setFilteredStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const { data, error } = await supabase
+        // First, fetch stores with basic info
+        const { data: storesData, error: storesError } = await supabase
           .from('stores')
           .select('*')
           .eq('approved', true)
           .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('Error fetching stores:', error)
-        } else {
-          setStores(data || [])
+        if (storesError) {
+          console.error('Error fetching stores:', storesError)
+          setStores([])
+          return
         }
+
+        if (!storesData) {
+          setStores([])
+          return
+        }
+
+        // Then fetch tags and user info for each store
+        const storesWithTags = await Promise.all(
+          storesData.map(async (store) => {
+            // Fetch tags
+            const { data: tagsData } = await supabase
+              .from('store_tags')
+              .select(`
+                id,
+                tag_id,
+                tags!inner(id, label, category)
+              `)
+              .eq('store_id', store.id)
+
+            // Fetch user display name from profiles table
+            let user_name = 'Unknown user'
+            
+            try {
+              const { data: userData, error: userError } = await supabase
+                .from('profiles')
+                .select('display_name')
+                .eq('id', store.submitted_by)
+                .single()
+
+              console.log(`Fetching user for store ${store.id}:`, {
+                submitted_by: store.submitted_by,
+                userData,
+                userError
+              })
+
+              if (userData?.display_name) {
+                user_name = userData.display_name
+              } else if (userError) {
+                console.log('Profiles table error, trying auth.users as fallback')
+                // Fallback to auth.users if profiles table fails
+                const { data: authUserData } = await supabase
+                  .from('auth.users')
+                  .select('email')
+                  .eq('id', store.submitted_by)
+                  .single()
+                
+                if (authUserData?.email) {
+                  user_name = authUserData.email
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching user data:', error)
+            }
+
+            return {
+              ...store,
+              store_tags: tagsData?.map((tag: any) => ({
+                id: tag.id,
+                tag_id: tag.tag_id,
+                tag: tag.tags
+              })) || [],
+              user_name
+            }
+          })
+        )
+
+        setStores(storesWithTags)
       } catch (error) {
         console.error('Error fetching stores:', error)
+        setStores([])
       } finally {
         setLoading(false)
       }
@@ -54,6 +136,26 @@ export default function HomePage() {
 
     fetchStores()
   }, [])
+
+  // Filter stores based on search query
+  useEffect(() => {
+    if (!stores) return
+
+    let filtered = stores
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(store => 
+        store.name.toLowerCase().includes(query) ||
+        store.city.toLowerCase().includes(query) ||
+        store.country.toLowerCase().includes(query) ||
+        store.address.toLowerCase().includes(query)
+      )
+    }
+
+    setFilteredStores(filtered)
+  }, [stores, searchQuery])
 
   if (loading) {
     return (
@@ -82,35 +184,15 @@ export default function HomePage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
               <Input
                 placeholder="Search by city or store name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
               />
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Select>
-                <SelectTrigger className="w-full sm:w-[180px] bg-stone-50 border-stone-300">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Payment type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All payment types</SelectItem>
-                  <SelectItem value="upfront">Upfront pay</SelectItem>
-                  <SelectItem value="consignment">Consignment</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-full sm:w-[160px] bg-stone-50 border-stone-300">
-                  <SelectValue placeholder="Split ratio" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All splits</SelectItem>
-                  <SelectItem value="50-50">50/50 split</SelectItem>
-                  <SelectItem value="60-40">60/40 split</SelectItem>
-                  <SelectItem value="other">Other splits</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Add more filters here in the future */}
             </div>
           </div>
         </div>
@@ -122,21 +204,40 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-stone-800 mb-4">Zine-Friendly Stores</h2>
 
             <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
-              {stores.length === 0 ? (
+              {filteredStores.length === 0 ? (
                 <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                   <CardContent className="p-6 text-center">
                     <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No stores yet</h3>
-                    <p className="text-stone-600 mb-4">Be the first to add a zine-friendly store to the map!</p>
-                    <Link href="/add-store">
-                      <Button className="bg-rose-500 hover:bg-rose-600 text-white">
-                        Add First Store
-                      </Button>
-                    </Link>
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">
+                      {stores.length === 0 ? "No stores yet" : "No stores match your filters"}
+                    </h3>
+                    <p className="text-stone-600 mb-4">
+                      {stores.length === 0 
+                        ? "Be the first to add a zine-friendly store to the map!"
+                        : "Try adjusting your search or filter criteria."
+                      }
+                    </p>
+                    {stores.length === 0 ? (
+                      <Link href="/add-store">
+                        <Button className="bg-rose-500 hover:bg-rose-600 text-white">
+                          Add First Store
+                        </Button>
+                      </Link>
+                                         ) : (
+                       <Button 
+                         onClick={() => {
+                           setSearchQuery("")
+                         }}
+                         variant="outline"
+                         className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                       >
+                         Clear Filters
+                       </Button>
+                     )}
                   </CardContent>
                 </Card>
               ) : (
-                stores.map((store) => (
+                filteredStores.map((store) => (
                   <Card
                     key={store.id}
                     className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
@@ -150,14 +251,22 @@ export default function HomePage() {
                             {store.city}, {store.country}
                           </div>
                         </div>
-                        <div
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            store.has_stocked_before ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {store.has_stocked_before ? "Upfront Pay" : "Consignment"}
-                        </div>
                       </div>
+                      
+                      {/* Store Tags */}
+                      {store.store_tags && store.store_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                          {store.store_tags.map((storeTag) => (
+                            <Badge
+                              key={storeTag.id}
+                              variant="outline"
+                              className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                            >
+                              {storeTag.tag.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </CardHeader>
 
                     <CardContent className="pt-0">
@@ -186,7 +295,7 @@ export default function HomePage() {
 
             <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
-                <StoreMap stores={stores} />
+                <StoreMap stores={filteredStores} />
               </CardContent>
             </Card>
             {/* Add Store button under the map */}

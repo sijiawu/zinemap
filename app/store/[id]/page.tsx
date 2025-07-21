@@ -184,11 +184,6 @@ export default function StoreDetailPage() {
             </div>
 
             <div className="flex justify-center items-center gap-6 text-sm text-stone-500">
-              <span className={`px-3 py-1 rounded-full ${
-                store.has_stocked_before ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-              }`}>
-                {store.has_stocked_before ? "Upfront Pay" : "Consignment"}
-              </span>
               <span>Added {new Date(store.created_at).toLocaleDateString()}</span>
             </div>
           </div>

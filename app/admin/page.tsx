@@ -250,16 +250,7 @@ export default function AdminPage() {
                         Submitted {new Date(store.created_at).toLocaleDateString()}
                       </div>
                     </div>
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        store.has_stocked_before 
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                          : "bg-blue-50 text-blue-700 border-blue-200"
-                      }`}
-                    >
-                      {store.has_stocked_before ? "Upfront Pay" : "Consignment"}
-                    </Badge>
+
                   </div>
                 </CardHeader>
 
