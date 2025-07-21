@@ -3,18 +3,23 @@
 import { useEffect, useRef, useState } from "react"
 import { MapPin, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import "mapbox-gl/dist/mapbox-gl.css"
 import Link from "next/link"
 
-
 interface Store {
-  id: number
+  id: string
   name: string
   city: string
-  consignmentTerms: string
-  description: string
-  hasUpfrontPay: boolean
-  coordinates: [number, number]
+  country: string
+  address: string
+  email?: string
+  website?: string
+  notes?: string
+  has_stocked_before: boolean
+  submitted_by: string
+  created_at: string
+  permalink?: string
+  latitude?: number
+  longitude?: number
 }
 
 interface StoreMapProps {
@@ -25,125 +30,119 @@ export function StoreMap({ stores }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
-  const [mapboxLoaded, setMapboxLoaded] = useState(false)
 
-  // Check if we have a valid Mapbox token
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-  
   useEffect(() => {
-    // Load Mapbox GL JS dynamically
-    const loadMapbox = async () => {
-      if (typeof window === "undefined" || !mapboxToken) return
+    // Clean up existing map first
+    if (map.current) {
+      map.current.remove()
+      map.current = null
+    }
 
+    // Simple map initialization
+    const initMap = async () => {
+      if (typeof window === "undefined") return
+      
       try {
-        // Load Mapbox GL JS from CDN
-        const mapboxgl = await import("mapbox-gl");
+        const mapboxgl = await import("mapbox-gl")
+        
+        // Wait a bit for DOM to be ready
+        setTimeout(() => {
+          if (!mapContainer.current) {
+            console.log("Container not ready, retrying...")
+            return
+          }
 
-        // Load CSS
+          if (map.current) return
 
-        setMapboxLoaded(true)
-
-        if (map.current) return // Initialize map only once
-
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current!,
-          accessToken: mapboxToken,
-          style: "mapbox://styles/mapbox/light-v11",
-          center: [-95.7129, 37.0902],
-          zoom: 3.5,
-          attributionControl: false,
-        })
-
-        // Add markers for each store
-        stores.forEach((store) => {
-          // Create marker element
-          const markerEl = document.createElement("div")
-          markerEl.className = "custom-marker"
-          markerEl.innerHTML = `
-            <div class="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-full shadow-lg transition-all duration-200 border-2 border-white hover:scale-110 cursor-pointer">
-              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-            </div>
-          `
-
-          // Add click event to marker
-          markerEl.addEventListener("click", () => {
-            setSelectedStore(store)
+          console.log("Initializing map...")
+          
+          map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ.example",
+            style: "mapbox://styles/mapbox/light-v11",
+            center: [-95.7129, 37.0902], // Center of US
+            zoom: 3.5,
           })
 
-          // Create and add marker to map
-          new mapboxgl.Marker(markerEl).setLngLat(store.coordinates).addTo(map.current)
-        })
+          map.current.on('load', () => {
+            console.log("Map loaded, adding markers...")
+            
+            // Add markers for stores with coordinates
+            stores.forEach((store) => {
+              if (!store.latitude || !store.longitude) return
+
+              const markerEl = document.createElement("div")
+              markerEl.innerHTML = `
+                <div style="background: #ef4444; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+              `
+
+              markerEl.addEventListener("click", () => {
+                setSelectedStore(store)
+              })
+
+              new mapboxgl.Marker(markerEl)
+                .setLngLat([store.longitude, store.latitude])
+                .addTo(map.current)
+            })
+          })
+
+        }, 100)
+
       } catch (error) {
-        console.error("Failed to load Mapbox:", error)
+        console.error("Map error:", error)
       }
     }
 
-    loadMapbox()
+    initMap()
 
     return () => {
       if (map.current) {
         map.current.remove()
+        map.current = null
       }
     }
-  }, [mapboxToken, stores])
-
-  if (!mapboxToken) {
-    return (
-      <div className="h-[600px] bg-gradient-to-br from-slate-100 to-stone-100 rounded-lg flex items-center justify-center">
-        <div className="text-center text-stone-500">
-          <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-          <p className="text-lg font-medium mb-2">Map Unavailable</p>
-          <p className="text-sm">Mapbox token required for map functionality</p>
-        </div>
-      </div>
-    )
-  }
+  }, [stores])
 
   return (
-    <div className="h-[600px] relative rounded-lg overflow-hidden">
+    <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Store Popup */}
       {selectedStore && (
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-xs z-10 font-serif">
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-xs z-10">
           <button
             onClick={() => setSelectedStore(null)}
-            className="absolute top-2 right-2 text-stone-400 hover:text-stone-600 text-xl leading-none"
-            aria-label="Close popup"
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
           >
             ×
           </button>
 
-          <h3 className="font-semibold text-stone-800 mb-2 text-base pr-6">{selectedStore.name}</h3>
-          <p className="text-sm text-stone-600 mb-3 flex items-center">
-            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-            {selectedStore.city}
+          <h3 className="font-semibold text-gray-800 mb-2 pr-6">{selectedStore.name}</h3>
+          <p className="text-sm text-gray-600 mb-3">
+            📍 {selectedStore.city}, {selectedStore.country}
           </p>
-          <div
-            className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-3 ${
-              selectedStore.hasUpfrontPay ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-            }`}
-          >
-            {selectedStore.consignmentTerms}
+          <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-3 ${
+            selectedStore.has_stocked_before ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+          }`}>
+            {selectedStore.has_stocked_before ? "Upfront Pay" : "Consignment"}
           </div>
-          <p className="text-sm text-stone-600 mb-4 leading-relaxed">{selectedStore.description}</p>
-          <Link href={`/store/${selectedStore.id}`}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full text-sm border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
-            >
+          {selectedStore.notes && (
+            <p className="text-sm text-gray-600 mb-4">{selectedStore.notes}</p>
+          )}
+          <Link href={`/store/${selectedStore.permalink || selectedStore.id}`}>
+            <Button size="sm" variant="outline" className="w-full">
               View Details
-              <ExternalLink className="h-3 w-3 ml-2" />
             </Button>
           </Link>
         </div>
       )}
 
       {/* Map Attribution */}
-      <div className="absolute bottom-2 right-2 bg-white bg-opacity-95 px-3 py-1 rounded-md text-xs text-stone-600 shadow-sm">
+      <div className="absolute bottom-2 right-2 bg-white bg-opacity-95 px-3 py-1 rounded text-xs text-gray-600">
         © Mapbox © OpenStreetMap
       </div>
     </div>

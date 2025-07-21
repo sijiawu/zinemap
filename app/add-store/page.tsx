@@ -1,55 +1,47 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { ArrowLeft, MapPin, Mail, Globe, Tag, MessageSquare, Store, Plus, Check } from "lucide-react"
+import { useSupabaseUser } from "@/hooks/useSupabaseUser"
+import { useRouter } from "next/navigation"
+import { useEffect, useState, useRef } from "react"
+import { ArrowLeft, Store, Plus, Check, MapPin, MessageSquare, Tag } from "lucide-react"
+import { nanoid } from "nanoid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { supabase } from "@/lib/supabaseClient"
 
-// Sample consignment terms tags
-const consignmentTerms = [
-  { id: "60-40", label: "60/40 split (60% to creator)", category: "split" },
-  { id: "50-50", label: "50/50 split", category: "split" },
-  { id: "70-30", label: "70/30 split (70% to creator)", category: "split" },
-  { id: "55-45", label: "55/45 split (55% to creator)", category: "split" },
-  { id: "upfront", label: "Pays upfront", category: "payment" },
-  { id: "monthly", label: "Monthly payments", category: "payment" },
-  { id: "quarterly", label: "Quarterly payments", category: "payment" },
-  { id: "on-demand", label: "Payment on demand", category: "payment" },
-  { id: "max-10", label: "Max 10 copies per title", category: "limits" },
-  { id: "max-25", label: "Max 25 copies per title", category: "limits" },
-  { id: "max-50", label: "Max 50 copies per title", category: "limits" },
-  { id: "no-limit", label: "No copy limits", category: "limits" },
-  { id: "min-price-2", label: "$2 minimum price", category: "pricing" },
-  { id: "min-price-5", label: "$5 minimum price", category: "pricing" },
-  { id: "returns-6mo", label: "Returns after 6 months", category: "returns" },
-  { id: "returns-1yr", label: "Returns after 1 year", category: "returns" },
-  { id: "no-returns", label: "No returns policy", category: "returns" },
-]
+interface Tag {
+  id: string
+  label: string
+  category: string
+}
 
-// Common countries for dropdown
-const countries = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Australia",
-  "Germany",
-  "France",
-  "Netherlands",
-  "Sweden",
-  "Japan",
-  "Other",
-]
+interface Store {
+  id: string
+  name: string
+  city: string
+  country: string
+  address: string
+  email?: string
+  website?: string
+  notes?: string
+  has_stocked_before: boolean
+  submitted_by: string
+  created_at: string
+  permalink?: string
+  latitude?: number
+  longitude?: number
+}
 
 export default function AddStorePage() {
+  const { user, loading } = useSupabaseUser()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     storeName: "",
     city: "",
@@ -61,9 +53,199 @@ export default function AddStorePage() {
     notes: "",
     hasStockedBefore: false,
   })
-
+  const [previewId] = useState(() => nanoid(6))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Address autocomplete state
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
+  const addressSuggestionsRef = useRef<HTMLDivElement>(null)
+
+  // Consignment terms from Supabase
+  const [consignmentTerms, setConsignmentTerms] = useState<Tag[]>([])
+  const [termsLoading, setTermsLoading] = useState(true)
+
+  // Country autocomplete state
+  const [countries, setCountries] = useState<Array<{name: string, code: string}>>([])
+  const [countrySuggestions, setCountrySuggestions] = useState<Array<{name: string, code: string}>>([])
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
+  const [selectedCountry, setSelectedCountry] = useState<{name: string, code: string} | null>(null)
+
+  // Load countries on component mount
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2')
+        const data = await response.json()
+        const countryList = data.map((country: any) => ({
+          name: country.name.common,
+          code: country.cca2
+        })).sort((a: any, b: any) => a.name.localeCompare(b.name))
+        setCountries(countryList)
+      } catch (error) {
+        console.error('Error loading countries:', error)
+      }
+    }
+    loadCountries()
+  }, [])
+
+  // Handle country search
+  const handleCountrySearch = (value: string) => {
+    if (!value.trim()) {
+      setCountrySuggestions([])
+      setShowCountrySuggestions(false)
+      return
+    }
+
+    const filtered = countries.filter(country =>
+      country.name.toLowerCase().includes(value.toLowerCase())
+    ).slice(0, 10)
+    
+    setCountrySuggestions(filtered)
+    setShowCountrySuggestions(true)
+  }
+
+  // Handle country selection
+  const handleCountrySelect = (country: {name: string, code: string}) => {
+    setSelectedCountry(country)
+    setFormData(prev => ({ ...prev, country: country.name }))
+    setCountrySuggestions([])
+    setShowCountrySuggestions(false)
+  }
+
+  // Handle address search with country filter
+  const handleAddressSearch = async (value: string) => {
+    if (!value.trim() || !selectedCountry) {
+      setAddressSuggestions([])
+      setShowAddressSuggestions(false)
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?` +
+        `access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&` +
+        `country=${selectedCountry.code}&` +
+        `types=address&` +
+        `limit=5`
+      )
+      
+      const data = await response.json()
+      const suggestions = data.features.map((feature: any) => ({
+        id: feature.id,
+        text: feature.place_name,
+        coordinates: feature.center,
+        context: feature.context
+      }))
+      
+      setAddressSuggestions(suggestions)
+      setShowAddressSuggestions(true)
+    } catch (error) {
+      console.error('Error fetching address suggestions:', error)
+    }
+  }
+
+  // Handle address selection
+  const handleAddressSelect = (suggestion: any) => {
+    // Extract city from context
+    const cityContext = suggestion.context?.find((ctx: any) => 
+      ctx.id.startsWith('place.') || ctx.id.startsWith('locality.')
+    )
+    const city = cityContext ? cityContext.text : ''
+
+    setFormData(prev => ({
+      ...prev,
+      address: suggestion.text,
+      city: city
+    }))
+    
+    setAddressSuggestions([])
+    setShowAddressSuggestions(false)
+  }
+
+  // Fetch consignment terms from Supabase
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tags')
+          .select('id, label, category')
+          .order('category')
+        
+        if (error) {
+          console.error('Error fetching terms:', error)
+        } else {
+          setConsignmentTerms(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching terms:', error)
+      } finally {
+        setTermsLoading(false)
+      }
+    }
+    fetchTerms()
+  }, [])
+
+  // Hide suggestions on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (addressSuggestionsRef.current && !addressSuggestionsRef.current.contains(event.target as Node)) {
+        setShowAddressSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login")
+    }
+  }, [user, loading, router])
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
+        <div className="text-stone-500 text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  // Generate permalink from store name and city
+  const generatePermalink = (storeName: string, city: string): string => {
+    const combined = `${storeName} ${city}`
+    return combined
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim()
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+  }
+
+  // Geocode address to get coordinates
+  const geocodeAddress = async (address: string, city: string, country: string): Promise<{latitude: number, longitude: number} | null> => {
+    try {
+      const fullAddress = `${address}, ${city}, ${country}`
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?` +
+        `access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=1`
+      )
+      
+      const data = await response.json()
+      if (data.features && data.features.length > 0) {
+        const [longitude, latitude] = data.features[0].center
+        return { latitude, longitude }
+      }
+      return null
+    } catch (error) {
+      console.error('Error geocoding address:', error)
+      return null
+    }
+  }
 
   const handleTermToggle = (termId: string) => {
     setFormData((prev) => ({
@@ -77,13 +259,106 @@ export default function AddStorePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // Validate required fields
+    if (!formData.storeName.trim()) {
+      setError('Store name is required')
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.city.trim()) {
+      setError('City is required')
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.country.trim()) {
+      setError('Country is required')
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.address.trim()) {
+      setError('Address is required')
+      setIsSubmitting(false)
+      return
+    }
 
-    console.log("Store submission:", formData)
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      console.log('Submitting store data:', formData)
+      console.log('User ID:', user.id)
+
+      // Generate ID and permalink for the store
+      const id = nanoid(6)
+      const permalink = generatePermalink(formData.storeName, formData.city)
+      console.log('Generated ID:', id)
+      console.log('Generated permalink:', permalink)
+
+      // Geocode the address to get coordinates
+      const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
+      console.log('Geocoded coordinates:', coordinates)
+
+      // Insert store into stores table
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .insert({
+          id: id,
+          name: formData.storeName,
+          city: formData.city,
+          country: formData.country,
+          address: formData.address,
+          email: formData.email || null,
+          website: formData.website || null,
+          notes: formData.notes || null,
+          has_stocked_before: formData.hasStockedBefore,
+          submitted_by: user.id,
+          permalink: permalink,
+          latitude: coordinates?.latitude || null,
+          longitude: coordinates?.longitude || null,
+        })
+        .select()
+        .single()
+
+      if (storeError) {
+        console.error('Error inserting store:', storeError)
+        setError(`Store insertion failed: ${storeError.message}`)
+        throw storeError
+      }
+
+      console.log('Store inserted successfully:', storeData)
+
+      // Insert selected terms into store_tags table
+      if (formData.selectedTerms.length > 0) {
+        const storeTags = formData.selectedTerms.map(tagId => ({
+          store_id: storeData.id,
+          tag_id: tagId
+        }))
+
+        console.log('Inserting store tags:', storeTags)
+        console.log('Selected terms:', formData.selectedTerms)
+        console.log('Available terms:', consignmentTerms)
+
+        const { error: tagsError } = await supabase
+          .from('store_tags')
+          .insert(storeTags)
+
+        if (tagsError) {
+          console.error('Error inserting store tags:', tagsError)
+          setError(`Tags insertion failed: ${tagsError.message}`)
+          throw tagsError
+        }
+
+        console.log('Store tags inserted successfully')
+      }
+
+      setIsSubmitted(true)
+    } catch (error) {
+      console.error('Submission error:', error)
+      if (!error) {
+        setError('An unexpected error occurred. Please try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const getTermsByCategory = (category: string) => {
@@ -101,8 +376,8 @@ export default function AddStorePage() {
               </div>
               <h1 className="text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
               <p className="text-stone-600 mb-6 leading-relaxed">
-                Your store submission has been received! Our community will review it and add it to the map soon. Thanks
-                for helping fellow zinesters discover new places to share their work.
+                Your store submission has been received! It will be reviewed and added to the map soon. Thanks for
+                helping fellow zinesters discover new places to share their work and find new zines to read!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/">
@@ -126,6 +401,8 @@ export default function AddStorePage() {
                       notes: "",
                       hasStockedBefore: false,
                     })
+                    // Generate new preview ID
+                    window.location.reload()
                   }}
                   className="border-stone-300 text-stone-700 hover:bg-stone-50 font-serif"
                 >
@@ -162,7 +439,7 @@ export default function AddStorePage() {
           </div>
           <h1 className="text-4xl font-bold text-stone-800 mb-3">Add a Store to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know a great indie store that stocks zines? Help fellow creators discover it! Share the details and we'll
+            Know a great indie store that stocks zines? Help fellow zinesters discover it! Share the details and we'll
             add it to our community map.
           </p>
         </div>
@@ -179,6 +456,7 @@ export default function AddStorePage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Store Name */}
                 <div className="space-y-2">
                   <Label htmlFor="storeName" className="text-stone-700 font-serif font-medium">
                     Store Name *
@@ -186,13 +464,102 @@ export default function AddStorePage() {
                   <Input
                     id="storeName"
                     value={formData.storeName}
-                    onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, storeName: e.target.value }))}
                     className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
                     placeholder="e.g. Quimby's Bookstore"
                     required
+                    autoComplete="off"
                   />
+                  {formData.storeName && formData.city && (
+                    <div className="text-xs text-stone-500 font-mono space-y-1">
+                      <div>URL: /store/{generatePermalink(formData.storeName, formData.city)}</div>
+                      <div>ID: {previewId} (will be generated on submit)</div>
+                    </div>
+                  )}
                 </div>
-
+                {/* Country with autocomplete */}
+                <div className="space-y-2 relative">
+                  <Label htmlFor="country" className="text-stone-700 font-serif font-medium">
+                    Country *
+                  </Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                                         onChange={(e) => {
+                       setFormData(prev => ({ ...prev, country: e.target.value }));
+                       handleCountrySearch(e.target.value);
+                     }}
+                     onBlur={() => setTimeout(() => setShowCountrySuggestions(false), 200)}
+                     onFocus={() => {
+                       if (formData.country.trim()) {
+                         handleCountrySearch(formData.country);
+                       }
+                     }}
+                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
+                    placeholder="e.g. United States"
+                    required
+                  />
+                  {showCountrySuggestions && countrySuggestions.length > 0 && (
+                    <div className="absolute z-20 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 max-h-60 overflow-y-auto">
+                      {countrySuggestions.map((country) => (
+                        <div
+                          key={country.code}
+                          className="px-4 py-2 hover:bg-rose-50 cursor-pointer text-stone-800"
+                          onClick={() => handleCountrySelect(country)}
+                        >
+                          {country.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showCountrySuggestions && countrySuggestions.length === 0 && (
+                    <div className="absolute z-20 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 px-4 py-2 text-stone-400">
+                      No suggestions found.
+                    </div>
+                  )}
+                </div>
+                {/* Address with autocomplete */}
+                <div className="space-y-2 relative" ref={addressSuggestionsRef}>
+                  <Label htmlFor="address" className="text-stone-700 font-serif font-medium">
+                    Address
+                  </Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                                         onChange={(e) => {
+                       setFormData(prev => ({ ...prev, address: e.target.value }));
+                       handleAddressSearch(e.target.value);
+                     }}
+                     onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                     onFocus={() => {
+                       if (selectedCountry && formData.address.trim()) {
+                         handleAddressSearch(formData.address);
+                       }
+                     }}
+                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
+                    placeholder="e.g. 123 Main St, Chicago, IL"
+                    autoComplete="off"
+                  />
+                  {showAddressSuggestions && addressSuggestions.length > 0 && (
+                    <div className="absolute z-20 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 max-h-60 overflow-y-auto">
+                      {addressSuggestions.map((feature) => (
+                        <div
+                          key={feature.id}
+                          className="px-4 py-2 hover:bg-rose-50 cursor-pointer text-stone-800"
+                          onClick={() => handleAddressSelect(feature)}
+                        >
+                          {feature.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showAddressSuggestions && (
+                    <div className="absolute z-20 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 px-4 py-2 text-stone-400">
+                      Loading suggestions...
+                    </div>
+                  )}
+                </div>
+                {/* City */}
                 <div className="space-y-2">
                   <Label htmlFor="city" className="text-stone-700 font-serif font-medium">
                     City *
@@ -200,7 +567,7 @@ export default function AddStorePage() {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                     className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
                     placeholder="e.g. Chicago"
                     required
@@ -208,86 +575,34 @@ export default function AddStorePage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="country" className="text-stone-700 font-serif font-medium">
-                  Country *
-                </Label>
-                <Select
-                  value={formData.country}
-                  onValueChange={(value) => setFormData({ ...formData, country: value })}
-                >
-                  <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200">
-                    <SelectValue placeholder="Choose a country..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-stone-700 font-serif font-medium">
-                  Full Address
-                  <span className="text-stone-500 font-mono text-sm ml-2">(optional but helpful)</span>
-                </Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-mono text-sm min-h-[80px]"
-                  placeholder="Street address, postal code, any helpful location details..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contact Info */}
-          <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Mail className="h-5 w-5 mr-2 text-blue-500" />
-                Contact Information
-              </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">How zinesters can get in touch (both optional)</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              {/* Contact Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-stone-700 font-serif font-medium">
-                    Email Address
+                    Contact Email
                   </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="bg-stone-50 border-stone-300 focus:border-blue-400 focus:ring-blue-200 font-mono pl-10"
-                      placeholder="store@example.com"
-                    />
-                  </div>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
+                    placeholder="store@example.com"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="website" className="text-stone-700 font-serif font-medium">
                     Website
                   </Label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400" />
-                    <Input
-                      id="website"
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="bg-stone-50 border-stone-300 focus:border-blue-400 focus:ring-blue-200 font-mono pl-10"
-                      placeholder="https://store-website.com"
-                    />
-                  </div>
+                  <Input
+                    id="website"
+                    type="url"
+                    value={formData.website}
+                    onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
+                    placeholder="https://store.com"
+                  />
                 </div>
               </div>
             </CardContent>
@@ -297,189 +612,196 @@ export default function AddStorePage() {
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Tag className="h-5 w-5 mr-2 text-green-500" />
+                <Tag className="h-5 w-5 mr-2 text-rose-500" />
                 Consignment Terms
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">
-                Select all that apply — this helps zinesters know what to expect
-              </p>
+              <p className="text-sm text-stone-600 font-mono">What are their policies? (Select all that apply)</p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Revenue Split */}
-              <div>
-                <h4 className="font-semibold text-stone-700 mb-3 font-serif">Revenue Split</h4>
-                <div className="flex flex-wrap gap-2">
-                  {getTermsByCategory("split").map((term) => (
-                    <Badge
-                      key={term.id}
-                      variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                      className={`cursor-pointer transition-all ${
-                        formData.selectedTerms.includes(term.id)
-                          ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
-                          : "bg-white border-stone-300 text-stone-700 hover:bg-green-50 hover:border-green-300"
-                      }`}
-                      onClick={() => handleTermToggle(term.id)}
-                    >
-                      {term.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+            <CardContent>
+              {termsLoading ? (
+                <div className="text-center py-8 text-stone-500">Loading terms...</div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Revenue Split */}
+                  <div>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Revenue Split</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getTermsByCategory("split").map((term) => (
+                        <Badge
+                          key={term.id}
+                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                          className={`cursor-pointer transition-all ${
+                            formData.selectedTerms.includes(term.id)
+                              ? "bg-rose-500 text-white hover:bg-rose-600"
+                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                          }`}
+                          onClick={() => handleTermToggle(term.id)}
+                        >
+                          {term.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Payment Timing */}
-              <div>
-                <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Schedule</h4>
-                <div className="flex flex-wrap gap-2">
-                  {getTermsByCategory("payment").map((term) => (
-                    <Badge
-                      key={term.id}
-                      variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                      className={`cursor-pointer transition-all ${
-                        formData.selectedTerms.includes(term.id)
-                          ? "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200"
-                          : "bg-white border-stone-300 text-stone-700 hover:bg-blue-50 hover:border-blue-300"
-                      }`}
-                      onClick={() => handleTermToggle(term.id)}
-                    >
-                      {term.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                  {/* Payment Timing */}
+                  <div>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Schedule</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getTermsByCategory("payment").map((term) => (
+                        <Badge
+                          key={term.id}
+                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                          className={`cursor-pointer transition-all ${
+                            formData.selectedTerms.includes(term.id)
+                              ? "bg-rose-500 text-white hover:bg-rose-600"
+                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                          }`}
+                          onClick={() => handleTermToggle(term.id)}
+                        >
+                          {term.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Copy Limits */}
-              <div>
-                <h4 className="font-semibold text-stone-700 mb-3 font-serif">Copy Limits</h4>
-                <div className="flex flex-wrap gap-2">
-                  {getTermsByCategory("limits").map((term) => (
-                    <Badge
-                      key={term.id}
-                      variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                      className={`cursor-pointer transition-all ${
-                        formData.selectedTerms.includes(term.id)
-                          ? "bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200"
-                          : "bg-white border-stone-300 text-stone-700 hover:bg-orange-50 hover:border-orange-300"
-                      }`}
-                      onClick={() => handleTermToggle(term.id)}
-                    >
-                      {term.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                  {/* Copy Limits */}
+                  <div>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Copy Limits</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getTermsByCategory("limits").map((term) => (
+                        <Badge
+                          key={term.id}
+                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                          className={`cursor-pointer transition-all ${
+                            formData.selectedTerms.includes(term.id)
+                              ? "bg-rose-500 text-white hover:bg-rose-600"
+                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                          }`}
+                          onClick={() => handleTermToggle(term.id)}
+                        >
+                          {term.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Pricing & Returns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-stone-700 mb-3 font-serif">Pricing Requirements</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {getTermsByCategory("pricing").map((term) => (
-                      <Badge
-                        key={term.id}
-                        variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                        className={`cursor-pointer transition-all ${
-                          formData.selectedTerms.includes(term.id)
-                            ? "bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-200"
-                            : "bg-white border-stone-300 text-stone-700 hover:bg-purple-50 hover:border-purple-300"
-                        }`}
-                        onClick={() => handleTermToggle(term.id)}
-                      >
-                        {term.label}
-                      </Badge>
-                    ))}
+                  {/* Pricing & Returns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-stone-700 mb-3 font-serif">Pricing Requirements</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {getTermsByCategory("pricing").map((term) => (
+                          <Badge
+                            key={term.id}
+                            variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                            className={`cursor-pointer transition-all ${
+                              formData.selectedTerms.includes(term.id)
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                            }`}
+                            onClick={() => handleTermToggle(term.id)}
+                          >
+                            {term.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-stone-700 mb-3 font-serif">Return Policy</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {getTermsByCategory("returns").map((term) => (
+                          <Badge
+                            key={term.id}
+                            variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                            className={`cursor-pointer transition-all ${
+                              formData.selectedTerms.includes(term.id)
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                            }`}
+                            onClick={() => handleTermToggle(term.id)}
+                          >
+                            {term.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="font-semibold text-stone-700 mb-3 font-serif">Return Policy</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {getTermsByCategory("returns").map((term) => (
-                      <Badge
-                        key={term.id}
-                        variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                        className={`cursor-pointer transition-all ${
-                          formData.selectedTerms.includes(term.id)
-                            ? "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
-                            : "bg-white border-stone-300 text-stone-700 hover:bg-slate-50 hover:border-slate-300"
-                        }`}
-                        onClick={() => handleTermToggle(term.id)}
-                      >
-                        {term.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Notes & Experience */}
+          {/* Additional Notes */}
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <MessageSquare className="h-5 w-5 mr-2 text-amber-500" />
+                <MessageSquare className="h-5 w-5 mr-2 text-rose-500" />
                 Additional Notes
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">
-                Share any quirky details, tips, or personal experiences
-              </p>
+              <p className="text-sm text-stone-600 font-mono">Any helpful tips or special requirements?</p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-stone-700 font-serif font-medium">
-                  Notes about this store
-                  <span className="text-stone-500 font-mono text-sm ml-2">(optional)</span>
-                </Label>
+            <CardContent>
+              <div className="space-y-4">
                 <Textarea
-                  id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="bg-stone-50 border-stone-300 focus:border-amber-400 focus:ring-amber-200 font-mono text-sm min-h-[120px]"
-                  placeholder="e.g. 'Staff are super supportive of local creators', 'Best to email first before dropping off', 'They have a great zine section near the front counter', etc."
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif min-h-[100px]"
+                  placeholder="e.g., They prefer email contact first, they're particularly interested in local zines, they have a specific submission process..."
                 />
-              </div>
 
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                <div className="flex items-start space-x-3">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="hasStockedBefore"
                     checked={formData.hasStockedBefore}
-                    onCheckedChange={(checked) => setFormData({ ...formData, hasStockedBefore: checked as boolean })}
-                    className="mt-1"
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hasStockedBefore: !!checked }))}
                   />
-                  <div>
-                    <Label htmlFor="hasStockedBefore" className="text-stone-700 font-serif font-medium cursor-pointer">
-                      I've stocked zines here before
-                    </Label>
-                    <p className="text-sm text-stone-600 font-mono mt-1">
-                      This helps us know the info comes from direct experience
-                    </p>
-                  </div>
+                  <Label htmlFor="hasStockedBefore" className="text-sm text-stone-700">
+                    I have stocked zines at this store before
+                  </Label>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
-          <div className="text-center pt-4">
+          <div className="text-center">
             <Button
               type="submit"
-              disabled={isSubmitting || !formData.storeName || !formData.city || !formData.country}
-              className="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white font-serif text-lg px-8 py-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
+              className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-8 py-3 text-lg rounded-lg shadow-md transition-colors"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Adding Store...
+                  Submitting...
                 </>
               ) : (
                 <>
                   <MapPin className="h-5 w-5 mr-2" />
-                  Add Store to Map
+                  Submit Store to ZineMap
                 </>
               )}
             </Button>
-            <p className="text-sm text-stone-500 mt-3 font-mono">Required fields: store name, city, and country</p>
           </div>
         </form>
       </div>

@@ -1,3 +1,5 @@
+"use client"
+
 import { Search, MapPin, Filter, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -5,66 +7,61 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
 
-// Sample store data
-const stores = [
-  {
-    id: 1,
-    name: "Quimby's Bookstore",
-    city: "Chicago, IL",
-    consignmentTerms: "60/40 split",
-    description: "Independent bookstore specializing in underground comix and zines",
-    hasUpfrontPay: false,
-    coordinates: [-87.6298, 41.8781] as [number, number], // Chicago coordinates
-  },
-  {
-    id: 2,
-    name: "Desert Island Comics",
-    city: "Brooklyn, NY",
-    consignmentTerms: "50/50 split",
-    description: "Comics and zine shop in Williamsburg",
-    hasUpfrontPay: false,
-    coordinates: [-73.9442, 40.6782] as [number, number], // Brooklyn coordinates
-  },
-  {
-    id: 3,
-    name: "Atomic Books",
-    city: "Baltimore, MD",
-    consignmentTerms: "Upfront payment",
-    description: "Eclectic bookstore with strong zine section",
-    hasUpfrontPay: true,
-    coordinates: [-76.6122, 39.2904] as [number, number], // Baltimore coordinates
-  },
-  {
-    id: 4,
-    name: "Powell's Books",
-    city: "Portland, OR",
-    consignmentTerms: "55/45 split",
-    description: "Legendary independent bookstore chain",
-    hasUpfrontPay: false,
-    coordinates: [-122.6784, 45.5152] as [number, number], // Portland coordinates
-  },
-  {
-    id: 5,
-    name: "The Bindery",
-    city: "Minneapolis, MN",
-    consignmentTerms: "50/50 split",
-    description: "Community-focused shop supporting local creators",
-    hasUpfrontPay: false,
-    coordinates: [-93.265, 44.9778] as [number, number], // Minneapolis coordinates
-  },
-  {
-    id: 6,
-    name: "Spoonbill & Sugartown",
-    city: "Brooklyn, NY",
-    consignmentTerms: "65/35 split",
-    description: "Art and design bookstore with curated zine selection",
-    hasUpfrontPay: false,
-    coordinates: [-73.9442, 40.6782] as [number, number], // Brooklyn coordinates
-  },
-]
+interface Store {
+  id: string
+  name: string
+  city: string
+  country: string
+  address: string
+  email?: string
+  website?: string
+  notes?: string
+  has_stocked_before: boolean
+  submitted_by: string
+  created_at: string
+  permalink?: string
+  latitude?: number
+  longitude?: number
+}
 
 export default function HomePage() {
+  const [stores, setStores] = useState<Store[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching stores:', error)
+        } else {
+          setStores(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching stores:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStores()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
+        <div className="text-stone-500 text-lg">Loading stores...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
       {/* Header */}
@@ -124,46 +121,61 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-stone-800 mb-4">Zine-Friendly Stores</h2>
 
             <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
-              {stores.map((store) => (
-                <Card
-                  key={store.id}
-                  className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{store.name}</CardTitle>
-                        <div className="flex items-center text-stone-600 text-sm mb-2">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {store.city}
-                        </div>
-                      </div>
-                      <div
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          store.hasUpfrontPay ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {store.consignmentTerms}
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <p className="text-stone-600 text-sm mb-4 leading-relaxed">{store.description}</p>
-
-                    <Link href={`/store/${store.id}`}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
-                      >
-                        View Details
-                        <ExternalLink className="h-3 w-3 ml-2" />
+              {stores.length === 0 ? (
+                <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
+                  <CardContent className="p-6 text-center">
+                    <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No stores yet</h3>
+                    <p className="text-stone-600 mb-4">Be the first to add a zine-friendly store to the map!</p>
+                    <Link href="/add-store">
+                      <Button className="bg-rose-500 hover:bg-rose-600 text-white">
+                        Add First Store
                       </Button>
                     </Link>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                stores.map((store) => (
+                  <Card
+                    key={store.id}
+                    className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{store.name}</CardTitle>
+                          <div className="flex items-center text-stone-600 text-sm mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {store.city}, {store.country}
+                          </div>
+                        </div>
+                        <div
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            store.has_stocked_before ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {store.has_stocked_before ? "Upfront Pay" : "Consignment"}
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <p className="text-stone-600 text-sm mb-4 leading-relaxed">{store.notes}</p>
+
+                      <Link href={`/store/${store.permalink || store.id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
+                        >
+                          View Details
+                          <ExternalLink className="h-3 w-3 ml-2" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -198,4 +210,4 @@ export default function HomePage() {
       </footer>
     </div>
   )
-}
+} 
