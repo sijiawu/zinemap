@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import NavBar from '@/components/NavBar'
+import ClientRoot from '@/components/ClientRoot'
 
 export const metadata: Metadata = {
   title: 'ZineMap',
@@ -21,8 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <NavBar />
-        <div>{children}</div>
+        <ClientRoot>{children}</ClientRoot>
       </body>
     </html>
   )

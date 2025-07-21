@@ -10,23 +10,9 @@ function validateEmail(email: string) {
 export default function AuthForm() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
-  const [userName, setUserName] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  // Username validation for signup
-  const validateUserName = (name: string) => {
-    if (!name || name.trim().length < 3) return 'Username must be at least 3 characters.'
-    if (/\s/.test(name)) return 'Username cannot contain spaces.'
-    return ''
-  }
-
-  // Check if username is taken (simulate, or wire up to Supabase if you want)
-  const checkUserNameTaken = async (name: string) => {
-    const { data } = await supabase.from('profiles').select('id').eq('display_name', name).single()
-    return !!data
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,34 +22,17 @@ export default function AuthForm() {
       setError('Please enter a valid email address.')
       return
     }
+    setLoading(true)
     if (mode === 'signup') {
-      const userNameError = validateUserName(userName)
-      if (userNameError) {
-        setError(userNameError)
-        return
-      }
-      setLoading(true)
-      // Check if username is taken
-      const taken = await checkUserNameTaken(userName)
-      if (taken) {
-        setError('That username is already taken.')
+      // Check if email is already registered
+      const { data: emailExists } = await supabase.from('profiles').select('email').eq('email', email).single()
+      if (emailExists) {
+        setError('That email is already registered. Please log in instead.')
         setLoading(false)
         return
       }
-      // Create profile row (if not exists) and send magic link
-      // (Supabase will create the user on magic link click, so we just pre-create the profile row)
-      await supabase.from('profiles').insert({ display_name: userName, email }).select()
-      const { error: supabaseError } = await supabase.auth.signInWithOtp({ email })
-      if (supabaseError) {
-        setError(supabaseError.message)
-      } else {
-        setMessage('Check your email for the magic link!')
-      }
-      setLoading(false)
-      return
     }
-    // Log in flow
-    setLoading(true)
+    // Send magic link for both login and signup (if not blocked above)
     const { error: supabaseError } = await supabase.auth.signInWithOtp({ email })
     if (supabaseError) {
       setError(supabaseError.message)
@@ -99,17 +68,6 @@ export default function AuthForm() {
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
-          <input
-            type="text"
-            placeholder="Choose a username"
-            value={userName}
-            onChange={e => setUserName(e.target.value)}
-            required
-            minLength={3}
-            className="w-full border px-3 py-2 rounded"
-          />
-        )}
         <input
           type="email"
           placeholder="Your email"
