@@ -80,7 +80,7 @@ export default function HomePage() {
 
             // Fetch user display name from profiles table
             let user_name = 'Unknown user'
-            
+
             try {
               const { data: userData, error: userError } = await supabase
                 .from('profiles')
@@ -104,7 +104,7 @@ export default function HomePage() {
                   .select('email')
                   .eq('id', store.submitted_by)
                   .single()
-                
+
                 if (authUserData?.email) {
                   user_name = authUserData.email
                 }
@@ -146,7 +146,7 @@ export default function HomePage() {
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
-      filtered = filtered.filter(store => 
+      filtered = filtered.filter(store =>
         store.name.toLowerCase().includes(query) ||
         store.city.toLowerCase().includes(query) ||
         store.country.toLowerCase().includes(query) ||
@@ -223,7 +223,7 @@ export default function HomePage() {
                       {stores.length === 0 ? "No stores yet" : "No stores match your filters"}
                     </h3>
                     <p className="text-stone-600 mb-4">
-                      {stores.length === 0 
+                      {stores.length === 0
                         ? "Be the first to add a zine-friendly store to the map!"
                         : "Try adjusting your search or filter criteria."
                       }
@@ -235,7 +235,7 @@ export default function HomePage() {
                         </Button>
                       </Link>
                                          ) : (
-                       <Button 
+                       <Button
                          onClick={() => {
                            setSearchQuery("")
                          }}
@@ -263,7 +263,7 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Store Tags */}
                       {store.store_tags && store.store_tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-3">
@@ -321,6 +321,14 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
+            {/* Add Library button under the map */}
+            <div className="mt-8 flex justify-center">
+              <Link href="/add-store">
+                <Button className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-6 py-3 mt-4 text-lg rounded-lg shadow-md transition-colors max-w-xs mx-auto">
+                  Add a Library to ZineMap
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -335,4 +343,4 @@ export default function HomePage() {
       </footer>
     </div>
   )
-} 
+}
