@@ -15,6 +15,7 @@ interface Store {
   id: string
   name: string
   city: string
+  state: string
   country: string
   address: string
   email?: string
@@ -149,6 +150,7 @@ export default function HomePage() {
       filtered = filtered.filter(store => 
         store.name.toLowerCase().includes(query) ||
         store.city.toLowerCase().includes(query) ||
+        store.state.toLowerCase().includes(query) ||
         store.country.toLowerCase().includes(query) ||
         store.address.toLowerCase().includes(query)
       )
@@ -194,7 +196,7 @@ export default function HomePage() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
               <Input
-                placeholder="Search by city or store name..."
+                placeholder="Search by city, state, or store name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
@@ -259,7 +261,7 @@ export default function HomePage() {
                           <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{store.name}</CardTitle>
                           <div className="flex items-center text-stone-600 text-sm mb-2">
                             <MapPin className="h-4 w-4 mr-1" />
-                            {store.city}, {store.country}
+                            {store.city}, {store.state}, {store.country}
                           </div>
                         </div>
                       </div>

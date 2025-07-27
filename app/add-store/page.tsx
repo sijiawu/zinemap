@@ -45,6 +45,7 @@ export default function AddStorePage() {
   const [formData, setFormData] = useState({
     storeName: "",
     city: "",
+    state: "",
     country: "",
     address: "",
     email: "",
@@ -130,16 +131,25 @@ export default function AddStorePage() {
         `access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&` +
         `country=${selectedCountry.code}&` +
         `types=address&` +
-        `limit=5`
+        `limit=5&` +
+        `autocomplete=true&` +
+        `language=en`
       )
       
       const data = await response.json()
-      const suggestions = data.features.map((feature: any) => ({
-        id: feature.id,
-        text: feature.place_name,
-        coordinates: feature.center,
-        context: feature.context
-      }))
+      const suggestions = data.features.map((feature: any) => {
+        // Extract just the street address part (remove city, state, country, zip)
+        const addressParts = feature.place_name.split(', ')
+        const streetAddress = addressParts[0] // Just the street address
+        
+        return {
+          id: feature.id,
+          text: streetAddress,
+          fullText: feature.place_name, // Keep full text for context extraction
+          coordinates: feature.center,
+          context: feature.context
+        }
+      })
       
       setAddressSuggestions(suggestions)
       setShowAddressSuggestions(true)
@@ -160,10 +170,33 @@ export default function AddStorePage() {
     )
     const city = cityContext ? cityContext.text : ''
 
+    // Extract state/province from context - Mapbox provides both full name and abbreviation
+    const stateContext = suggestion.context?.find((ctx: any) => 
+      ctx.id.startsWith('region.') || ctx.id.startsWith('province.')
+    )
+    
+    // Use the short_code if available (abbreviation), otherwise use the full text
+    let state = ''
+    if (stateContext) {
+      // Mapbox provides short_code for administrative regions in many countries
+      if (stateContext.short_code) {
+        // Extract the abbreviation part (after the country code)
+        const shortCodeParts = stateContext.short_code.split('-')
+        if (shortCodeParts.length >= 2) {
+          state = shortCodeParts[1] // Extract "IL" from "US-IL", "ON" from "CA-ON", etc.
+        } else {
+          state = stateContext.short_code // Fallback if format is unexpected
+        }
+      } else {
+        state = stateContext.text // Use full name if no short_code available
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      address: suggestion.text,
-      city: city
+      address: suggestion.text, // Just the street address
+      city: city,
+      state: state
     }))
     
     setAddressSuggestions([])
@@ -307,6 +340,7 @@ export default function AddStorePage() {
           id: id,
           name: formData.storeName,
           city: formData.city,
+          state: formData.state,
           country: formData.country,
           address: formData.address,
           email: formData.email || null,
@@ -397,6 +431,7 @@ export default function AddStorePage() {
                     setFormData({
                       storeName: "",
                       city: "",
+                      state: "",
                       country: "",
                       address: "",
                       email: "",
@@ -516,27 +551,38 @@ export default function AddStorePage() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Address and Location */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Address with autocomplete */}
-                <div className="space-y-2 relative" ref={addressSuggestionsRef}>
+                <div className="space-y-2 relative md:col-span-2" ref={addressSuggestionsRef}>
                   <Label htmlFor="address" className="text-stone-700 font-serif font-medium">
-                    Address
+                    Address {!selectedCountry && <span className="text-stone-400 text-sm">(Select country first to enable autocomplete)</span>}
                   </Label>
                   <Input
                     id="address"
                     value={formData.address}
-                                         onChange={(e) => {
-                       setFormData(prev => ({ ...prev, address: e.target.value }));
-                       handleAddressSearch(e.target.value);
-                     }}
-                     onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
-                     onFocus={() => {
-                       if (selectedCountry && formData.address.trim()) {
-                         handleAddressSearch(formData.address);
-                       }
-                     }}
-                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
-                    placeholder="e.g. 123 Main St, Chicago, IL"
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, address: e.target.value }));
+                      if (selectedCountry) {
+                        handleAddressSearch(e.target.value);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                    onFocus={() => {
+                      if (selectedCountry && formData.address.trim()) {
+                        handleAddressSearch(formData.address);
+                      }
+                    }}
+                    className={`font-serif ${
+                      selectedCountry 
+                        ? "bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200" 
+                        : "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed"
+                    }`}
+                    placeholder={selectedCountry ? "e.g. 123 Main St" : "Select a country first"}
                     autoComplete="off"
+                    disabled={!selectedCountry}
                   />
                   {showAddressSuggestions && addressSuggestions.length > 0 && (
                     <div className="absolute z-20 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 max-h-60 overflow-y-auto">
@@ -546,7 +592,8 @@ export default function AddStorePage() {
                           className="px-4 py-2 hover:bg-rose-50 cursor-pointer text-stone-800"
                           onClick={() => handleAddressSelect(feature)}
                         >
-                          {feature.text}
+                          <div className="font-medium">{feature.text}</div>
+                          <div className="text-sm text-stone-500">{feature.fullText}</div>
                         </div>
                       ))}
                     </div>
@@ -569,6 +616,22 @@ export default function AddStorePage() {
                     className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
                     placeholder="e.g. Chicago"
                     required
+                  />
+                </div>
+              </div>
+
+              {/* State/Province */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="state" className="text-stone-700 font-serif font-medium">
+                    State/Province
+                  </Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+                    className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
+                    placeholder="e.g. Illinois"
                   />
                 </div>
               </div>
