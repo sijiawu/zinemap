@@ -36,14 +36,14 @@ export default function DashboardPage() {
     const activeBatches = zine.batches?.filter((b: any) => b.status === 'active') || []
     const totalCopiesOut = activeBatches.reduce((sum: number, b: any) => sum + b.copies_placed, 0)
     const totalCopiesSold = activeBatches.reduce((sum: number, b: any) => sum + (b.copies_sold || 0), 0)
-    const revenue = activeBatches.reduce((sum: number, b: any) => {
-      if (b.copies_sold && b.price_per_copy) {
-        return sum + (b.copies_sold * b.price_per_copy)
+    const earnings = activeBatches.reduce((sum: number, b: any) => {
+      if (b.copies_sold && b.price_per_copy && b.split_percent) {
+        return sum + ((b.split_percent / 100) * b.copies_sold * b.price_per_copy)
       }
       return sum
     }, 0)
     
-    return { activeBatches: activeBatches.length, totalCopiesOut, totalCopiesSold, revenue }
+    return { activeBatches: activeBatches.length, totalCopiesOut, totalCopiesSold, earnings }
   }
 
   // Get unique stores for a zine
@@ -57,8 +57,16 @@ export default function DashboardPage() {
   const getZineStatus = (zine: any) => {
     const activeBatches = zine.batches?.filter((b: any) => b.status === 'active') || []
     if (activeBatches.length === 0) return 'inactive'
-    if (activeBatches.length <= 2) return 'low-stock'
     return 'active'
+  }
+
+  // Get unique stores from active batches
+  const getUniqueStores = () => {
+    const allActiveBatches = zines.flatMap(zine => 
+      zine.batches?.filter((b: any) => b.status === 'active') || []
+    )
+    const uniqueStoreIds = [...new Set(allActiveBatches.map(batch => batch.store_id).filter(Boolean))]
+    return uniqueStoreIds.length
   }
 
   const handleZineCreated = () => {
@@ -93,6 +101,29 @@ export default function DashboardPage() {
     if (!user || !zineToDelete) return
 
     try {
+      // Delete cover image from storage if it exists
+      if (zineToDelete.cover_image) {
+        try {
+          // Extract the file path from the URL
+          const url = new URL(zineToDelete.cover_image)
+          const pathParts = url.pathname.split('/')
+          const fileName = pathParts[pathParts.length - 1]
+          const filePath = `${user.id}/${fileName}`
+          
+          const { error: storageError } = await supabase.storage
+            .from('zine-covers')
+            .remove([filePath])
+
+          if (storageError) {
+            console.error('Error deleting cover image:', storageError)
+            // Don't fail the entire deletion if image deletion fails
+          }
+        } catch (error) {
+          console.error('Error processing cover image deletion:', error)
+          // Continue with zine deletion even if image deletion fails
+        }
+      }
+
       // Delete all batches first
       const { error: batchesError } = await supabase
         .from('batches')
@@ -183,7 +214,7 @@ export default function DashboardPage() {
                   Welcome back, {profile?.display_name || user.email?.split('@')[0] || 'Zinester'}
                 </h2>
                 <p className="text-stone-600 mb-4">
-                  You have {stats.totalZines} zines with {stats.activeBatches} active batches
+                  You have {stats.totalZines} zines with {stats.activeBatches} active batches in {getUniqueStores()} stores
                 </p>
                 <p className="text-sm text-stone-500">
                   {stats.totalZines === 0 ? 'Ready to start tracking your zines?' : 'Keep up the great work!'}
@@ -221,8 +252,8 @@ export default function DashboardPage() {
             </Card>
             <Card className="bg-white border border-stone-200 shadow-sm">
               <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-stone-800 mb-1">${stats.totalRevenue.toFixed(2)}</div>
-                <div className="text-sm text-stone-600">Total Revenue</div>
+                <div className="text-2xl font-bold text-stone-800 mb-1">${stats.totalEarnings.toFixed(2)}</div>
+                <div className="text-sm text-stone-600">Total Earnings</div>
               </CardContent>
             </Card>
           </div>
@@ -354,12 +385,10 @@ export default function DashboardPage() {
                           className={
                             status === "active"
                               ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                              : status === "low-stock"
-                              ? "bg-amber-100 text-amber-700 hover:bg-amber-100"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                           }
                         >
-                          {status === "active" ? "Active" : status === "low-stock" ? "Low Stock" : "Inactive"}
+                          {status === "active" ? "Active" : "Inactive"}
                         </Badge>
                         <span className="text-xs text-stone-500">
                           Updated {new Date(lastUpdate).toLocaleDateString()}
@@ -382,8 +411,8 @@ export default function DashboardPage() {
                             <div className="text-stone-600 text-xs">Sold</div>
                           </div>
                           <div className="text-center bg-green-50 p-2 rounded border border-green-100">
-                            <div className="font-semibold text-stone-800">${zineStats.revenue.toFixed(2)}</div>
-                            <div className="text-stone-600 text-xs">Revenue</div>
+                            <div className="font-semibold text-stone-800">${zineStats.earnings.toFixed(2)}</div>
+                            <div className="text-stone-600 text-xs">Earnings</div>
                           </div>
                         </div>
 

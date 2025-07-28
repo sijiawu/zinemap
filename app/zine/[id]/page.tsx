@@ -96,7 +96,6 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
           return a.name.localeCompare(b.name)
         })
 
-        console.log('Fetched stores:', sortedStores)
         setStores(sortedStores || [])
       } catch (err) {
         console.error('Error fetching stores:', err)
@@ -139,8 +138,6 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
         notes: formData.notes || null,
       }
 
-      console.log('Attempting to save batch with data:', batchData)
-      
       // First verify the zine belongs to the user
       const { data: zineCheck, error: zineError } = await supabase
         .from('zines')
@@ -1183,7 +1180,6 @@ export default function ZineDetailPage() {
 
       // Refresh data
       fetchZineData()
-      console.log('Batch updated successfully:', batchId)
     } catch (err) {
       console.error('Error updating batch:', err)
       alert('Failed to update batch. Please try again.')
@@ -1213,12 +1209,14 @@ export default function ZineDetailPage() {
 
       // Refresh data
       fetchZineData()
-      console.log('Batch deleted successfully:', batchToDelete)
       setDeleteModalOpen(false)
       setBatchToDelete(null)
     } catch (err) {
       console.error('Error deleting batch:', err)
       alert('Failed to delete batch. Please try again.')
+    } finally {
+      setDeleteModalOpen(false)
+      setBatchToDelete(null)
     }
   }
 
@@ -1263,9 +1261,9 @@ export default function ZineDetailPage() {
   const activeBatches = batches.filter(batch => batch.status === 'active')
   const totalCopiesOut = activeBatches.reduce((sum, batch) => sum + batch.copies_placed, 0)
   const totalCopiesSold = activeBatches.reduce((sum, batch) => sum + (batch.copies_sold || 0), 0)
-  const totalRevenue = activeBatches.reduce((sum, batch) => {
-    if (batch.copies_sold && batch.price_per_copy) {
-      return sum + (batch.copies_sold * batch.price_per_copy)
+  const totalEarnings = activeBatches.reduce((sum, batch) => {
+    if (batch.copies_sold && batch.price_per_copy && batch.split_percent) {
+      return sum + ((batch.split_percent / 100) * batch.copies_sold * batch.price_per_copy)
     }
     return sum
   }, 0)
@@ -1316,8 +1314,8 @@ export default function ZineDetailPage() {
                   <div className="text-sm text-stone-600">Copies Sold</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-stone-800">${totalRevenue.toFixed(2)}</div>
-                  <div className="text-sm text-stone-600">Revenue</div>
+                  <div className="text-2xl font-bold text-stone-800">${totalEarnings.toFixed(2)}</div>
+                  <div className="text-sm text-stone-600">Earnings</div>
                 </div>
               </div>
             </div>

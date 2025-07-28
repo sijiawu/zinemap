@@ -42,7 +42,7 @@ export interface DashboardStats {
   activeBatches: number
   totalCopiesOut: number
   totalCopiesSold: number
-  totalRevenue: number
+  totalEarnings: number
 }
 
 export interface UserProfile {
@@ -60,7 +60,7 @@ export function useZineData(user: User | null) {
     activeBatches: 0,
     totalCopiesOut: 0,
     totalCopiesSold: 0,
-    totalRevenue: 0
+    totalEarnings: 0
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,7 +77,6 @@ export function useZineData(user: User | null) {
         setError(null)
 
         // Fetch user profile
-        console.log('Fetching profile for user:', user.id)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -91,7 +90,6 @@ export function useZineData(user: User | null) {
         setProfile(profileData)
 
         // Fetch zines for the current user
-        console.log('Fetching zines for user:', user.id)
         const { data: zinesData, error: zinesError } = await supabase
           .from('zines')
           .select('*')
@@ -104,7 +102,6 @@ export function useZineData(user: User | null) {
         }
 
         // Fetch batches for the current user with store information
-        console.log('Fetching batches for user:', user.id)
         const { data: batchesData, error: batchesError } = await supabase
           .from('batches')
           .select('*')
@@ -129,10 +126,10 @@ export function useZineData(user: User | null) {
         const activeBatches = batchesData?.filter(batch => batch.status === 'active') || []
         const totalCopiesOut = activeBatches.reduce((sum, batch) => sum + batch.copies_placed, 0)
         const totalCopiesSold = activeBatches.reduce((sum, batch) => sum + (batch.copies_sold || 0), 0)
-        const totalRevenue = activeBatches.reduce((sum, batch) => {
-          if (batch.copies_sold && batch.price_per_copy) {
-            const revenue = batch.copies_sold * batch.price_per_copy
-            return sum + revenue
+        const totalEarnings = activeBatches.reduce((sum, batch) => {
+          if (batch.copies_sold && batch.price_per_copy && batch.split_percent) {
+            const earnings = (batch.split_percent / 100) * batch.copies_sold * batch.price_per_copy
+            return sum + earnings
           }
           return sum
         }, 0)
@@ -142,7 +139,7 @@ export function useZineData(user: User | null) {
           activeBatches: activeBatches.length,
           totalCopiesOut,
           totalCopiesSold,
-          totalRevenue
+          totalEarnings
         })
 
       } catch (err) {

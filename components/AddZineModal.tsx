@@ -18,16 +18,26 @@ interface AddZineModalProps {
   zine?: any // For edit mode
 }
 
-// Function to generate permalink from title
-const generatePermalink = (title: string): string => {
-  return title
+// Function to generate permalink from title and user name
+const generatePermalink = (title: string, userName: string): string => {
+  const cleanUserName = userName
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
-    .substring(0, 50) // Limit length
+
+  const cleanTitle = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 30) // Limit title length
+
+  return `${cleanUserName}-${cleanTitle}`
 }
 
 export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'create', zine }: AddZineModalProps) {
@@ -37,9 +47,6 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // Debug logging
-  console.log('AddZineModal render:', { mode, zine: zine?.id, show, user: user?.id })
 
   // Initialize form data when editing
   useEffect(() => {
@@ -147,6 +154,22 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
     setError('')
 
     try {
+      // Get user's display name from profile
+      let userName = user.email?.split('@')[0] || user.id
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single()
+        
+        if (profileData?.display_name) {
+          userName = profileData.display_name
+        }
+      } catch (error) {
+        // Could not fetch profile, using fallback name
+      }
+
       let coverImageUrl = null
 
       // Upload cover image if provided
@@ -157,8 +180,6 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
         // Generate unique filename
         const timestamp = Date.now()
         const fileName = `${user.id}/${timestamp}.jpg`
-        
-        console.log('Uploading image:', fileName, 'Size:', compressedImage.size)
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('zine-covers')
@@ -181,7 +202,6 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
           .getPublicUrl(fileName)
 
         coverImageUrl = urlData.publicUrl
-        console.log('Image uploaded successfully:', coverImageUrl)
       }
 
       if (mode === 'create') {
@@ -193,7 +213,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
             title: title.trim(),
             description: description.trim() || null,
             cover_image: coverImageUrl,
-            permalink: generatePermalink(title.trim())
+            permalink: generatePermalink(title.trim(), userName)
           })
 
         if (insertError) {
@@ -205,7 +225,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
         const updateData: any = {
           title: title.trim(),
           description: description.trim() || null,
-          permalink: generatePermalink(title.trim())
+          permalink: generatePermalink(title.trim(), userName)
         }
 
         // Only update cover image if a new one was uploaded

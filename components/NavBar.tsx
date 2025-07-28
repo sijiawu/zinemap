@@ -22,6 +22,7 @@ export default function NavBar() {
         <div className="flex items-center gap-4">
           {!loading && user && (
             <>
+              <Link href="/dashboard" className="text-stone-700 hover:text-rose-600 font-medium transition-colors">Dashboard</Link>
               {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
                 <Link href="/admin" className="text-stone-700 hover:text-rose-600 font-medium transition-colors">Admin</Link>
               )}

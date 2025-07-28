@@ -322,16 +322,12 @@ export default function AddStorePage() {
     }
 
     try {
-      console.log('Submitting store data:', formData)
-      console.log('User ID:', user.id)
-
       // Generate ID and permalink for the store
       const id = nanoid(6)
       const permalink = generatePermalink(formData.storeName, formData.city)
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
-      console.log('Geocoded coordinates:', coordinates)
 
       // Insert store into stores table
       const { data: storeData, error: storeError } = await supabase
@@ -357,35 +353,25 @@ export default function AddStorePage() {
         .single()
 
       if (storeError) {
-        console.error('Error inserting store:', storeError)
-        setError(`Store insertion failed: ${storeError.message}`)
-        throw storeError
+        console.error('Store insert error:', storeError)
+        throw new Error('Failed to create store')
       }
 
-      console.log('Store inserted successfully:', storeData)
-
-      // Insert selected terms into store_tags table
+      // Insert store tags if any were selected
       if (formData.selectedTerms.length > 0) {
-        const storeTags = formData.selectedTerms.map(tagId => ({
-          store_id: storeData.id,
-          tag_id: tagId
+        const storeTags = formData.selectedTerms.map(termId => ({
+          store_id: id,
+          tag_id: termId
         }))
-
-        console.log('Inserting store tags:', storeTags)
-        console.log('Selected terms:', formData.selectedTerms)
-        console.log('Available terms:', consignmentTerms)
 
         const { error: tagsError } = await supabase
           .from('store_tags')
           .insert(storeTags)
 
         if (tagsError) {
-          console.error('Error inserting store tags:', tagsError)
-          setError(`Tags insertion failed: ${tagsError.message}`)
-          throw tagsError
+          console.error('Store tags insert error:', tagsError)
+          // Don't throw here, store was created successfully
         }
-
-        console.log('Store tags inserted successfully')
       }
 
       setIsSubmitted(true)
