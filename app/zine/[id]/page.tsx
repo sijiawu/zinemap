@@ -17,6 +17,7 @@ import {
   Save,
   DollarSign,
   X,
+  Trash2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,6 +32,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; retailPrice?: number; onBatchAdded: () => void }) {
   const { user } = useSupabaseUser()
@@ -130,7 +132,8 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
         price_per_copy: parseFloat(formData.pricePerCopy),
         split_percent: parseInt(formData.splitPercentage),
         paid_upfront: formData.paidUpfront,
-        copies_sold: formData.copiesSold ? parseInt(formData.copiesSold) : null,
+        paid: formData.paidUpfront, // Auto-set paid to true for upfront payments
+        copies_sold: formData.paidUpfront ? parseInt(formData.copiesPlaced) : (formData.copiesSold ? parseInt(formData.copiesSold) : null),
         status: formData.status,
         next_checkin: formData.nextCheckIn || null,
         notes: formData.notes || null,
@@ -227,65 +230,60 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                 <Label htmlFor="store" className="text-stone-700 font-serif font-medium">
                   Store *
                 </Label>
-                <div className="space-y-2">
-                  <Select
-                    value={formData.storeId}
-                    onValueChange={(value) => setFormData({ ...formData, storeId: value })}
-                  >
-                    <SelectTrigger className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200">
-                      <SelectValue placeholder="Choose a store..." />
-                    </SelectTrigger>
-                                      <SelectContent>
-                    {stores.length === 0 ? (
-                      <div className="px-2 py-1 text-sm text-stone-500">
-                        No stores found. Add your first store below.
-                      </div>
-                    ) : (
-                      stores.map((store) => {
-                        // Check if user has used this store before
-                        const hasUsedStore = userBatches?.some(batch => batch.store_id === store.id)
-                        return (
-                          <SelectItem key={store.id} value={store.id}>
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{store.name}</span>
-                                {hasUsedStore && (
-                                  <span className="text-xs bg-green-100 text-green-700 px-1 rounded">
-                                    Used
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-stone-500">{store.city}, {store.state}</span>
-                            </div>
-                          </SelectItem>
-                        )
-                      })
-                    )}
-                  </SelectContent>
-                  </Select>
-                  
-                  {selectedStore && (
-                    <div className="flex items-center text-sm text-stone-600 bg-white p-2 rounded border border-orange-100">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {selectedStore.city}, {selectedStore.state}
-                    </div>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="md:col-span-2">
+                    <Select
+                      value={formData.storeId}
+                      onValueChange={(value) => setFormData({ ...formData, storeId: value })}
+                    >
+                      <SelectTrigger className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200">
+                        <SelectValue placeholder="Choose a store..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stores.length === 0 ? (
+                          <div className="px-2 py-1 text-sm text-stone-500">
+                            No stores found. Add your first store below.
+                          </div>
+                        ) : (
+                          stores.map((store) => {
+                            // Check if user has used this store before
+                            const hasUsedStore = userBatches?.some(batch => batch.store_id === store.id)
+                            return (
+                              <SelectItem key={store.id} value={store.id}>
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{store.name}</span>
+                                    {hasUsedStore && (
+                                      <span className="text-xs bg-green-100 text-green-700 px-1 rounded">
+                                        Used
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-stone-500">{store.city}, {store.state}</span>
+                                </div>
+                              </SelectItem>
+                            )
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   {/* Add Store Button */}
-                  <Link href="/add-store">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full border-stone-300 text-stone-700 hover:bg-stone-50 bg-transparent font-serif"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Don't see your store? Add it to ZineMap
-                    </Button>
-                  </Link>
+                  <div className="md:col-span-1">
+                    <Link href="/add-store">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-10 border-stone-300 text-stone-700 hover:bg-stone-50 bg-transparent font-serif"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Don't see it here? Add it to ZineMap!
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-
-
               </div>
 
               {/* Date and Copies Row */}
@@ -300,7 +298,7 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                       type="date"
                       value={formData.datePlaced}
                       onChange={(e) => setFormData({ ...formData, datePlaced: e.target.value })}
-                      className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono"
+                      className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono [&::-webkit-calendar-picker-indicator]:hidden"
                       required
                     />
                     <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
@@ -383,16 +381,36 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
               {/* Payment and Status Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
-                  <Label className="text-stone-700 font-serif font-medium">Payment</Label>
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-stone-300">
-                    <Checkbox
-                      id="paidUpfront"
-                      checked={formData.paidUpfront}
-                      onCheckedChange={(checked) => setFormData({ ...formData, paidUpfront: checked as boolean })}
-                    />
-                    <Label htmlFor="paidUpfront" className="text-sm text-stone-700 font-mono">
-                      Paid upfront?
-                    </Label>
+                  <Label className="text-stone-700 font-serif font-medium">Payment Type</Label>
+                  <div className="flex items-center space-x-4 bg-white p-3 rounded-lg border border-stone-300">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="paymentUpfront"
+                        name="paymentType"
+                        value="upfront"
+                        checked={formData.paidUpfront === true}
+                        onChange={() => setFormData({ ...formData, paidUpfront: true })}
+                        className="text-orange-500 focus:ring-orange-400"
+                      />
+                      <Label htmlFor="paymentUpfront" className="text-sm text-stone-700 font-mono">
+                        Upfront
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="paymentConsignment"
+                        name="paymentType"
+                        value="consignment"
+                        checked={formData.paidUpfront === false}
+                        onChange={() => setFormData({ ...formData, paidUpfront: false })}
+                        className="text-orange-500 focus:ring-orange-400"
+                      />
+                      <Label htmlFor="paymentConsignment" className="text-sm text-stone-700 font-mono">
+                        Consignment
+                      </Label>
+                    </div>
                   </div>
                 </div>
 
@@ -414,6 +432,11 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                       <SelectItem value="unknown">Unknown</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formData.paidUpfront && (
+                    <p className="text-xs text-stone-500 font-mono">
+                      For upfront payments, status can remain "Active" until store sells out
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -427,11 +450,21 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                     id="copiesSold"
                     type="number"
                     min="0"
-                    value={formData.copiesSold}
+                    value={formData.paidUpfront ? formData.copiesPlaced : formData.copiesSold}
                     onChange={(e) => setFormData({ ...formData, copiesSold: e.target.value })}
-                    className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono"
+                    className={`font-mono ${
+                      formData.paidUpfront 
+                        ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" 
+                        : "bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200"
+                    }`}
                     placeholder="0"
+                    disabled={formData.paidUpfront}
                   />
+                  {formData.paidUpfront && (
+                    <p className="text-xs text-stone-500 font-mono">
+                      Set to copies placed for upfront payment
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -502,48 +535,70 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
   )
 }
 
-function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: string, updates: any) => void }) {
+function CompactEditableBatchCard({ batch, onSave, onDelete, getStoreDetails, formatStoreLocation, user }: { 
+  batch: any;
+  onSave: (id: string, updates: any) => void;
+  onDelete: (id: string) => void;
+  getStoreDetails: (storeId: string) => any;
+  formatStoreLocation: (store: any) => string;
+  user: any;
+}) {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({
-    date_placed: batch.date_placed,
-    copies_placed: batch.copies_placed?.toString() || "",
-    price_per_copy: batch.price_per_copy?.toString() || "",
-    split_percent: batch.split_percent?.toString() || "",
-    status: batch.status,
-    copies_sold: batch.copies_sold?.toString() || "",
-    paid: batch.paid,
-    paid_upfront: batch.paid_upfront,
+    date_placed: batch.date_placed || "",
+    copies_placed: batch.copies_placed || 0,
+    price_per_copy: batch.price_per_copy || 0,
+    split_percent: batch.split_percent || 50,
+    paid_upfront: batch.paid_upfront || false,
+    status: batch.status || "active",
+    copies_sold: batch.copies_sold || 0,
+    paid: batch.paid || false,
     next_checkin: batch.next_checkin || "",
+    last_update: batch.last_update || "",
     notes: batch.notes || "",
   })
 
   const handleChange = (field: string, value: any) => {
-    setEditData((prev) => ({ ...prev, [field]: value }))
+    const newData = { ...editData, [field]: value }
+    
+    // Handle upfront payment logic
+    if (field === 'paid_upfront' && value === true) {
+      newData.paid = true
+      newData.copies_sold = newData.copies_placed
+    }
+    
+    setEditData(newData)
   }
 
   const handleSave = () => {
     onSave(batch.id, {
-      ...editData,
-      date_placed: editData.date_placed,
-      copies_placed: editData.copies_placed ? Number.parseInt(editData.copies_placed) : null,
-      price_per_copy: editData.price_per_copy ? Number.parseFloat(editData.price_per_copy) : null,
-      split_percent: editData.split_percent ? Number.parseInt(editData.split_percent) : null,
-      copies_sold: editData.copies_sold ? Number.parseInt(editData.copies_sold) : null,
+      date_placed: editData.date_placed || null,
+      copies_placed: parseInt(editData.copies_placed),
+      price_per_copy: parseFloat(editData.price_per_copy),
+      split_percent: parseInt(editData.split_percent),
+      paid_upfront: editData.paid_upfront,
+      status: editData.status,
+      copies_sold: editData.paid_upfront ? parseInt(editData.copies_placed) : parseInt(editData.copies_sold),
+      paid: editData.paid,
+      next_checkin: editData.next_checkin || null,
+      last_update: editData.last_update || null,
+      notes: editData.notes || null,
     })
     setIsEditing(false)
   }
 
   const handleCancel = () => {
     setEditData({
-      date_placed: batch.date_placed,
-      copies_placed: batch.copies_placed?.toString() || "",
-      price_per_copy: batch.price_per_copy?.toString() || "",
-      split_percent: batch.split_percent?.toString() || "",
-      status: batch.status,
-      copies_sold: batch.copies_sold?.toString() || "",
-      paid: batch.paid,
-      paid_upfront: batch.paid_upfront,
+      date_placed: batch.date_placed || "",
+      copies_placed: batch.copies_placed || 0,
+      price_per_copy: batch.price_per_copy || 0,
+      split_percent: batch.split_percent || 50,
+      paid_upfront: batch.paid_upfront || false,
+      status: batch.status || "active",
+      copies_sold: batch.copies_sold || 0,
+      paid: batch.paid || false,
       next_checkin: batch.next_checkin || "",
+      last_update: batch.last_update || "",
       notes: batch.notes || "",
     })
     setIsEditing(false)
@@ -589,7 +644,7 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
             </CardTitle>
             <div className="flex items-center text-stone-600 text-sm">
               <MapPin className="h-3 w-3 mr-1" />
-              {batch.store_name ? 'Store location' : 'Location unknown'}
+              {formatStoreLocation(getStoreDetails(batch.store_id))}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -712,6 +767,11 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                     <SelectItem value="unknown">Unknown</SelectItem>
                   </SelectContent>
                 </Select>
+                {editData.paid_upfront && (
+                  <p className="text-xs text-stone-500 font-mono mt-1">
+                    For upfront payments, status can remain "Active" until store sells out
+                  </p>
+                )}
               </div>
 
               {/* Copies Sold */}
@@ -721,11 +781,21 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                   type="number"
                   min="0"
                   max={Number(editData.copies_placed) || batch.copies_placed}
-                  value={editData.copies_sold}
+                  value={editData.paid_upfront ? editData.copies_placed : editData.copies_sold}
                   onChange={(e) => handleChange("copies_sold", e.target.value)}
-                  className="h-8 bg-white border-stone-300 font-mono text-xs"
+                  className={`font-mono text-xs h-8 ${
+                    editData.paid_upfront 
+                      ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" 
+                      : "bg-white border-stone-300"
+                  }`}
                   placeholder="0"
+                  disabled={editData.paid_upfront}
                 />
+                {editData.paid_upfront && (
+                  <p className="text-xs text-stone-500 font-mono mt-1">
+                    Set to copies placed for upfront payment
+                  </p>
+                )}
               </div>
 
               {/* Payment Status */}
@@ -741,29 +811,60 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                 </div>
               </div>
 
-              {/* Paid Upfront */}
+              {/* Payment Type */}
               <div>
-                <Label className="text-stone-700 font-serif text-xs mb-1 block">Paid Upfront</Label>
-                <div className="flex items-center h-8 bg-white px-2 rounded border border-stone-300">
-                  <Checkbox
-                    checked={editData.paid_upfront}
-                    onCheckedChange={(checked) => handleChange("paid_upfront", checked)}
-                    className="scale-75"
-                  />
-                  <span className="text-xs text-stone-700 font-mono ml-1">Upfront</span>
+                <Label className="text-stone-700 font-serif text-xs mb-1 block">Payment Type</Label>
+                <div className="flex items-center space-x-3 bg-white px-2 py-1 rounded border border-stone-300">
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="radio"
+                      id={`paymentUpfront-${batch.id}`}
+                      name={`paymentType-${batch.id}`}
+                      value="upfront"
+                      checked={editData.paid_upfront === true}
+                      onChange={() => handleChange("paid_upfront", true)}
+                      className="text-orange-500 focus:ring-orange-400 scale-75"
+                    />
+                    <Label htmlFor={`paymentUpfront-${batch.id}`} className="text-xs text-stone-700 font-mono">
+                      Upfront
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="radio"
+                      id={`paymentConsignment-${batch.id}`}
+                      name={`paymentType-${batch.id}`}
+                      value="consignment"
+                      checked={editData.paid_upfront === false}
+                      onChange={() => handleChange("paid_upfront", false)}
+                      className="text-orange-500 focus:ring-orange-400 scale-75"
+                    />
+                    <Label htmlFor={`paymentConsignment-${batch.id}`} className="text-xs text-stone-700 font-mono">
+                      Consignment
+                    </Label>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Next Check-in */}
+            {/* Last Update and Next Check-in */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div>
+                <Label className="text-stone-700 font-serif text-xs mb-1 block">Last Update</Label>
+                <Input
+                  type="date"
+                  value={editData.last_update || ""}
+                  onChange={(e) => handleChange("last_update", e.target.value)}
+                  className="h-8 bg-white border-stone-300 font-mono text-xs [&::-webkit-calendar-picker-indicator]:hidden"
+                />
+              </div>
               <div>
                 <Label className="text-stone-700 font-serif text-xs mb-1 block">Next Check-in</Label>
                 <Input
                   type="date"
                   value={editData.next_checkin}
                   onChange={(e) => handleChange("next_checkin", e.target.value)}
-                  className="h-8 bg-white border-stone-300 font-mono text-xs"
+                  className="h-8 bg-white border-stone-300 font-mono text-xs [&::-webkit-calendar-picker-indicator]:hidden"
                 />
               </div>
             </div>
@@ -794,6 +895,15 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                 <X className="h-3 w-3 mr-1" />
                 Cancel
               </Button>
+              <Button
+                onClick={() => onDelete(batch.id)}
+                size="sm"
+                variant="outline"
+                className="border-red-500 text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700 font-serif bg-transparent"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
             </div>
           </div>
         ) : (
@@ -813,7 +923,7 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                 </span>
               </div>
               <div>
-                <span className="text-stone-500 text-xs font-mono">Next Check: </span>
+                <span className="text-stone-500 text-xs font-mono">Next Check-in: </span>
                 <span className="font-semibold text-stone-800 font-mono">
                   {batch.next_checkin
                     ? new Date(batch.next_checkin).toLocaleDateString("en-US", { month: "short", day: "numeric" })
@@ -823,8 +933,8 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
               <div>
                 <span className="text-stone-500 text-xs font-mono">Last Update: </span>
                 <span className="font-semibold text-stone-800 font-mono">
-                  {batch.lastCheckIn?.date
-                    ? new Date(batch.lastCheckIn.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  {batch.last_update
+                    ? new Date(batch.last_update).toLocaleDateString("en-US", { month: "short", day: "numeric" })
                     : "None"}
                 </span>
               </div>
@@ -839,7 +949,7 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
             )}
 
             {/* Edit button */}
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 onClick={() => setIsEditing(true)}
                 size="sm"
@@ -849,6 +959,15 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
                 <Edit className="h-3 w-3 mr-1" />
                 Update
               </Button>
+              <Button
+                onClick={() => onDelete(batch.id)}
+                size="sm"
+                variant="outline"
+                className="border-red-500 text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700 font-serif bg-transparent"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
             </div>
           </div>
         )}
@@ -857,7 +976,13 @@ function CompactEditableBatchCard({ batch, onSave }: { batch: any; onSave: (id: 
   )
 }
 
-function BatchCard({ batch, isArchived = false }: { batch: any; isArchived?: boolean }) {
+function BatchCard({ batch, isArchived = false, getStoreDetails, formatStoreLocation, onDelete }: { 
+  batch: any; 
+  isArchived?: boolean;
+  getStoreDetails: (storeId: string) => any;
+  formatStoreLocation: (store: any) => string;
+  onDelete: (id: string) => void;
+}) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -931,50 +1056,51 @@ function BatchCard({ batch, isArchived = false }: { batch: any; isArchived?: boo
           </div>
         </div>
 
-        {/* Details */}
-        <div className="space-y-2 text-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <span className="text-stone-600">Date placed:</span>
-            <span className="font-mono text-stone-800">{new Date(batch.date_placed).toLocaleDateString()}</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <span className="text-stone-600">Payment received:</span>
-            <div className="flex items-center gap-2">
-              <Checkbox checked={batch.paid} disabled />
-              <span className={batch.paid ? "text-emerald-600" : "text-amber-600"}>
-                {batch.paid ? "Paid" : "Pending"}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <span className="text-stone-600">Last check-in:</span>
-            <span className="font-mono text-stone-800">
-              {batch.lastCheckIn?.date ? new Date(batch.lastCheckIn.date).toLocaleDateString() : "No check-ins yet"}
-            </span>
-          </div>
+        {/* Delete button for archived batches */}
+        <div className="flex justify-end pt-2">
+          <Button
+            onClick={() => onDelete(batch.id)}
+            size="sm"
+            variant="outline"
+            className="border-red-500 text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700 font-serif bg-transparent"
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Delete
+          </Button>
         </div>
-
-        {/* Last check-in note */}
-        {batch.lastCheckIn?.note && (
-          <div className="bg-slate-50 p-2 rounded border border-slate-100">
-            <div className="text-xs text-stone-600 mb-1">Latest note:</div>
-            <div className="text-sm text-stone-700 italic">"{batch.lastCheckIn.note}"</div>
-          </div>
-        )}
       </CardContent>
     </Card>
   )
 }
 
 export default function ZineDetailPage() {
-  const params = useParams()
   const { user } = useSupabaseUser()
+  const params = useParams()
   const [zine, setZine] = useState<any>(null)
   const [batches, setBatches] = useState<any[]>([])
+  const [stores, setStores] = useState<any[]>([])
+  const [userBatches, setUserBatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [batchToDelete, setBatchToDelete] = useState<any>(null)
+
+  // Function to get store details by store_id
+  const getStoreDetails = (storeId: string) => {
+    return stores.find(store => store.id === storeId)
+  }
+
+  // Function to format store location
+  const formatStoreLocation = (store: any) => {
+    if (!store) return 'Location unknown'
+    
+    const parts = []
+    if (store.city) parts.push(store.city)
+    if (store.state) parts.push(store.state)
+    if (store.country) parts.push(store.country)
+    
+    return parts.length > 0 ? parts.join(', ') : 'Location unknown'
+  }
 
   const fetchZineData = async () => {
     if (!params.id || !user) return
@@ -983,11 +1109,11 @@ export default function ZineDetailPage() {
       setLoading(true)
       setError(null)
 
-      // Fetch zine data
+      // Fetch zine data by permalink
       const { data: zineData, error: zineError } = await supabase
         .from('zines')
         .select('*')
-        .eq('id', params.id)
+        .eq('permalink', params.id)
         .eq('user_id', user.id)
         .single()
 
@@ -1004,20 +1130,31 @@ export default function ZineDetailPage() {
       const { data: batchesData, error: batchesError } = await supabase
         .from('batches')
         .select('*')
-        .eq('zine_id', params.id)
+        .eq('zine_id', zineData.id) // Use the actual zine ID for batches
         .order('date_placed', { ascending: false })
 
       if (batchesError) {
         console.error('Error fetching batches:', batchesError)
         console.error('Error details:', {
-          zineId: params.id,
+          zineId: zineData.id,
           userId: user.id,
           error: batchesError
         })
       }
 
+      // Fetch all stores for reference
+      const { data: storesData, error: storesError } = await supabase
+        .from('stores')
+        .select('*')
+        .order('name')
+
+      if (storesError) {
+        console.error('Error fetching stores:', storesError)
+      }
+
       setZine(zineData)
       setBatches(batchesData || [])
+      setStores(storesData || [])
     } catch (err) {
       console.error('Error fetching zine data:', err)
       setError('Failed to load zine data')
@@ -1032,8 +1169,6 @@ export default function ZineDetailPage() {
 
   const handleBatchSave = async (batchId: string, updates: any) => {
     try {
-      console.log("Saving batch updates:", batchId, updates)
-      
       const { error } = await supabase
         .from('batches')
         .update(updates)
@@ -1042,16 +1177,48 @@ export default function ZineDetailPage() {
 
       if (error) {
         console.error('Error updating batch:', error)
-        alert('Failed to save batch changes. Please try again.')
+        alert('Failed to update batch. Please try again.')
         return
       }
 
-      // Update local state
-      setBatches((prev) => prev.map((batch) => (batch.id === batchId ? { ...batch, ...updates } : batch)))
-      console.log("Batch updated successfully:", batchId, updates)
+      // Refresh data
+      fetchZineData()
+      console.log('Batch updated successfully:', batchId)
     } catch (err) {
-      console.error('Error saving batch:', err)
-      alert('Failed to save batch changes. Please try again.')
+      console.error('Error updating batch:', err)
+      alert('Failed to update batch. Please try again.')
+    }
+  }
+
+  const handleBatchDelete = async (batchId: string) => {
+    setBatchToDelete(batchId)
+    setDeleteModalOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!user || !batchToDelete) return
+
+    try {
+      const { error } = await supabase
+        .from('batches')
+        .delete()
+        .eq('id', batchToDelete)
+        .eq('user_id', user?.id)
+
+      if (error) {
+        console.error('Error deleting batch:', error)
+        alert('Failed to delete batch. Please try again.')
+        return
+      }
+
+      // Refresh data
+      fetchZineData()
+      console.log('Batch deleted successfully:', batchToDelete)
+      setDeleteModalOpen(false)
+      setBatchToDelete(null)
+    } catch (err) {
+      console.error('Error deleting batch:', err)
+      alert('Failed to delete batch. Please try again.')
     }
   }
 
@@ -1172,17 +1339,21 @@ export default function ZineDetailPage() {
               <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm max-w-md mx-auto">
                 <Store className="h-12 w-12 text-stone-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-stone-800 mb-2">No active batches</h3>
-                <p className="text-stone-600 mb-6">This zine isn't stocked anywhere yet. Add your first batch to start tracking sales.</p>
-                <Button className="bg-rose-500 hover:bg-rose-600 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Batch
-                </Button>
+                <p className="text-stone-600">Use the form above to add your first batch and start tracking sales.</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               {activeBatches.map((batch: any) => (
-                <CompactEditableBatchCard key={batch.id} batch={batch} onSave={handleBatchSave} />
+                <CompactEditableBatchCard 
+                  key={batch.id} 
+                  batch={batch} 
+                  onSave={handleBatchSave}
+                  onDelete={handleBatchDelete}
+                  getStoreDetails={getStoreDetails}
+                  formatStoreLocation={formatStoreLocation}
+                  user={user}
+                />
               ))}
             </div>
           )}
@@ -1198,12 +1369,39 @@ export default function ZineDetailPage() {
 
             <div className="space-y-4">
               {batches.filter((batch: any) => batch.status !== 'active').map((batch: any) => (
-                <BatchCard key={batch.id} batch={batch} isArchived={true} />
+                <BatchCard 
+                  key={batch.id} 
+                  batch={batch} 
+                  isArchived={true}
+                  getStoreDetails={getStoreDetails}
+                  formatStoreLocation={formatStoreLocation}
+                  onDelete={handleBatchDelete}
+                />
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this batch? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} className="mr-2">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

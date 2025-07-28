@@ -11,12 +11,17 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useZineData } from "@/hooks/useZineData"
 import { useState } from "react"
 import AddZineModal from "@/components/AddZineModal"
+import { supabase } from "@/lib/supabaseClient"
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useSupabaseUser()
   const { zines, profile, stats, loading: dataLoading, error } = useZineData(user)
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddZineModal, setShowAddZineModal] = useState(false)
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedZine, setSelectedZine] = useState<any>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [zineToDelete, setZineToDelete] = useState<any>(null)
 
   const loading = userLoading || dataLoading
 
@@ -59,6 +64,70 @@ export default function DashboardPage() {
   const handleZineCreated = () => {
     // Refresh the zine data
     window.location.reload()
+  }
+
+  const handleEditZine = (zine: any) => {
+    setSelectedZine(zine)
+    setModalMode('edit')
+    setShowAddZineModal(true)
+  }
+
+  const handleAddNewZine = () => {
+    setSelectedZine(null)
+    setModalMode('create')
+    setShowAddZineModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddZineModal(false)
+    setSelectedZine(null)
+    setModalMode('create')
+  }
+
+  const handleDeleteZine = (zine: any) => {
+    setZineToDelete(zine)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!user || !zineToDelete) return
+
+    try {
+      // Delete all batches first
+      const { error: batchesError } = await supabase
+        .from('batches')
+        .delete()
+        .eq('zine_id', zineToDelete.id)
+        .eq('user_id', user.id)
+
+      if (batchesError) {
+        console.error('Error deleting batches:', batchesError)
+        alert('Failed to delete zine batches')
+        return
+      }
+
+      // Delete the zine
+      const { error: deleteError } = await supabase
+        .from('zines')
+        .delete()
+        .eq('id', zineToDelete.id)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting zine:', deleteError)
+        alert('Failed to delete zine')
+        return
+      }
+
+      // Refresh the page to update the data
+      window.location.reload()
+    } catch (err) {
+      console.error('Error deleting zine:', err)
+      alert('Failed to delete zine. Please try again.')
+    } finally {
+      setShowDeleteConfirm(false)
+      setZineToDelete(null)
+    }
   }
 
   if (loading) {
@@ -122,7 +191,7 @@ export default function DashboardPage() {
               </div>
               <Button 
                 className="bg-rose-500 hover:bg-rose-600 text-white shadow-sm"
-                onClick={() => setShowAddZineModal(true)}
+                onClick={handleAddNewZine}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Zine
@@ -200,7 +269,7 @@ export default function DashboardPage() {
                   {!searchTerm && (
                     <Button 
                       className="bg-rose-500 hover:bg-rose-600 text-white"
-                      onClick={() => setShowAddZineModal(true)}
+                      onClick={handleAddNewZine}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Zine
@@ -269,10 +338,11 @@ export default function DashboardPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit zine</DropdownMenuItem>
-                            <DropdownMenuItem>Add batch</DropdownMenuItem>
-                            <DropdownMenuItem>View analytics</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Archive</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditZine(zine)}>Edit zine</DropdownMenuItem>
+                            <Link href={`/zine/${zine.permalink}`}>
+                              <DropdownMenuItem>Add batch</DropdownMenuItem>
+                            </Link>
+                            <DropdownMenuItem onClick={() => handleDeleteZine(zine)} className="text-red-600">Delete</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -339,26 +409,11 @@ export default function DashboardPage() {
                           )}
                         </div>
 
-                        {/* Progress bar */}
-                        {zineStats.totalCopiesOut > 0 && (
-                          <div className="space-y-1">
-                            <div className="w-full bg-stone-200 rounded-full h-2">
-                              <div
-                                className="bg-rose-400 h-2 rounded-full transition-all"
-                                style={{ width: `${(zineStats.totalCopiesSold / zineStats.totalCopiesOut) * 100}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-stone-500 text-center">
-                              {Math.round((zineStats.totalCopiesSold / zineStats.totalCopiesOut) * 100)}% sold
-                            </div>
-                          </div>
-                        )}
-
-                        <Link href={`/zine/${zine.id}`}>
+                        <Link href={`/zine/${zine.permalink}`}>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
+                            className="w-full mt-2 border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
                           >
                             <Eye className="h-3 w-3 mr-2" />
                             View Details
@@ -378,9 +433,41 @@ export default function DashboardPage() {
       <AddZineModal
         user={user}
         show={showAddZineModal}
-        onClose={() => setShowAddZineModal(false)}
+        onClose={handleCloseModal}
         onSuccess={handleZineCreated}
+        zine={selectedZine}
+        mode={modalMode}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-stone-800 mb-2">Delete Zine</h3>
+            <p className="text-stone-600 mb-4">
+              Are you sure you want to delete "{zineToDelete?.title}"? This will also delete all associated batches and cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  setZineToDelete(null)
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
