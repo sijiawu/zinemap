@@ -53,8 +53,6 @@ export function StoreMap({ stores }: StoreMapProps) {
         
         if (!mapContainer.current) return
 
-        console.log("Initializing map...")
-        
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ.example",

@@ -89,16 +89,9 @@ export default function HomePage() {
                 .eq('id', store.submitted_by)
                 .single()
 
-              console.log(`Fetching user for store ${store.id}:`, {
-                submitted_by: store.submitted_by,
-                userData,
-                userError
-              })
-
               if (userData?.display_name) {
                 user_name = userData.display_name
               } else if (userError) {
-                console.log('Profiles table error, trying auth.users as fallback')
                 // Fallback to auth.users if profiles table fails
                 const { data: authUserData } = await supabase
                   .from('auth.users')
