@@ -150,7 +150,7 @@ export default function HomePage() {
       filtered = filtered.filter(store => 
         store.name.toLowerCase().includes(query) ||
         store.city.toLowerCase().includes(query) ||
-        store.state.toLowerCase().includes(query) ||
+        (store.state && store.state.toLowerCase().includes(query)) ||
         store.country.toLowerCase().includes(query) ||
         store.address.toLowerCase().includes(query)
       )
