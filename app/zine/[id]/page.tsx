@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -38,7 +38,6 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
   const { user } = useSupabaseUser()
   const [isOpen, setIsOpen] = useState(false)
   const [stores, setStores] = useState<any[]>([])
-  const [userBatches, setUserBatches] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     storeId: "",
@@ -53,57 +52,32 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
     notes: "",
   })
 
-  // Fetch all stores from Supabase
+  // Fetch stores only when form opens
   useEffect(() => {
-    const fetchStores = async () => {
-      if (!user) return
-      
-      try {
-        // Fetch all stores from the stores table
-        const { data: allStores, error: storesError } = await supabase
-          .from('stores')
-          .select('*')
-          .order('name')
+    if (isOpen && stores.length === 0) {
+      const fetchStores = async () => {
+        if (!user) return
         
-        if (storesError) {
-          console.error('Error fetching stores:', storesError)
-          return
-        }
-
-        // Fetch user's batches to see which stores they've used
-        const { data: userBatchesData, error: batchesError } = await supabase
-          .from('batches')
-          .select('store_id')
-          .eq('user_id', user.id)
-        
-        if (batchesError) {
-          console.error('Error fetching user batches:', batchesError)
-        }
-
-        // Store user batches for display
-        setUserBatches(userBatchesData || [])
-
-        // Get unique store IDs that user has used
-        const userStoreIds = new Set(userBatchesData?.map((batch: any) => batch.store_id) || [])
-        
-        // Sort stores: user's stores first, then alphabetically
-        const sortedStores = (allStores || []).sort((a, b) => {
-          const aIsUserStore = userStoreIds.has(a.id)
-          const bIsUserStore = userStoreIds.has(b.id)
+        try {
+          const { data: allStores, error: storesError } = await supabase
+            .from('stores')
+            .select('*')
+            .order('name')
           
-          if (aIsUserStore && !bIsUserStore) return -1
-          if (!aIsUserStore && bIsUserStore) return 1
-          return a.name.localeCompare(b.name)
-        })
+          if (storesError) {
+            console.error('Error fetching stores:', storesError)
+            return
+          }
 
-        setStores(sortedStores || [])
-      } catch (err) {
-        console.error('Error fetching stores:', err)
+          setStores(allStores || [])
+        } catch (err) {
+          console.error('Error fetching stores:', err)
+        }
       }
-    }
 
-    fetchStores()
-  }, [user])
+      fetchStores()
+    }
+  }, [isOpen, user, stores.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -243,18 +217,11 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                           </div>
                         ) : (
                           stores.map((store) => {
-                            // Check if user has used this store before
-                            const hasUsedStore = userBatches?.some(batch => batch.store_id === store.id)
                             return (
                               <SelectItem key={store.id} value={store.id}>
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-2">
                                     <span className="font-medium">{store.name}</span>
-                                    {hasUsedStore && (
-                                      <span className="text-xs bg-green-100 text-green-700 px-1 rounded">
-                                        Used
-                                      </span>
-                                    )}
                                   </div>
                                   <span className="text-xs text-stone-500">{store.city}, {store.state}</span>
                                 </div>
@@ -298,7 +265,6 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                       className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono [&::-webkit-calendar-picker-indicator]:hidden"
                       required
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
                   </div>
                 </div>
 
@@ -476,7 +442,6 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                       onChange={(e) => setFormData({ ...formData, nextCheckIn: e.target.value })}
                       className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono [&::-webkit-calendar-picker-indicator]:hidden"
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -1076,7 +1041,6 @@ export default function ZineDetailPage() {
   const [zine, setZine] = useState<any>(null)
   const [batches, setBatches] = useState<any[]>([])
   const [stores, setStores] = useState<any[]>([])
-  const [userBatches, setUserBatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -1100,7 +1064,7 @@ export default function ZineDetailPage() {
   }
 
   const fetchZineData = async () => {
-    if (!params.id || !user) return
+    if (!params.id || !user?.id) return
 
     try {
       setLoading(true)
@@ -1123,20 +1087,15 @@ export default function ZineDetailPage() {
         return
       }
 
-      // Fetch batches for this zine (simplified for now)
+      // Fetch batches for this zine
       const { data: batchesData, error: batchesError } = await supabase
         .from('batches')
         .select('*')
-        .eq('zine_id', zineData.id) // Use the actual zine ID for batches
+        .eq('zine_id', zineData.id)
         .order('date_placed', { ascending: false })
 
       if (batchesError) {
         console.error('Error fetching batches:', batchesError)
-        console.error('Error details:', {
-          zineId: zineData.id,
-          userId: user.id,
-          error: batchesError
-        })
       }
 
       // Fetch all stores for reference
@@ -1161,8 +1120,10 @@ export default function ZineDetailPage() {
   }
 
   useEffect(() => {
-    fetchZineData()
-  }, [params.id, user])
+    if (params.id && user?.id) {
+      fetchZineData()
+    }
+  }, [params.id, user?.id])
 
   const handleBatchSave = async (batchId: string, updates: any) => {
     try {
