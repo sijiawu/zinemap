@@ -474,7 +474,7 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
                       type="date"
                       value={formData.nextCheckIn}
                       onChange={(e) => setFormData({ ...formData, nextCheckIn: e.target.value })}
-                      className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono"
+                      className="bg-white border-stone-300 focus:border-orange-400 focus:ring-orange-200 font-mono [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                     <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
                   </div>
@@ -696,7 +696,7 @@ function CompactEditableBatchCard({ batch, onSave, onDelete, getStoreDetails, fo
                   type="date"
                   value={editData.date_placed}
                   onChange={(e) => handleChange("date_placed", e.target.value)}
-                  className="h-8 bg-white border-stone-300 font-mono text-xs"
+                  className="h-8 bg-white border-stone-300 font-mono text-xs [&::-webkit-calendar-picker-indicator]:hidden"
                 />
               </div>
 
