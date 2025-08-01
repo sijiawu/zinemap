@@ -51,7 +51,7 @@ export interface UserProfile {
   display_name: string | null
 }
 
-export function useZineData(user: User | null) {
+export function useZineData(user: User | null, refreshKey: number = 0) {
   const [zines, setZines] = useState<Zine[]>([])
   const [batches, setBatches] = useState<Batch[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -144,10 +144,6 @@ export function useZineData(user: User | null) {
 
       } catch (err) {
         console.error('Error fetching zine data:', err)
-        console.error('Error details:', {
-          user: user?.id,
-          error: err
-        })
         setError(err instanceof Error ? err.message : 'Failed to fetch zine data')
       } finally {
         setLoading(false)
@@ -155,7 +151,7 @@ export function useZineData(user: User | null) {
     }
 
     fetchZineData()
-  }, [user])
+  }, [user?.id, refreshKey]) // Include refreshKey in dependencies
 
   return { zines, batches, profile, stats, loading, error }
 } 

@@ -15,7 +15,8 @@ import { supabase } from "@/lib/supabaseClient"
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useSupabaseUser()
-  const { zines, profile, stats, loading: dataLoading, error } = useZineData(user)
+  const [refreshKey, setRefreshKey] = useState(0) // Add refresh key to force re-fetch
+  const { zines, profile, stats, loading: dataLoading, error } = useZineData(user, refreshKey)
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddZineModal, setShowAddZineModal] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -70,8 +71,12 @@ export default function DashboardPage() {
   }
 
   const handleZineCreated = () => {
-    // Refresh the zine data
-    window.location.reload()
+    // Trigger a refresh by updating the refresh key
+    setRefreshKey(prev => prev + 1)
+    // Close modal
+    setShowAddZineModal(false)
+    setSelectedZine(null)
+    setModalMode('create')
   }
 
   const handleEditZine = (zine: any) => {
@@ -150,8 +155,11 @@ export default function DashboardPage() {
         return
       }
 
-      // Refresh the page to update the data
-      window.location.reload()
+      // Trigger a refresh by updating the refresh key
+      setRefreshKey(prev => prev + 1)
+      // Close modal
+      setShowDeleteConfirm(false)
+      setZineToDelete(null)
     } catch (err) {
       console.error('Error deleting zine:', err)
       alert('Failed to delete zine. Please try again.')
