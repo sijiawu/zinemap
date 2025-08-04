@@ -697,7 +697,7 @@ export default function StoreDetailPage() {
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex justify-end space-x-4">
+                          <div className="flex flex-col sm:flex-row justify-end gap-4">
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id="editHasStockedHere"
@@ -725,7 +725,7 @@ export default function StoreDetailPage() {
                           <div className="text-red-600 text-sm">{editError}</div>
                         )}
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2">
                           <Button
                             type="button"
                             variant="outline"
@@ -749,8 +749,8 @@ export default function StoreDetailPage() {
                     ) : (
                       // Display note
                       <>
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2 text-sm text-stone-600">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
                             {!note.anonymous && note.user && (
                               <span>{note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}</span>
                             )}
@@ -766,7 +766,7 @@ export default function StoreDetailPage() {
                             )}
                           </div>
                           {user && note.user_id === user.id && (
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 flex-shrink-0">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -832,7 +832,7 @@ export default function StoreDetailPage() {
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="flex justify-end space-x-4">
+                  <div className="flex flex-col sm:flex-row justify-end gap-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hasStockedHere"
@@ -860,7 +860,7 @@ export default function StoreDetailPage() {
                   <div className="text-red-600 text-sm">{noteError}</div>
                 )}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
                   <Button
                     type="button"
                     variant="outline"
