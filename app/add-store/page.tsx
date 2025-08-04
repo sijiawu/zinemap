@@ -374,6 +374,24 @@ export default function AddStorePage() {
         }
       }
 
+      // Insert community note if notes were provided
+      if (formData.notes && formData.notes.trim()) {
+        const { error: noteError } = await supabase
+          .from('community_notes')
+          .insert({
+            store_id: id,
+            user_id: user.id,
+            text: formData.notes.trim(),
+            anonymous: false,
+            has_stocked_here: formData.hasStockedBefore
+          })
+
+        if (noteError) {
+          console.error('Community note insert error:', noteError)
+          // Don't throw here, store was created successfully
+        }
+      }
+
       setIsSubmitted(true)
     } catch (error) {
       console.error('Submission error:', error)
@@ -784,9 +802,9 @@ export default function AddStorePage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <MessageSquare className="h-5 w-5 mr-2 text-rose-500" />
-                Additional Notes
+                Add a Community Note
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">Any helpful tips or special requirements?</p>
+              <p className="text-sm text-stone-600 font-mono">What was it like working with or visiting this place? Got any tips, surprises, or stories?</p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

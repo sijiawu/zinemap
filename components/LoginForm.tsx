@@ -48,7 +48,7 @@ export default function AuthForm() {
         <h2 className="text-2xl font-bold text-stone-800 mb-2">{mode === 'signup' ? 'Sign Up' : 'Log In'}</h2>
         <p className="text-stone-600 text-sm">
         Sign up / log in to contribute, explore, and support indie stores and small press creators.<br />
-          <span className="text-rose-600 font-semibold">Zine tracking is coming soon!</span>
+          <span className="text-rose-600 font-semibold">Zine tracking features are now available!</span>
         </p>
       </div>
       <div className="flex justify-center mb-6">
