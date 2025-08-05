@@ -178,9 +178,12 @@ export default function AddStorePage() {
     // Use the short_code if available (abbreviation), otherwise use the full text
     let state = ''
     if (stateContext) {
-      // Mapbox provides short_code for administrative regions in many countries
-      if (stateContext.short_code) {
-        // Extract the abbreviation part (after the country code)
+      // For French addresses, prefer the full region name over department codes
+      if (suggestion.fullText && suggestion.fullText.includes('France')) {
+        // Use the full text name instead of short code for French regions
+        state = stateContext.text
+      } else if (stateContext.short_code) {
+        // For other countries, use the abbreviation
         const shortCodeParts = stateContext.short_code.split('-')
         if (shortCodeParts.length >= 2) {
           state = shortCodeParts[1] // Extract "IL" from "US-IL", "ON" from "CA-ON", etc.
@@ -628,7 +631,7 @@ export default function AddStorePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-stone-700 font-serif font-medium">
-                    State/Province
+                    State/Province/Region
                   </Label>
                   <Input
                     id="state"
