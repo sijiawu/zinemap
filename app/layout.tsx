@@ -15,11 +15,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Plausible Analytics */}
+        <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.outbound-links.js"></script>        {/* Umami Analytics */}
+        {/* {process.env.NEXT_PUBLIC_UMAMI_URL && process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+          <script
+            defer
+            src={`${process.env.NEXT_PUBLIC_UMAMI_URL}/script.js`}
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          ></script>
+        )} */}
+      </head>
       <body>
         <ClientRoot>{children}</ClientRoot>
       </body>
