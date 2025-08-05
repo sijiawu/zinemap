@@ -164,9 +164,9 @@ export default function AddStorePage() {
 
   // Handle address selection
   const handleAddressSelect = (suggestion: any) => {
-    // Extract city from context
+    // Extract city from context - simple approach
     const cityContext = suggestion.context?.find((ctx: any) => 
-      ctx.id.startsWith('place.') || ctx.id.startsWith('locality.')
+      ctx.id.startsWith('place.') && !ctx.text.includes('arrondissement')
     )
     const city = cityContext ? cityContext.text : ''
 
