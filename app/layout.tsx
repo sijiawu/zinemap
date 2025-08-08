@@ -3,8 +3,30 @@ import './globals.css'
 import ClientRoot from '@/components/ClientRoot'
 
 export const metadata: Metadata = {
-  title: 'ZineMap',
-  description: 'Find and share zine stores around the world',
+  title: "ZineMap - Drop Your Zines, Find Your People",
+  description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+  openGraph: {
+    title: "ZineMap - Drop Your Zines, Find Your People",
+    description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+    url: "https://zinemap.com",
+    siteName: "ZineMap",
+    images: [
+      {
+        url: "/preview-image.png", // Update this path to your actual image
+        width: 1010,
+        height: 1034,
+        alt: "ZineMap - Drop Your Zines, Find Your People",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZineMap - Drop Your Zines, Find Your People",
+    description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+    images: ["/preview-image.png"], // Update this path to your actual image
+  },
   generator: 'v0.dev',
   icons: {
     icon: [
