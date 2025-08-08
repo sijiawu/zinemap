@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/preview-image.png", // Update this path to your actual image
-        width: 1010,
-        height: 1034,
+        width: 1200,
+        height: 630,
         alt: "ZineMap - Drop Your Zines, Find Your People",
       },
     ],
