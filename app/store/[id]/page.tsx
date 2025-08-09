@@ -26,6 +26,7 @@ interface Store {
   has_stocked_before: boolean
   submitted_by: string
   created_at: string
+  updated_at: string
   permalink?: string
   latitude?: number
   longitude?: number
@@ -586,7 +587,7 @@ export default function StoreDetailPage() {
                 {isOwner ? (
                   <>
                     <Store className="h-3 w-3 mr-1" />
-                    Added by owner
+                    Added by shop staff
                   </>
                 ) : (
                   <>
@@ -606,7 +607,7 @@ export default function StoreDetailPage() {
 
             <div className="flex justify-center items-center gap-6 text-sm text-stone-500">
               <span>
-                Added {new Date(store.created_at).toLocaleDateString()}
+                Last updated {new Date(store.updated_at || store.created_at).toLocaleDateString()}
                 {/* {storeSubmitter && (
                   <span>
                     {' by '}
