@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2 } from "lucide-react"
+import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2, Heart, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -88,6 +88,10 @@ export default function StoreDetailPage() {
   
   // Delete note state
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
+  
+  // Store submitter state
+  const [storeSubmitter, setStoreSubmitter] = useState<{ display_name: string | null; email: string } | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
     const fetchStore = async () => {
@@ -125,6 +129,24 @@ export default function StoreDetailPage() {
           console.log('Store ID from database:', storeData.id)
           console.log('Store ID type:', typeof storeData.id)
           setStore(storeData)
+
+          // Fetch store submitter's information
+          if (storeData.submitted_by) {
+            const { data: submitterData, error: submitterError } = await supabase
+              .from('profiles')
+              .select('display_name, email')
+              .eq('id', storeData.submitted_by)
+              .single()
+
+            if (!submitterError && submitterData) {
+              setStoreSubmitter(submitterData)
+              
+              // Check if submitter is the owner (email matches store email)
+              if (storeData.email && submitterData.email === storeData.email) {
+                setIsOwner(true)
+              }
+            }
+          }
 
           // Fetch store tags
           const { data: tagsData, error: tagsError } = await supabase
@@ -558,11 +580,20 @@ export default function StoreDetailPage() {
         {/* Store header */}
         <div className="text-center space-y-4">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200">
-            <div className="flex justify-center items-center gap-4 flex-wrap mb-4">
-              <h1 className="text-4xl md:text-5xl font-bold text-stone-800 tracking-tight">{store.name}</h1>
+            <div className="flex flex-col items-center gap-4 mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-stone-800 tracking-tight">{store.name}</h2>
               <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Community Submitted
+                {isOwner ? (
+                  <>
+                    <Store className="h-3 w-3 mr-1" />
+                    Added by owner
+                  </>
+                ) : (
+                  <>
+                    <Heart className="h-3 w-3 mr-1" />
+                    Community submitted
+                  </>
+                )}
               </Badge>
             </div>
 
@@ -574,7 +605,17 @@ export default function StoreDetailPage() {
             </div>
 
             <div className="flex justify-center items-center gap-6 text-sm text-stone-500">
-              <span>Added {new Date(store.created_at).toLocaleDateString()}</span>
+              <span>
+                Added {new Date(store.created_at).toLocaleDateString()}
+                {/* {storeSubmitter && (
+                  <span>
+                    {' by '}
+                    <span className="font-medium">
+                      {storeSubmitter.display_name || storeSubmitter.email?.split('@')[0] || 'Anonymous'}
+                    </span>
+                  </span>
+                )} */}
+              </span>
             </div>
           </div>
         </div>

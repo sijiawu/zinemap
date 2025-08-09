@@ -276,7 +276,9 @@ export default function HomePage() {
                     </CardHeader>
 
                     <CardContent className="pt-0">
-                      <p className="text-stone-600 text-sm mb-4 leading-relaxed">{store.notes}</p>
+                      <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
+                        {store.notes}
+                      </p>
                       {store.user_name && (
                         <p className="text-xs text-gray-500 mb-3">
                           Added by {store.user_name}
