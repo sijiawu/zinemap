@@ -601,7 +601,7 @@ export default function StoreDetailPage() {
             <div className="flex justify-center items-center gap-2 text-xl text-stone-600 mb-3">
               <MapPin className="h-5 w-5 text-rose-500" />
               <span>
-                {store.city}, {store.state}, {store.country}
+                {store.city}{store.state && `, ${store.state}`}, {store.country}
               </span>
             </div>
 
@@ -633,7 +633,7 @@ export default function StoreDetailPage() {
             <CardContent className="space-y-2">
               <div className="text-stone-700 leading-relaxed bg-stone-50 p-4 rounded-lg">
                 <p className="font-medium">{store.address}</p>
-                <p className="text-stone-500">{store.city}, {store.state}, {store.country}</p>
+                <p className="text-stone-500">{store.city}{store.state && `, ${store.state}`}, {store.country}</p>
               </div>
             </CardContent>
           </Card>

@@ -254,7 +254,7 @@ export default function HomePage() {
                           <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{store.name}</CardTitle>
                           <div className="flex items-center text-stone-600 text-sm mb-2">
                             <MapPin className="h-4 w-4 mr-1" />
-                            {store.city}, {store.state}, {store.country}
+                            {store.city}{store.state && `, ${store.state}`}, {store.country}
                           </div>
                         </div>
                       </div>
