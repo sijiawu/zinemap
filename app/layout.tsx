@@ -1,6 +1,6 @@
-import type { Metadata } from 'next'
 import './globals.css'
 import ClientRoot from '@/components/ClientRoot'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: "ZineMap - Drop Your Zines, Find Your People",
@@ -41,17 +41,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
-        {/* Plausible Analytics */}
-        <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.outbound-links.js"></script>        {/* Umami Analytics */}
-        {/* {process.env.NEXT_PUBLIC_UMAMI_URL && process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-          <script
-            defer
-            src={`${process.env.NEXT_PUBLIC_UMAMI_URL}/script.js`}
-            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-          ></script>
-        )} */}
+        <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.js"></script>
+        <script async defer src="https://analytics.umami.is/script.js" data-website-id="a0c0c0c0-c0c0-c0c0-c0c0-c0c0c0c0c0c0"></script>
       </head>
       <body>
         <ClientRoot>{children}</ClientRoot>

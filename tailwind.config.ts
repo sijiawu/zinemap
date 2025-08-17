@@ -22,6 +22,7 @@ const config: Config = {
       fontFamily: {
         serif: ["Georgia", "Cambria", "Times New Roman", "Times", "serif"],
         mono: ["Monaco", "Menlo", "Ubuntu Mono", "monospace"],
+        gloria: ["Gloria Hallelujah", "cursive"],
       },
       colors: {
         border: "hsl(var(--border))",

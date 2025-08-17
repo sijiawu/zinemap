@@ -165,7 +165,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">ZineMap</h1>
+          <h1 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight italic">zinemap</h1>
           <div className="flex justify-center items-center mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
             <div className="mx-3 text-rose-500">
@@ -177,7 +177,7 @@ export default function HomePage() {
             </div>
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
           </div>
-          <p className="text-lg md:text-xl text-stone-600 italic">Drop your zines. Find your people.</p>
+          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Drop your zines. Find your people.</p>
         </div>
       </header>
 
@@ -207,7 +207,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Store List */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-stone-800 mb-4">Zine-Friendly Stores</h2>
+            <h2 className="text-2xl font-bold text-stone-800 mb-4 font-gloria">Zine-Friendly Stores</h2>
 
             <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
               {filteredStores.length === 0 ? (
@@ -225,7 +225,7 @@ export default function HomePage() {
                     </p>
                     {stores.length === 0 ? (
                       <Link href="/add-store">
-                        <Button className="bg-rose-500 hover:bg-rose-600 text-white">
+                        <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
                           Add First Store
                         </Button>
                       </Link>
@@ -303,7 +303,7 @@ export default function HomePage() {
 
           {/* Interactive Map */}
           <div className="lg:sticky lg:top-6">
-            <h2 className="text-2xl font-bold text-stone-800 mb-4">Store Locations</h2>
+            <h2 className="text-2xl font-bold text-stone-800 mb-4 font-gloria">Store Locations</h2>
 
             <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
@@ -313,7 +313,7 @@ export default function HomePage() {
             {/* Add Store button under the map */}
             <div className="mt-8 flex justify-center">
               <Link href="/add-store">
-                <Button className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-6 py-3 mt-4 text-lg rounded-lg shadow-md transition-colors max-w-xs mx-auto">
+                <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria px-6 py-3 mt-4 text-lg rounded-lg shadow-md transition-colors max-w-xs mx-auto">
                   Add a Store
                 </Button>
               </Link>
@@ -325,8 +325,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="mt-16 bg-white border-t border-stone-200">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <p className="text-stone-600 text-sm">
-            © 2025 ZineMap. created by <a href="https://ko-fi.com/cjwucomics" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops that carry us!
+          <p className="text-stone-600 text-sm font-gloria italic">
+            © 2025 zinemap. created by <a href="https://ko-fi.com/cjwucomics" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops that carry us!
           </p>
         </div>
       </footer>
