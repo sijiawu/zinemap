@@ -786,109 +786,125 @@ export default function LibraryDetailPage() {
               </div>
             )}
 
-            {/* Add Note Form */}
-            {!userHasNote && user && (
-              <div className="bg-white p-4 rounded-lg border border-blue-200">
-                {noteSubmitted ? (
-                  <div className="text-center py-4">
-                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                    <p className="text-green-600 font-medium">Thank you for sharing your experience!</p>
+
+
+            {/* No notes message */}
+            {notes.length === 0 && !loading && (
+              <div className="text-center py-4 mb-6">
+                <p className="text-stone-500 text-sm">No community notes yet. Be the first to share your experience!</p>
+              </div>
+            )}
+
+            {/* Note Submission */}
+            {noteSubmitted ? (
+              <div className="bg-blue-100 p-4 rounded-lg border border-blue-200">
+                <p className="text-blue-700 text-sm font-medium">Thank you for sharing your experience!</p>
+              </div>
+            ) : userHasNote ? (
+              <div className="bg-stone-100 p-4 rounded-lg border border-stone-200">
+                <p className="text-stone-600 text-sm">You've already added a community note for this place.
+                Feel free to edit it if anything's changed.</p>
+              </div>
+            ) : showNoteForm ? (
+              <form onSubmit={handleNoteSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="noteText" className="text-sm font-medium text-stone-700">
+                    Your Experience *
+                  </Label>
+                  <Textarea
+                    id="noteText"
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="Tell us what it was like working with or visiting this library, or anything else you think others should know."
+                    className="mt-1 min-h-[120px]"
+                    maxLength={1000}
+                    required
+                  />
+                  <div className="text-xs text-stone-500 text-right">
+                    {noteText.length}/1000 characters
                   </div>
-                ) : showNoteForm ? (
-                  <form onSubmit={handleNoteSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="noteText" className="text-sm font-medium text-stone-700">
-                        Your Experience *
-                      </Label>
-                      <Textarea
-                        id="noteText"
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="Share your experience at this library..."
-                        className="mt-1 min-h-[120px]"
-                        maxLength={1000}
-                        required
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row justify-end gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="hasVisitedHere"
+                        checked={hasVisitedHere}
+                        onCheckedChange={(checked) => setHasVisitedHere(checked as boolean)}
                       />
-                      <div className="text-xs text-stone-500 text-right">
-                        {noteText.length}/1000 characters
-                      </div>
+                      <Label htmlFor="hasVisitedHere" className="text-sm text-stone-600">
+                        I have visited this library
+                      </Label>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex flex-col sm:flex-row justify-end gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="hasVisitedHere"
-                            checked={hasVisitedHere}
-                            onCheckedChange={(checked) => setHasVisitedHere(checked as boolean)}
-                          />
-                          <Label htmlFor="hasVisitedHere" className="text-sm text-stone-600">
-                            I have visited this library
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="isAnonymous"
-                            checked={isAnonymous}
-                            onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-                          />
-                          <Label htmlFor="isAnonymous" className="text-sm text-stone-600">
-                            Submit anonymously
-                          </Label>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isAnonymous"
+                        checked={isAnonymous}
+                        onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                      />
+                      <Label htmlFor="isAnonymous" className="text-sm text-stone-600">
+                        Submit anonymously
+                      </Label>
                     </div>
-
-                    {noteError && (
-                      <div className="text-red-600 text-sm">{noteError}</div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowNoteForm(false)}
-                        className="border-stone-300 text-stone-700 hover:bg-stone-50"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        size="sm"
-                        disabled={!noteText.trim()}
-                        className="bg-blue-500 hover:bg-blue-600 text-white"
-                      >
-                        Submit Note
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="text-center py-4">
-                    <Button
-                      onClick={() => setShowNoteForm(true)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Share Your Experience
-                    </Button>
                   </div>
+                </div>
+
+                {noteError && (
+                  <div className="text-red-600 text-sm">{noteError}</div>
+                )}
+
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowNoteForm(false)
+                      setNoteText("")
+                      setIsAnonymous(false)
+                      setHasVisitedHere(false)
+                      setNoteError(null)
+                    }}
+                    className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Submit
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center">
+                {user ? (
+                  <Button
+                    onClick={() => setShowNoteForm(true)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Share Your Experience
+                  </Button>
+                ) : (
+                  <Link href="/login">
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Sign in to Share Your Experience
+                    </Button>
+                  </Link>
                 )}
               </div>
             )}
 
-            {!user && (
-              <div className="text-center py-4">
-                <p className="text-stone-600 mb-2">Want to share your experience?</p>
-                <Link href="/login">
-                  <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
-                    Sign in to add a note
-                  </Button>
-                </Link>
-              </div>
-            )}
+
           </CardContent>
         </Card>
+
+
 
         {/* Feedback Section */}
         <div className="text-center py-8">
@@ -925,7 +941,7 @@ export default function LibraryDetailPage() {
                 <textarea
                   className="w-full border border-stone-300 rounded p-2 text-sm min-h-[120px]"
                   rows={6}
-                  placeholder="Share your experience at this library, or let us know what's outdated, incorrect, or missing..."
+                  placeholder="Suggest a new tag for this library, or let us know what's outdated, incorrect, or missing..."
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
                   required

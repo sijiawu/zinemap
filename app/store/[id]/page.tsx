@@ -967,7 +967,7 @@ export default function StoreDetailPage() {
                 <textarea
                   className="w-full border border-stone-300 rounded p-2 text-sm min-h-[120px]"
                   rows={6}
-                  placeholder="Share your experience at this store, or let us know what's outdated, incorrect, or missing..."
+                  placeholder="Suggest a new tag for this store, or let us know what's outdated, incorrect, or missing..."
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
                   required
