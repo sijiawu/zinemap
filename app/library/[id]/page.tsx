@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2, Heart, Store } from "lucide-react"
+import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2, Heart, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
-interface Store {
+interface Library {
   id: string
   name: string
   state: string
@@ -23,7 +23,7 @@ interface Store {
   email?: string
   website?: string
   notes?: string
-  has_stocked_before: boolean
+  has_visited_before: boolean
   submitted_by: string
   created_at: string
   updated_at: string
@@ -32,9 +32,9 @@ interface Store {
   longitude?: number
 }
 
-interface StoreTag {
+interface LibraryTag {
   id: string
-  store_id: string
+  library_id: string
   tag_id: string
   tag: {
     id: string
@@ -45,7 +45,7 @@ interface StoreTag {
 
 interface CommunityNote {
   id: string
-  store_id: string
+  library_id: string
   user_id: string | null
   text: string
   anonymous: boolean
@@ -57,11 +57,11 @@ interface CommunityNote {
   }
 }
 
-export default function StoreDetailPage() {
+export default function LibraryDetailPage() {
   const params = useParams()
   const { user } = useSupabaseUser()
-  const [store, setStore] = useState<Store | null>(null)
-  const [storeTags, setStoreTags] = useState<StoreTag[]>([])
+  const [library, setLibrary] = useState<Library | null>(null)
+  const [libraryTags, setLibraryTags] = useState<LibraryTag[]>([])
   const [notes, setNotes] = useState<CommunityNote[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +74,7 @@ export default function StoreDetailPage() {
   const [showNoteForm, setShowNoteForm] = useState(false)
   const [noteText, setNoteText] = useState("")
   const [isAnonymous, setIsAnonymous] = useState(false)
-  const [hasStockedHere, setHasStockedHere] = useState(false)
+  const [hasVisitedHere, setHasVisitedHere] = useState(false)
   const [noteError, setNoteError] = useState<string | null>(null)
   const [noteSubmitted, setNoteSubmitted] = useState(false)
   const [userHasNote, setUserHasNote] = useState(false)
@@ -83,103 +83,103 @@ export default function StoreDetailPage() {
   const [editingNote, setEditingNote] = useState<CommunityNote | null>(null)
   const [editText, setEditText] = useState("")
   const [editAnonymous, setEditAnonymous] = useState(false)
-  const [editHasStockedHere, setEditHasStockedHere] = useState(false)
+  const [editHasVisitedHere, setEditHasVisitedHere] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   
   // Delete note state
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
   
-  // Store submitter state
-  const [storeSubmitter, setStoreSubmitter] = useState<{ display_name: string | null; email: string } | null>(null)
+  // Library submitter state
+  const [librarySubmitter, setLibrarySubmitter] = useState<{ display_name: string | null; email: string } | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
-    const fetchStore = async () => {
+    const fetchLibrary = async () => {
       if (!params.id) return
 
       try {
         setLoading(true)
         setError(null)
 
-        // First try to find by permalink (approved stores only)
-        let { data: storeData, error: storeError } = await supabase
-          .from('stores')
+        // First try to find by permalink (approved libraries only)
+        let { data: libraryData, error: libraryError } = await supabase
+          .from('libraries')
           .select('*')
           .eq('permalink', params.id)
           .eq('approved', true)
           .single()
 
-        // If not found by permalink, try by ID (approved stores only)
-        if (!storeData && storeError) {
-          const { data: storeById, error: storeByIdError } = await supabase
-            .from('stores')
+        // If not found by permalink, try by ID (approved libraries only)
+        if (!libraryData && libraryError) {
+          const { data: libraryById, error: libraryByIdError } = await supabase
+            .from('libraries')
             .select('*')
             .eq('id', params.id)
             .eq('approved', true)
             .single()
 
-          if (storeByIdError) {
-            throw new Error('Store not found')
+          if (libraryByIdError) {
+            throw new Error('Library not found')
           }
-          storeData = storeById
+          libraryData = libraryById
         }
 
-        if (storeData) {
-          setStore(storeData)
+        if (libraryData) {
+          setLibrary(libraryData)
 
-          // Fetch store submitter's information
-          if (storeData.submitted_by) {
+          // Fetch library submitter's information
+          if (libraryData.submitted_by) {
             const { data: submitterData, error: submitterError } = await supabase
               .from('profiles')
               .select('display_name, email')
-              .eq('id', storeData.submitted_by)
+              .eq('id', libraryData.submitted_by)
               .single()
-
+            
             if (!submitterError && submitterData) {
-              setStoreSubmitter(submitterData)
+              setLibrarySubmitter(submitterData)
               
-              // Check if submitter is the owner (email matches store email)
-              if (storeData.email && submitterData.email === storeData.email) {
+              // Check if submitter is the owner (email matches library email)
+              if (libraryData.email && submitterData.email === libraryData.email) {
                 setIsOwner(true)
               }
             }
           }
 
-          // Fetch store tags
+          // Fetch library tags
           const { data: tagsData, error: tagsError } = await supabase
-            .from('store_tags')
+            .from('library_tags')
             .select(`
               id,
-              store_id,
+              library_id,
               tag_id,
               tags!inner(id, label, category)
             `)
-            .eq('store_id', storeData.id)
+            .eq('library_id', libraryData.id)
 
           if (!tagsError && tagsData) {
             // Transform the data to match our interface
             const transformedTags = tagsData.map((item: any) => ({
               id: item.id,
-              store_id: item.store_id,
+              library_id: item.library_id,
               tag_id: item.tag_id,
               tag: item.tags
             }))
-            setStoreTags(transformedTags)
+            setLibraryTags(transformedTags)
           }
 
-          // Fetch store notes
+          // Fetch library notes
           const { data: notesData, error: notesError } = await supabase
             .from('community_notes')
             .select(`
               id,
-              store_id,
+              library_id,
               user_id,
               text,
               anonymous,
               has_stocked_here,
               submitted_at
             `)
-            .eq('store_id', storeData.id)
+            .eq('library_id', libraryData.id)
             .order('submitted_at', { ascending: false })
 
 
@@ -213,7 +213,7 @@ export default function StoreDetailPage() {
             
             const transformedNotes = notesData.map((note: any) => ({
               id: note.id,
-              store_id: note.store_id,
+              library_id: note.library_id,
               user_id: note.user_id,
               text: note.text,
               anonymous: note.anonymous,
@@ -230,7 +230,7 @@ export default function StoreDetailPage() {
             const { data: userNote } = await supabase
               .from('community_notes')
               .select('id')
-              .eq('store_id', storeData.id)
+              .eq('library_id', libraryData.id)
               .eq('user_id', user.id)
               .single()
 
@@ -238,14 +238,14 @@ export default function StoreDetailPage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching store:', error)
-        setError('Store not found')
+        console.error('Error fetching library:', error)
+        setError('Library not found')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchStore()
+    fetchLibrary()
   }, [params.id, user?.id])
 
   const handleNoteSubmit = async (e: React.FormEvent) => {
@@ -258,7 +258,12 @@ export default function StoreDetailPage() {
       return
     }
 
-    if (!store) {
+    if (!library) {
+      return
+    }
+
+    if (!user) {
+      setNoteError('You must be logged in to submit a note')
       return
     }
 
@@ -266,11 +271,12 @@ export default function StoreDetailPage() {
       const { error } = await supabase
         .from('community_notes')
         .insert({
-          store_id: store.id,
+          library_id: library.id,
+          store_id: null,
           user_id: user?.id || null,
           text: noteText.trim(),
           anonymous: isAnonymous,
-          has_stocked_here: hasStockedHere
+          has_stocked_here: hasVisitedHere,
         })
 
       if (error) {
@@ -282,13 +288,14 @@ export default function StoreDetailPage() {
           hint: error.hint
         })
         console.error('Submission data:', {
-          store_id: store.id,
+          library_id: library.id,
+          store_id: null,
           user_id: user?.id || null,
           text: noteText.trim(),
           anonymous: isAnonymous,
-          has_stocked_here: hasStockedHere
+          has_stocked_here: hasVisitedHere,
         })
-        setNoteError('Failed to submit note. Please try again.')
+        setNoteError(`Failed to submit note: ${error.message}`)
         return
       }
 
@@ -296,7 +303,7 @@ export default function StoreDetailPage() {
       setShowNoteForm(false)
       setNoteText("")
       setIsAnonymous(false)
-      setHasStockedHere(false)
+      setHasVisitedHere(false)
       setUserHasNote(true)
 
       // Refresh notes
@@ -304,14 +311,14 @@ export default function StoreDetailPage() {
         .from('community_notes')
         .select(`
           id,
-          store_id,
+          library_id,
           user_id,
           text,
           anonymous,
           has_stocked_here,
           submitted_at
         `)
-        .eq('store_id', store.id)
+        .eq('library_id', library.id)
         .order('submitted_at', { ascending: false })
 
       if (notesData) {
@@ -337,7 +344,7 @@ export default function StoreDetailPage() {
         
         const transformedNotes = notesData.map((note: any) => ({
           id: note.id,
-          store_id: note.store_id,
+          library_id: note.library_id,
           user_id: note.user_id,
           text: note.text,
           anonymous: note.anonymous,
@@ -356,11 +363,11 @@ export default function StoreDetailPage() {
         errorStack: err instanceof Error ? err.stack : 'No stack trace'
       })
       console.error('Submission data at time of error:', {
-        store_id: store?.id,
+        library_id: library?.id,
         user_id: user?.id || null,
         text: noteText.trim(),
         anonymous: isAnonymous,
-        has_stocked_here: hasStockedHere
+        has_stocked_here: hasVisitedHere
       })
       setNoteError('Failed to submit note. Please try again.')
     }
@@ -370,7 +377,7 @@ export default function StoreDetailPage() {
     setEditingNote(note)
     setEditText(note.text)
     setEditAnonymous(note.anonymous)
-    setEditHasStockedHere(note.has_stocked_here)
+    setEditHasVisitedHere(note.has_stocked_here)
     setEditError(null)
   }
 
@@ -379,7 +386,7 @@ export default function StoreDetailPage() {
     setEditError(null)
 
     if (!editingNote || !editText.trim()) {
-      setEditError('Please provide your note text')
+      setEditError('Please provide note text')
       return
     }
 
@@ -389,7 +396,7 @@ export default function StoreDetailPage() {
         .update({
           text: editText.trim(),
           anonymous: editAnonymous,
-          has_stocked_here: editHasStockedHere
+          has_stocked_here: editHasVisitedHere
         })
         .eq('id', editingNote.id)
         .eq('user_id', user?.id)
@@ -400,60 +407,18 @@ export default function StoreDetailPage() {
         return
       }
 
-      // Refresh notes
-      const { data: notesData } = await supabase
-        .from('community_notes')
-        .select(`
-          id,
-          store_id,
-          user_id,
-          text,
-          anonymous,
-          has_stocked_here,
-          submitted_at
-        `)
-        .eq('store_id', store?.id)
-        .order('submitted_at', { ascending: false })
-
-      if (notesData) {
-        // Fetch user profiles for notes that have user_id
-        const userIds = notesData
-          .filter((note: any) => note.user_id && !note.anonymous)
-          .map((note: any) => note.user_id)
-        
-        let userProfiles: any = {}
-        if (userIds.length > 0) {
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, display_name, email')
-            .in('id', userIds)
-          
-          if (profilesData) {
-            userProfiles = profilesData.reduce((acc: any, profile: any) => {
-              acc[profile.id] = profile
-              return acc
-            }, {})
-          }
-        }
-        
-        const transformedNotes = notesData.map((note: any) => ({
-          id: note.id,
-          store_id: note.store_id,
-          user_id: note.user_id,
-          text: note.text,
-          anonymous: note.anonymous,
-          has_stocked_here: note.has_stocked_here || false,
-          submitted_at: note.submitted_at,
-          user: note.user_id && !note.anonymous ? userProfiles[note.user_id] : null
-        }))
-        setNotes(transformedNotes)
-      }
+      // Update local state
+      setNotes(prev => prev.map(note => 
+        note.id === editingNote.id 
+          ? { ...note, text: editText.trim(), anonymous: editAnonymous, has_stocked_here: editHasVisitedHere }
+          : note
+      ))
 
       // Reset edit state
       setEditingNote(null)
       setEditText("")
       setEditAnonymous(false)
-      setEditHasStockedHere(false)
+      setEditHasVisitedHere(false)
     } catch (err) {
       console.error('Error updating note:', err)
       setEditError('Failed to update note. Please try again.')
@@ -464,7 +429,7 @@ export default function StoreDetailPage() {
     setEditingNote(null)
     setEditText("")
     setEditAnonymous(false)
-    setEditHasStockedHere(false)
+    setEditHasVisitedHere(false)
     setEditError(null)
   }
 
@@ -508,23 +473,23 @@ export default function StoreDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading store...</div>
+        <div className="text-stone-500 text-lg">Loading library...</div>
       </div>
     )
   }
 
-  if (error || !store) {
+  if (error || !library) {
     return (
       <div className="min-h-screen bg-stone-50 font-serif">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 mx-auto mb-4 text-stone-400" />
-            <h1 className="font-gloria text-2xl font-bold text-stone-800 mb-2">Store Not Found</h1>
-            <p className="text-stone-600 mb-6">The store you're looking for doesn't exist or has been removed.</p>
+            <h1 className="font-gloria text-2xl font-bold text-stone-800 mb-4">Library Not Found</h1>
+            <p className="text-stone-600 mb-6">The library you're looking for doesn't exist or has been removed.</p>
             <Link href="/">
-              <Button className="bg-rose-500 hover:bg-rose-600 text-white">
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Map
+                Back to map
               </Button>
             </Link>
           </div>
@@ -534,14 +499,13 @@ export default function StoreDetailPage() {
   }
 
   // Group tags by category
-  const tagsByCategory = storeTags.reduce((acc, storeTag) => {
-    const category = storeTag.tag.category
-    if (!acc[category]) {
-      acc[category] = []
+  const tagsByCategory = libraryTags.reduce((acc, tag) => {
+    if (!acc[tag.tag.category]) {
+      acc[tag.tag.category] = []
     }
-    acc[category].push(storeTag.tag)
+    acc[tag.tag.category].push(tag)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {} as Record<string, LibraryTag[]>)
 
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
@@ -559,16 +523,16 @@ export default function StoreDetailPage() {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Store header */}
+        {/* Library header */}
         <div className="text-center space-y-4">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200">
             <div className="flex flex-col items-center gap-4 mb-4">
-              <h2 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 tracking-tight">{store.name}</h2>
-              <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
+              <h2 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 tracking-tight">{library.name}</h2>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                 {isOwner ? (
                   <>
-                    <Store className="h-3 w-3 mr-1" />
-                    Added by shop staff
+                    <BookOpen className="h-3 w-3 mr-1" />
+                    Added by library staff
                   </>
                 ) : (
                   <>
@@ -580,20 +544,20 @@ export default function StoreDetailPage() {
             </div>
 
             <div className="flex justify-center items-center gap-2 text-xl text-stone-600 mb-3">
-              <MapPin className="h-5 w-5 text-rose-500" />
+              <MapPin className="h-5 w-5 text-blue-500" />
               <span>
-                {store.city}{store.state && `, ${store.state}`}, {store.country}
+                {library.city}{library.state && `, ${library.state}`}, {library.country}
               </span>
             </div>
 
             <div className="flex justify-center items-center gap-6 text-sm text-stone-500">
               <span>
-                Last updated {new Date(store.updated_at || store.created_at).toLocaleDateString()}
-                {/* {storeSubmitter && (
+                Last updated {new Date(library.updated_at || library.created_at).toLocaleDateString()}
+                {/* {librarySubmitter && (
                   <span>
                     {' by '}
                     <span className="font-medium">
-                      {storeSubmitter.display_name || storeSubmitter.email?.split('@')[0] || 'Anonymous'}
+                      {librarySubmitter.display_name || librarySubmitter.email?.split('@')[0] || 'Anonymous'}
                     </span>
                   </span>
                 )} */}
@@ -607,14 +571,14 @@ export default function StoreDetailPage() {
           <Card className="bg-white border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-lg">
-                <MapPin className="h-5 w-5 mr-2 text-rose-500" />
+                <MapPin className="h-5 w-5 mr-2 text-blue-500" />
                 Address
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="text-stone-700 leading-relaxed bg-stone-50 p-4 rounded-lg">
-                <p className="font-medium">{store.address}</p>
-                <p className="text-stone-500">{store.city}{store.state && `, ${store.state}`}, {store.country}</p>
+                <p className="font-medium">{library.address}</p>
+                <p className="text-stone-500">{library.city}{library.state && `, ${library.state}`}, {library.country}</p>
               </div>
             </CardContent>
           </Card>
@@ -625,31 +589,31 @@ export default function StoreDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-stone-50 p-4 rounded-lg space-y-3">
-                {store.email && (
+                {library.email && (
                   <div className="flex items-center space-x-3">
                     <Mail className="h-4 w-4 text-stone-400 flex-shrink-0" />
                     <a
-                      href={`mailto:${store.email}`}
-                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400"
+                      href={`mailto:${library.email}`}
+                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400"
                     >
-                      {store.email}
+                      {library.email}
                     </a>
                   </div>
                 )}
-                {store.website && (
+                {library.website && (
                   <div className="flex items-center space-x-3">
                     <Globe className="h-4 w-4 text-stone-400 flex-shrink-0" />
                     <a
-                      href={store.website}
+                      href={library.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400"
+                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400"
                     >
-                      {store.website.replace("https://", "").replace("www.", "")}
+                      {library.website.replace("https://", "").replace("www.", "")}
                     </a>
                   </div>
                 )}
-                {!store.email && !store.website && (
+                {!library.email && !library.website && (
                   <p className="text-stone-500 text-sm italic">No contact information available</p>
                 )}
               </div>
@@ -657,24 +621,24 @@ export default function StoreDetailPage() {
           </Card>
         </div>
 
-        {/* Consignment Terms */}
+        {/* Library Services */}
         {Object.keys(tagsByCategory).length > 0 && (
-          <Card className="bg-white border border-rose-200 shadow-sm">
+          <Card className="bg-white border border-blue-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-stone-800 text-xl flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-rose-600" />
-                Consignment Terms
+                <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                Library Services
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-6 text-stone-700">
                 {Object.entries(tagsByCategory).map(([category, tags]) => (
                   <div key={category} className="space-y-4">
-                    <div className="bg-stone-50 p-4 rounded-lg border border-rose-100">
+                    <div className="bg-stone-50 p-4 rounded-lg border border-blue-100">
                       <h4 className="font-semibold text-stone-800 mb-2 capitalize">{category}</h4>
                       <div className="space-y-1">
                         {tags.map((tag) => (
-                          <p key={tag.id} className="text-sm">{tag.label}</p>
+                          <p key={tag.id} className="text-sm">{tag.tag.label}</p>
                         ))}
                       </div>
                     </div>
@@ -686,10 +650,10 @@ export default function StoreDetailPage() {
         )}
 
         {/* Share Your Experience */}
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 shadow-sm">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-stone-800 text-xl flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-rose-600" />
+              <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
               Community Notes ({notes.length})
             </CardTitle>
           </CardHeader>
@@ -698,7 +662,7 @@ export default function StoreDetailPage() {
             {notes.length > 0 && (
               <div className="space-y-4 mb-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="bg-white p-4 rounded-lg border border-rose-100">
+                  <div key={note.id} className="bg-white p-4 rounded-lg border border-blue-100">
                     {editingNote?.id === note.id ? (
                       // Edit form
                       <form onSubmit={handleUpdateNote} className="space-y-4">
@@ -710,7 +674,7 @@ export default function StoreDetailPage() {
                             id="editNote"
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            placeholder="Share your experience at this store..."
+                            placeholder="Share your experience at this library..."
                             className="mt-1 min-h-[120px]"
                             maxLength={1000}
                             required
@@ -724,12 +688,12 @@ export default function StoreDetailPage() {
                           <div className="flex flex-col sm:flex-row justify-end gap-4">
                             <div className="flex items-center space-x-2">
                               <Checkbox
-                                id="editHasStockedHere"
-                                checked={editHasStockedHere}
-                                onCheckedChange={(checked) => setEditHasStockedHere(checked as boolean)}
+                                id="editHasVisitedHere"
+                                checked={editHasVisitedHere}
+                                onCheckedChange={(checked) => setEditHasVisitedHere(checked as boolean)}
                               />
-                              <Label htmlFor="editHasStockedHere" className="text-sm text-stone-600">
-                                I have stocked zines at this location
+                              <Label htmlFor="editHasVisitedHere" className="text-sm text-stone-600">
+                                I have visited this library
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -763,7 +727,7 @@ export default function StoreDetailPage() {
                           <Button
                             type="submit"
                             size="sm"
-                            className="bg-rose-500 hover:bg-rose-600 text-white"
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
                           >
                             <Save className="h-4 w-4 mr-1" />
                             Save Changes
@@ -779,37 +743,41 @@ export default function StoreDetailPage() {
                               <span>{note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}</span>
                             )}
                             {note.anonymous && (
-                              <span>Anonymous</span>
+                              <span className="italic">Anonymous</span>
                             )}
-                            <span>|</span>
-                            <span>{new Date(note.submitted_at).toLocaleDateString()}</span>
                             {note.has_stocked_here && (
-                              <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-xs">
-                                has stocked zines here
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Visited
                               </Badge>
                             )}
                           </div>
-                          {user && note.user_id === user.id && (
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditNote(note)}
-                                className="text-stone-500 hover:text-stone-700"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteNote(note)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
+                          
+                          <div className="flex items-center gap-2 text-xs text-stone-500">
+                            <span>{new Date(note.submitted_at).toLocaleDateString()}</span>
+                            {user && note.user_id === user.id && (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditNote(note)}
+                                  className="h-6 w-6 p-0 text-stone-400 hover:text-stone-600"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteNote(note)}
+                                  className="h-6 w-6 p-0 text-stone-400 hover:text-red-600"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                        
                         <p className="text-stone-700 leading-relaxed">{note.text}</p>
                       </>
                     )}
@@ -817,123 +785,113 @@ export default function StoreDetailPage() {
                 ))}
               </div>
             )}
-            
-            {/* No notes message */}
-            {notes.length === 0 && !loading && (
-              <div className="text-center py-4 mb-6">
-                <p className="text-stone-500 text-sm">No community notes yet. Be the first to share your experience!</p>
+
+            {/* Add Note Form */}
+            {!userHasNote && user && (
+              <div className="bg-white p-4 rounded-lg border border-blue-200">
+                {noteSubmitted ? (
+                  <div className="text-center py-4">
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <p className="text-green-600 font-medium">Thank you for sharing your experience!</p>
+                  </div>
+                ) : showNoteForm ? (
+                  <form onSubmit={handleNoteSubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="noteText" className="text-sm font-medium text-stone-700">
+                        Your Experience *
+                      </Label>
+                      <Textarea
+                        id="noteText"
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Share your experience at this library..."
+                        className="mt-1 min-h-[120px]"
+                        maxLength={1000}
+                        required
+                      />
+                      <div className="text-xs text-stone-500 text-right">
+                        {noteText.length}/1000 characters
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row justify-end gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="hasVisitedHere"
+                            checked={hasVisitedHere}
+                            onCheckedChange={(checked) => setHasVisitedHere(checked as boolean)}
+                          />
+                          <Label htmlFor="hasVisitedHere" className="text-sm text-stone-600">
+                            I have visited this library
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="isAnonymous"
+                            checked={isAnonymous}
+                            onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                          />
+                          <Label htmlFor="isAnonymous" className="text-sm text-stone-600">
+                            Submit anonymously
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {noteError && (
+                      <div className="text-red-600 text-sm">{noteError}</div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowNoteForm(false)}
+                        className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={!noteText.trim()}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Submit Note
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="text-center py-4">
+                    <Button
+                      onClick={() => setShowNoteForm(true)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Share Your Experience
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Note Submission */}
-            {noteSubmitted ? (
-              <div className="bg-rose-100 p-4 rounded-lg border border-rose-200">
-                <p className="text-rose-700 text-sm font-medium">Thank you for sharing your experience!</p>
-              </div>
-            ) : userHasNote ? (
-              <div className="bg-stone-100 p-4 rounded-lg border border-stone-200">
-                <p className="text-stone-600 text-sm">You’ve already added a community note for this place.
-                Feel free to edit it if anything’s changed.</p>
-              </div>
-            ) : showNoteForm ? (
-              <form onSubmit={handleNoteSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="note" className="text-sm font-medium text-stone-700">
-                    Your Note *
-                  </Label>
-                  <Textarea
-                    id="note"
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    placeholder="Tell us what it was like working with or visiting this place, or anything else you think others should know."
-                    className="mt-1 min-h-[120px]"
-                    maxLength={1000}
-                    required
-                  />
-                  <div className="text-xs text-stone-500 text-right">
-                    {noteText.length}/1000 characters
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row justify-end gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="hasStockedHere"
-                        checked={hasStockedHere}
-                        onCheckedChange={(checked) => setHasStockedHere(checked as boolean)}
-                      />
-                      <Label htmlFor="hasStockedHere" className="text-sm text-stone-600">
-                        I have stocked zines at this location
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="anonymous"
-                        checked={isAnonymous}
-                        onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-                      />
-                      <Label htmlFor="anonymous" className="text-sm text-stone-600">
-                        Submit anonymously
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
-                {noteError && (
-                  <div className="text-red-600 text-sm">{noteError}</div>
-                )}
-
-                <div className="flex flex-col sm:flex-row justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowNoteForm(false)
-                      setNoteText("")
-                      setIsAnonymous(false)
-                      setHasStockedHere(false)
-                      setNoteError(null)
-                    }}
-                    className="border-stone-300 text-stone-700 hover:bg-stone-50"
-                  >
-                    Cancel
+            {!user && (
+              <div className="text-center py-4">
+                <p className="text-stone-600 mb-2">Want to share your experience?</p>
+                <Link href="/login">
+                  <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                    Sign in to add a note
                   </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="bg-rose-600 text-white"
-                  >
-                    Submit
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center">
-                {user ? (
-                  <Button
-                    onClick={() => setShowNoteForm(true)}
-                    className="bg-rose-500 hover:bg-rose-600 text-white"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Share Your Experience
-                  </Button>
-                ) : (
-                  <Link href="/login">
-                    <Button className="bg-rose-500 hover:bg-rose-600 text-white">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Sign in to Share Your Experience
-                    </Button>
-                  </Link>
-                )}
+                </Link>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Community contribution note */}
-        <div className="text-center pt-8 border-t border-stone-200">
+        {/* Feedback Section */}
+        <div className="text-center py-8">
           <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
             {feedbackSubmitted ? (
               <p className="text-green-600 text-sm">Thank you for your feedback!</p>
@@ -943,9 +901,9 @@ export default function StoreDetailPage() {
                   e.preventDefault()
                   setFeedbackError(null)
                   try {
-                    const { error } = await supabase.from('store_feedback').insert([
+                    const { error } = await supabase.from('library_feedback').insert([
                       {
-                        store_id: store.id,
+                        library_id: library.id,
                         feedback,
                         user_id: user?.id || null,
                         // Optionally, add user_agent, etc.
@@ -967,7 +925,7 @@ export default function StoreDetailPage() {
                 <textarea
                   className="w-full border border-stone-300 rounded p-2 text-sm min-h-[120px]"
                   rows={6}
-                  placeholder="Share your experience at this store, or let us know what's outdated, incorrect, or missing..."
+                  placeholder="Share your experience at this library, or let us know what's outdated, incorrect, or missing..."
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
                   required
@@ -983,7 +941,7 @@ export default function StoreDetailPage() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 py-1 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-4 py-1 rounded"
                   >
                     Submit
                   </button>
@@ -993,7 +951,7 @@ export default function StoreDetailPage() {
               <p className="text-stone-600 text-sm">
                 Is any information outdated, incorrect, or missing?{" "}
                 <button
-                  className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 hover:decoration-rose-400"
+                  className="text-blue-600 hover:text-blue-700 underline decoration-blue-200 hover:decoration-blue-400"
                   onClick={() => setShowFeedbackForm(true)}
                 >
                   Send us a message
@@ -1032,4 +990,4 @@ export default function StoreDetailPage() {
       )}
     </div>
   )
-}
+} 

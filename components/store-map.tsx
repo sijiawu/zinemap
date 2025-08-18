@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -33,15 +33,48 @@ interface Store {
   user_name?: string
 }
 
-interface StoreMapProps {
-  stores: Store[]
+interface Library {
+  id: string
+  name: string
+  city: string
+  state: string
+  country: string
+  address: string
+  email?: string
+  website?: string
+  notes?: string
+  has_visited_before: boolean
+  submitted_by: string
+  created_at: string
+  permalink?: string
+  latitude?: number
+  longitude?: number
+  library_tags?: {
+    id: string
+    tag_id: string
+    tag: {
+      id: string
+      label: string
+      category: string
+    }
+  }[]
+  user_name?: string
 }
 
-export function StoreMap({ stores }: StoreMapProps) {
+interface StoreMapProps {
+  stores: Store[]
+  libraries: Library[]
+  searchQuery?: string
+}
+
+export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<Store | Library | null>(null)
+  const [locationType, setLocationType] = useState<'store' | 'library'>('store')
+  const [mapView, setMapView] = useState<'stores' | 'libraries' | 'both'>('both')
+  const [mapReady, setMapReady] = useState(false)
 
   // Initialize map (only once)
   useEffect(() => {
@@ -61,6 +94,13 @@ export function StoreMap({ stores }: StoreMapProps) {
           zoom: 3.5,
         })
 
+        // Add event listener for when map is ready
+        map.current.on('load', () => {
+          setMapReady(true)
+        })
+
+
+
       } catch (error) {
         console.error("Map error:", error)
       }
@@ -76,64 +116,174 @@ export function StoreMap({ stores }: StoreMapProps) {
     }
   }, [])
 
-  // Update markers when stores change
+  // Update markers when stores, libraries, mapView, or searchQuery change
   useEffect(() => {
-    if (!map.current || !stores) return
+    if (!map.current || !mapReady) return
+    
+    // Don't add markers if data isn't loaded yet
+    if (!stores || !libraries) return
+
+
+
+
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove())
     markersRef.current = []
 
-    // Add new markers
-    stores.forEach((store) => {
-      if (!store.latitude || !store.longitude) return
+    // Filter stores based on search query
+    const filteredStores = searchQuery.trim() 
+      ? stores.filter(store => 
+          store.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          store.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          store.country.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          store.address.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        )
+      : stores
 
-      const mapboxgl = require("mapbox-gl")
-      
-      const markerEl = document.createElement("div")
-      markerEl.innerHTML = `
-        <div style="background: #ef4444; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        </div>
-      `
+    // Filter libraries based on search query
+    const filteredLibraries = searchQuery.trim()
+      ? libraries.filter(library => 
+          library.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          library.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          (library.state && library.state.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
+          library.country.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          library.address.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        )
+      : libraries
 
-      markerEl.addEventListener("click", () => {
-        setSelectedStore(store)
+    // Add store markers (red) if stores should be shown
+    if (mapView === 'stores' || mapView === 'both') {
+      filteredStores.forEach((store) => {
+        if (!store.latitude || !store.longitude) return
+
+        const mapboxgl = require("mapbox-gl")
+        
+        const markerEl = document.createElement("div")
+        markerEl.innerHTML = `
+          <div style="background: #ef4444; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        `
+
+        markerEl.addEventListener("click", () => {
+          setSelectedLocation(store)
+          setLocationType('store')
+        })
+
+        const marker = new mapboxgl.Marker(markerEl)
+          .setLngLat([store.longitude, store.latitude])
+          .addTo(map.current)
+
+        markersRef.current.push(marker)
       })
+    }
 
-      const marker = new mapboxgl.Marker(markerEl)
-        .setLngLat([store.longitude, store.latitude])
-        .addTo(map.current)
+    // Add library markers (blue) if libraries should be shown
+    if (mapView === 'libraries' || mapView === 'both') {
+      filteredLibraries.forEach((library) => {
+        if (!library.latitude || !library.longitude) return
 
-      markersRef.current.push(marker)
-    })
-  }, [stores])
+        const mapboxgl = require("mapbox-gl")
+        
+        const markerEl = document.createElement("div")
+        markerEl.innerHTML = `
+          <div style="background: #3b82f6; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        `
+
+        markerEl.addEventListener("click", () => {
+          setSelectedLocation(library)
+          setLocationType('library')
+        })
+
+        const marker = new mapboxgl.Marker(markerEl)
+          .setLngLat([library.longitude, library.latitude])
+          .addTo(map.current)
+
+        markersRef.current.push(marker)
+      })
+    }
+  }, [stores, libraries, mapView, searchQuery, mapReady])
 
   return (
     <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* Store Popup */}
-      {selectedStore && (
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-xs z-10">
+      {/* Map Controls */}
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-2 z-10">
+        <div className="flex gap-1">
           <button
-            onClick={() => setSelectedStore(null)}
+            onClick={() => setMapView('stores')}
+            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              mapView === 'stores' 
+                ? 'bg-rose-500 text-white' 
+                : 'bg-stone-100 text-stone-700 hover:bg-rose-50 hover:bg-rose-100'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-rose-500 rounded-full"></div>
+              Stores
+            </div>
+          </button>
+          <button
+            onClick={() => setMapView('libraries')}
+            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              mapView === 'libraries' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+              Libraries
+            </div>
+          </button>
+          <button
+            onClick={() => setMapView('both')}
+            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              mapView === 'both' 
+                ? 'bg-[#DBDBDC] text-stone-800' 
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+            }`}
+          >
+            All
+          </button>
+        </div>
+      </div>
+
+      {/* Location Popup */}
+      {selectedLocation && (
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-xs z-10">
+          <button
+            onClick={() => setSelectedLocation(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
           >
             ×
           </button>
 
-          <h3 className="font-semibold text-gray-800 mb-2 pr-6">{selectedStore.name}</h3>
+          <div className="flex items-center gap-2 mb-2">
+            {locationType === 'store' ? (
+              <MapPin className="h-4 w-4 text-rose-500" />
+            ) : (
+              <BookOpen className="h-4 w-4 text-blue-500" />
+            )}
+            <h3 className="font-semibold text-gray-800 pr-6">{selectedLocation.name}</h3>
+          </div>
+
           <p className="text-sm text-gray-600 mb-3">
-            📍 {selectedStore.city}, {selectedStore.country}
+            📍 {selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}
           </p>
 
-          {/* Store Tags */}
-          {selectedStore.store_tags && selectedStore.store_tags.length > 0 && (
+          {/* Tags */}
+          {locationType === 'store' && 'store_tags' in selectedLocation && selectedLocation.store_tags && selectedLocation.store_tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-4">
-              {selectedStore.store_tags.map((storeTag) => (
+              {selectedLocation.store_tags.map((storeTag) => (
                 <Badge
                   key={storeTag.id}
                   variant="outline"
@@ -145,17 +295,41 @@ export function StoreMap({ stores }: StoreMapProps) {
             </div>
           )}
 
+          {locationType === 'library' && 'library_tags' in selectedLocation && selectedLocation.library_tags && selectedLocation.library_tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-4">
+              {selectedLocation.library_tags.map((libraryTag) => (
+                <Badge
+                  key={libraryTag.id}
+                  variant="outline"
+                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                >
+                  {libraryTag.tag.label}
+                </Badge>
+              ))}
+            </div>
+          )}
+
           {/* User info */}
-          {selectedStore.user_name && (
+          {selectedLocation.user_name && (
             <p className="text-xs text-gray-500 mb-3">
-              Added by {selectedStore.user_name}
+              Added by {selectedLocation.user_name}
             </p>
           )}
-          <Link href={`/store/${selectedStore.permalink || selectedStore.id}`}>
-            <Button size="sm" variant="outline" className="w-full">
-              View Details
-            </Button>
-          </Link>
+
+          {/* View Details Button */}
+          {locationType === 'store' ? (
+            <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+              <Button size="sm" variant="outline" className="w-full border-rose-300 text-rose-700 hover:bg-rose-50">
+                View Details
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+              <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+                View Details
+              </Button>
+            </Link>
+          )}
         </div>
       )}
 

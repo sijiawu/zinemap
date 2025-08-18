@@ -419,7 +419,7 @@ export default function AddStorePage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Check className="h-8 w-8 text-green-600" />
               </div>
-              <h1 className="text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
+              <h1 className="font-gloria text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
               <p className="text-stone-600 mb-6 leading-relaxed">
                 Your store submission has been received and is pending approval! Our team will review it shortly and add it to the map once approved. Thanks for
                 helping fellow zinesters discover new places to share their work and find new zines to read!
@@ -483,7 +483,7 @@ export default function AddStorePage() {
           <div className="w-16 h-16 bg-gradient-to-br from-rose-200 to-orange-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <Store className="h-8 w-8 text-rose-600" />
           </div>
-          <h1 className="text-4xl font-bold text-stone-800 mb-3">Add a Store to ZineMap</h1>
+          <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Store to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
             Know a great indie store that stocks zines? Help fellow zinesters discover it! Share the details and we'll
             add it to our community map.

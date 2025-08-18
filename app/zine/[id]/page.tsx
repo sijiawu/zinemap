@@ -1204,7 +1204,7 @@ export default function ZineDetailPage() {
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-stone-800 mb-2">Zine Not Found</h2>
+            <h2 className="font-gloria text-2xl font-bold text-stone-800 mb-2">Zine Not Found</h2>
             <p className="text-stone-600 mb-6">{error || 'This zine could not be loaded.'}</p>
             <Link href="/dashboard">
               <Button className="bg-rose-500 hover:bg-rose-600 text-white">
@@ -1256,7 +1256,7 @@ export default function ZineDetailPage() {
             </div>
             <div className="flex-1 space-y-4">
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-stone-800 mb-3">{zine.title}</h1>
+                <h1 className="font-gloria text-3xl lg:text-4xl font-bold text-stone-800 mb-3">{zine.title}</h1>
                 <p className="text-stone-700 leading-relaxed">{zine.description || 'No description provided'}</p>
               </div>
 
@@ -1289,7 +1289,7 @@ export default function ZineDetailPage() {
         {/* Active Batches - Compact Editable */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-stone-800">Currently Stocked</h2>
+                          <h2 className="font-gloria text-2xl font-bold text-stone-800">Currently Stocked</h2>
             <span className="text-sm text-stone-500">{activeBatches.length} active batches</span>
           </div>
 
@@ -1322,7 +1322,7 @@ export default function ZineDetailPage() {
         {batches.filter((batch: any) => batch.status !== 'active').length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-stone-800">Past Batches</h2>
+              <h2 className="font-gloria text-2xl font-bold text-stone-800">Past Batches</h2>
               <span className="text-sm text-stone-500">{batches.filter((batch: any) => batch.status !== 'active').length} completed</span>
             </div>
 

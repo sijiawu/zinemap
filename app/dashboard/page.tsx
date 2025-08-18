@@ -199,7 +199,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-stone-800 mb-4">Please log in to view your dashboard</h2>
+          <h2 className="font-gloria text-2xl font-bold text-stone-800 mb-4">Please log in to view your dashboard</h2>
           <Link href="/login">
             <Button className="bg-rose-500 hover:bg-rose-600 text-white">
               Go to Login
@@ -218,7 +218,7 @@ export default function DashboardPage() {
           <div className="bg-gradient-to-r from-rose-50 to-orange-50 rounded-xl p-6 lg:p-8 border border-rose-100">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-stone-800 mb-2">
+                <h2 className="font-gloria text-2xl lg:text-3xl font-bold text-stone-800 mb-2">
                   Welcome back, {profile?.display_name || user.email?.split('@')[0] || 'Zinester'}
                 </h2>
                 <p className="text-stone-600 mb-4">
