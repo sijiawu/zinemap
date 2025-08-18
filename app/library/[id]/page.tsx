@@ -748,7 +748,7 @@ export default function LibraryDetailPage() {
                             {note.has_stocked_here && (
                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                Visited
+                                has been here
                               </Badge>
                             )}
                           </div>
@@ -957,9 +957,9 @@ export default function LibraryDetailPage() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-4 py-1 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-4 py-1 rounded font-gloria"
                   >
-                    Submit
+                    submit
                   </button>
                 </div>
               </form>
@@ -972,6 +972,25 @@ export default function LibraryDetailPage() {
                 >
                   Send us a message
                 </button>
+                {" "}or{" "}
+                {user ? (
+                  <Link
+                    href={`/library/${library.id}/suggest-edit`}
+                    className="text-blue-600 hover:text-blue-700 underline decoration-blue-200 hover:decoration-blue-400"
+                  >
+                    suggest an edit to this page
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href={`/login?redirect=/library/${library.id}/suggest-edit`}
+                      className="text-blue-600 hover:text-blue-700 underline decoration-blue-200 hover:decoration-blue-400"
+                    >
+                      sign in 
+                    </Link>{" "}
+                    to suggest an edit to this page
+                  </>
+                )}
               </p>
             )}
           </div>

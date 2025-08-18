@@ -407,35 +407,35 @@ export default function AddLibraryPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-serif">
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria">
                     <MapPin className="h-4 w-4 mr-2" />
-                    Browse Libraries
+                    browse libraries
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsSubmitted(false)
-                    setFormData({
-                      libraryName: "",
-                      city: "",
-                      state: "",
-                      country: "",
-                      address: "",
-                      email: "",
-                      website: "",
-                      notes: "",
-                      hasVisitedBefore: false,
-                      selectedTerms: []
-                    })
-                    // Generate new preview ID
-                    window.location.reload()
-                  }}
-                  className="border-stone-300 text-stone-700 hover:bg-stone-50 font-serif"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Another Library
-                </Button>
+                                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsSubmitted(false)
+                      setFormData({
+                        libraryName: "",
+                        city: "",
+                        state: "",
+                        country: "",
+                        address: "",
+                        email: "",
+                        website: "",
+                        notes: "",
+                        hasVisitedBefore: false,
+                        selectedTerms: []
+                      })
+                      // Generate new preview ID
+                      window.location.reload()
+                    }}
+                    className="border-stone-300 text-stone-700 hover:bg-stone-50 font-gloria"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    add another library
+                  </Button>
               </div>
             </CardContent>
           </Card>
@@ -780,9 +780,9 @@ export default function AddLibraryPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-serif px-8 py-3 text-lg rounded-lg shadow-md transition-colors"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-gloria px-8 py-3 text-lg rounded-lg shadow-md transition-colors"
             >
-              {isSubmitting ? "Submitting..." : "Submit Library"}
+              {isSubmitting ? "submitting..." : "submit"}
             </Button>
           </div>
         </form>

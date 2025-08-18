@@ -426,35 +426,35 @@ export default function AddStorePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/">
-                  <Button className="bg-rose-500 hover:bg-rose-600 text-white font-serif">
+                  <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
                     <MapPin className="h-4 w-4 mr-2" />
-                    Browse Stores
+                    browse stores
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsSubmitted(false)
-                    setFormData({
-                      storeName: "",
-                      city: "",
-                      state: "",
-                      country: "",
-                      address: "",
-                      email: "",
-                      website: "",
-                      selectedTerms: [],
-                      notes: "",
-                      hasStockedBefore: false,
-                    })
-                    // Generate new preview ID
-                    window.location.reload()
-                  }}
-                  className="border-stone-300 text-stone-700 hover:bg-stone-50 font-serif"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Another Store
-                </Button>
+                                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsSubmitted(false)
+                      setFormData({
+                        storeName: "",
+                        city: "",
+                        state: "",
+                        country: "",
+                        address: "",
+                        email: "",
+                        website: "",
+                        selectedTerms: [],
+                        notes: "",
+                        hasStockedBefore: false,
+                      })
+                      // Generate new preview ID
+                      window.location.reload()
+                    }}
+                    className="border-stone-300 text-stone-700 hover:bg-stone-50 font-gloria"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    add another store
+                  </Button>
               </div>
             </CardContent>
           </Card>
@@ -856,17 +856,16 @@ export default function AddStorePage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-rose-500 hover:bg-rose-600 text-white font-serif px-8 py-3 text-lg rounded-lg shadow-md transition-colors"
+              className="bg-rose-500 hover:bg-rose-600 text-white font-gloria px-8 py-3 text-lg rounded-lg shadow-md transition-colors"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Submitting...
+                  submitting...
                 </>
               ) : (
                 <>
-                  <MapPin className="h-5 w-5 mr-2" />
-                  Submit Store to ZineMap
+                  submit
                 </>
               )}
             </Button>

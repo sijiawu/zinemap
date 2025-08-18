@@ -333,7 +333,7 @@ export default function HomePage() {
                         {stores.length === 0 ? (
                           <Link href="/add-store">
                             <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
-                              Add First Store
+                              add first store
                             </Button>
                           </Link>
                         ) : (
@@ -425,7 +425,7 @@ export default function HomePage() {
                         {libraries.length === 0 ? (
                           <Link href="/add-library">
                             <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria">
-                              Add First Library
+                              add first library
                             </Button>
                           </Link>
                         ) : (
@@ -517,12 +517,12 @@ export default function HomePage() {
               <div className="flex justify-center gap-4">
                 <Link href="/add-store">
                   <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria px-6 py-3 text-lg rounded-lg shadow-md transition-colors">
-                    Add a Store
+                    add a store
                   </Button>
                 </Link>
                 <Link href="/add-library">
                   <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria px-6 py-3 text-lg rounded-lg shadow-md transition-colors">
-                    Add a Library
+                    add a library
                   </Button>
                 </Link>
               </div>

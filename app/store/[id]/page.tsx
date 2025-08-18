@@ -983,9 +983,9 @@ export default function StoreDetailPage() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 py-1 rounded"
+                    className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 py-1 rounded font-gloria"
                   >
-                    Submit
+                    submit
                   </button>
                 </div>
               </form>
@@ -998,6 +998,25 @@ export default function StoreDetailPage() {
                 >
                   Send us a message
                 </button>
+                {" "}or{" "}
+                {user ? (
+                  <Link
+                    href={`/store/${store.id}/suggest-edit`}
+                    className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 hover:decoration-rose-400"
+                  >
+                    suggest an edit to this page
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href={`/login?redirect=/store/${store.id}/suggest-edit`}
+                      className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 hover:decoration-rose-400"
+                    >
+                      sign in 
+                    </Link>{" "}
+                    to suggest an edit to this page
+                  </>
+                )}
               </p>
             )}
           </div>

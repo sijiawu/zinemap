@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, Store, MapPin, Clock, User, BookOpen } from "lucide-react"
+import { ArrowLeft, Check, X, Store, MapPin, Clock, User, BookOpen, Edit3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -54,10 +54,16 @@ export default function AdminPage() {
   const router = useRouter()
   const [unapprovedStores, setUnapprovedStores] = useState<Store[]>([])
   const [unapprovedLibraries, setUnapprovedLibraries] = useState<Library[]>([])
+  const [storeEdits, setStoreEdits] = useState<any[]>([])
+  const [libraryEdits, setLibraryEdits] = useState<any[]>([])
   const [loadingStores, setLoadingStores] = useState(true)
   const [loadingLibraries, setLoadingLibraries] = useState(true)
+  const [loadingStoreEdits, setLoadingStoreEdits] = useState(true)
+  const [loadingLibraryEdits, setLoadingLibraryEdits] = useState(true)
   const [processingStore, setProcessingStore] = useState<string | null>(null)
   const [processingLibrary, setProcessingLibrary] = useState<string | null>(null)
+  const [processingStoreEdit, setProcessingStoreEdit] = useState<string | null>(null)
+  const [processingLibraryEdit, setProcessingLibraryEdit] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("stores")
@@ -79,6 +85,8 @@ export default function AdminPage() {
     if (isAdmin) {
       fetchUnapprovedStores()
       fetchUnapprovedLibraries()
+      fetchStoreEdits()
+      fetchLibraryEdits()
     }
   }, [user, loading, isAdmin, router])
 
@@ -236,6 +244,112 @@ export default function AdminPage() {
     }
   }
 
+  const fetchStoreEdits = async () => {
+    try {
+      setLoadingStoreEdits(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('store_edits')
+        .select(`
+          *,
+          stores!inner(name, city, country)
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching store edits:', error)
+        setError('Failed to load store edits')
+      } else {
+        setStoreEdits(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching store edits:', error)
+      setError('Failed to load store edits')
+    } finally {
+      setLoadingStoreEdits(false)
+    }
+  }
+
+  const fetchLibraryEdits = async () => {
+    try {
+      setLoadingLibraryEdits(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('library_edits')
+        .select(`
+          *,
+          libraries!inner(name, city, country)
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching library edits:', error)
+        setError('Failed to load library edits')
+      } else {
+        setLibraryEdits(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching library edits:', error)
+      setError('Failed to load library edits')
+    } finally {
+      setLoadingLibraryEdits(false)
+    }
+  }
+
+  const handleMarkStoreEditAddressed = async (editId: string) => {
+    try {
+      setProcessingStoreEdit(editId)
+      setError(null)
+      setSuccess(null)
+
+      const { error } = await supabase
+        .from('store_edits')
+        .update({ status: 'addressed' })
+        .eq('id', editId)
+
+      if (error) {
+        console.error('Error marking store edit as addressed:', error)
+        setError('Failed to mark store edit as addressed')
+      } else {
+        setSuccess('Store edit marked as addressed!')
+        // Remove the edit from the list
+        setStoreEdits(prev => prev.filter(edit => edit.id !== editId))
+      }
+    } catch (error) {
+      console.error('Error marking store edit as addressed:', error)
+    } finally {
+      setProcessingStoreEdit(null)
+    }
+  }
+
+  const handleMarkLibraryEditAddressed = async (editId: string) => {
+    try {
+      setProcessingLibraryEdit(editId)
+      setError(null)
+      setSuccess(null)
+
+      const { error } = await supabase
+        .from('library_edits')
+        .update({ status: 'addressed' })
+        .eq('id', editId)
+
+      if (error) {
+        console.error('Error marking library edit as addressed:', error)
+        setError('Failed to mark library edit as addressed')
+      } else {
+        setLibraryEdits(prev => prev.filter(edit => edit.id !== editId))
+      }
+    } catch (error) {
+      console.error('Error marking library edit as addressed:', error)
+    } finally {
+      setProcessingLibraryEdit(null)
+    }
+  }
+
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 font-serif">
@@ -304,6 +418,14 @@ export default function AdminPage() {
             <TabsTrigger value="libraries" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Libraries ({unapprovedLibraries.length})
+            </TabsTrigger>
+            <TabsTrigger value="store-edits" className="flex items-center gap-2">
+              <Edit3 className="h-4 w-4" />
+              Store Edits ({storeEdits.length})
+            </TabsTrigger>
+            <TabsTrigger value="library-edits" className="flex items-center gap-2">
+              <Edit3 className="h-4 w-4" />
+              Library Edits ({libraryEdits.length})
             </TabsTrigger>
           </TabsList>
 
@@ -549,6 +671,186 @@ export default function AdminPage() {
                           >
                             <X className="h-4 w-4 mr-2" />
                             {processingLibrary === library.id ? 'Rejecting...' : 'Reject'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Store Edits Tab */}
+          <TabsContent value="store-edits" className="space-y-6">
+            {/* Stats */}
+            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Store Edit Suggestions</h2>
+                  <p className="text-stone-600">
+                    {storeEdits.length} edit suggestion{storeEdits.length !== 1 ? 's' : ''} waiting for review
+                  </p>
+                </div>
+                <Button 
+                  onClick={fetchStoreEdits} 
+                  variant="outline" 
+                  disabled={loadingStoreEdits}
+                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                >
+                  Refresh
+                </Button>
+              </div>
+            </div>
+
+            {/* Store Edits List */}
+            {loadingStoreEdits ? (
+              <div className="text-center py-12">
+                <div className="text-stone-500 text-lg">Loading store edit suggestions...</div>
+              </div>
+            ) : storeEdits.length === 0 ? (
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <Edit3 className="h-16 w-16 mx-auto mb-4 text-stone-400" />
+                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No store edit suggestions</h3>
+                  <p className="text-stone-600">All edit suggestions have been reviewed.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {storeEdits.map((edit) => (
+                  <Card key={edit.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-semibold text-stone-800 mb-2">
+                            Edit for: {edit.stores?.name || 'Unknown Store'}
+                          </CardTitle>
+                          <div className="flex items-center text-stone-600 text-sm mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {edit.stores?.city}, {edit.stores?.country}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm mb-3">
+                            <User className="h-4 w-4 mr-1" />
+                            Suggested by: User ID: {edit.user_id?.slice(0, 8)}...
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Suggested {new Date(edit.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {/* Edit Summary */}
+                        <div>
+                          <strong className="text-stone-700 text-sm">Suggested Changes:</strong>
+                          <div className="mt-2 p-3 bg-stone-50 rounded-lg border border-stone-200">
+                            <pre className="text-sm text-stone-700 whitespace-pre-wrap font-mono">{edit.edit_summary}</pre>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t border-stone-100">
+                          <Button
+                            onClick={() => handleMarkStoreEditAddressed(edit.id)}
+                            disabled={processingStoreEdit === edit.id}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            {processingStoreEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Library Edits Tab */}
+          <TabsContent value="library-edits" className="space-y-6">
+            {/* Stats */}
+            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Library Edit Suggestions</h2>
+                  <p className="text-stone-600">
+                    {libraryEdits.length} edit suggestion{libraryEdits.length !== 1 ? 's' : ''} waiting for review
+                  </p>
+                </div>
+                <Button 
+                  onClick={fetchLibraryEdits} 
+                  variant="outline" 
+                  disabled={loadingLibraryEdits}
+                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                >
+                  Refresh
+                </Button>
+              </div>
+            </div>
+
+            {/* Library Edits List */}
+            {loadingLibraryEdits ? (
+              <div className="text-center py-12">
+                <div className="text-stone-500 text-lg">Loading library edit suggestions...</div>
+              </div>
+            ) : libraryEdits.length === 0 ? (
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <Edit3 className="h-16 w-16 mx-auto mb-4 text-blue-400" />
+                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No library edit suggestions</h3>
+                  <p className="text-stone-600">All edit suggestions have been reviewed.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {libraryEdits.map((edit) => (
+                  <Card key={edit.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-semibold text-stone-800 mb-2">
+                            Edit for: {edit.libraries?.name || 'Unknown Library'}
+                          </CardTitle>
+                          <div className="flex items-center text-stone-600 text-sm mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {edit.libraries?.city}, {edit.libraries?.country}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm mb-3">
+                            <User className="h-4 w-4 mr-1" />
+                            Suggested by: User ID: {edit.user_id?.slice(0, 8)}...
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Suggested {new Date(edit.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {/* Edit Summary */}
+                        <div>
+                          <strong className="text-stone-700 text-sm">Suggested Changes:</strong>
+                          <div className="mt-2 p-3 bg-stone-50 rounded-lg border border-stone-200">
+                            <pre className="text-sm text-stone-700 whitespace-pre-wrap font-mono">{edit.edit_summary}</pre>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t border-stone-100">
+                          <Button
+                            onClick={() => handleMarkLibraryEditAddressed(edit.id)}
+                            disabled={processingLibraryEdit === edit.id}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            {processingLibraryEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
                           </Button>
                         </div>
                       </div>
