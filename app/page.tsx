@@ -75,6 +75,7 @@ export default function HomePage() {
   const [filteredLibraries, setFilteredLibraries] = useState<Library[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("stores")
 
 
@@ -103,103 +104,87 @@ export default function HomePage() {
           console.error('Error fetching libraries:', librariesError)
         }
 
+        // Batch fetch all store tags
+        const { data: allStoreTags } = await supabase
+          .from('store_tags')
+          .select(`
+            store_id,
+            tag_id,
+            tags!inner(id, label, category)
+          `)
+          .in('store_id', (storesData || []).map(s => s.id))
+
+        // Batch fetch all user profiles
+        const storeUserIds = (storesData || []).map(s => s.submitted_by)
+        const { data: allStoreUserProfiles } = await supabase
+          .from('profiles')
+          .select('id, display_name')
+          .in('id', storeUserIds)
+
+        // Create user lookup map
+        const storeUserMap = new Map(
+          (allStoreUserProfiles || []).map(user => [user.id, user.display_name])
+        )
+
         // Process stores with tags and user info
-        const storesWithTags = await Promise.all(
-          (storesData || []).map(async (store) => {
-            const { data: tagsData } = await supabase
-              .from('store_tags')
-              .select(`
-                id,
-                tag_id,
-                tags!inner(id, label, category)
-              `)
-              .eq('store_id', store.id)
+        const storesWithTags = (storesData || []).map((store) => {
+          const storeTags = (allStoreTags || [])
+            .filter(tag => tag.store_id === store.id)
+            .map((tag: any) => ({
+              id: tag.id,
+              tag_id: tag.tag_id,
+              tag: tag.tags
+            }))
 
-            let user_name = 'Unknown user'
-            try {
-              const { data: userData } = await supabase
-                .from('profiles')
-                .select('display_name')
-                .eq('id', store.submitted_by)
-                .single()
+          const user_name = storeUserMap.get(store.submitted_by) || 'Unknown user'
 
-              if (userData?.display_name) {
-                user_name = userData.display_name
-              } else {
-                const { data: authUserData } = await supabase
-                  .from('auth.users')
-                  .select('email')
-                  .eq('id', store.submitted_by)
-                  .single()
-                
-                if (authUserData?.email) {
-                  user_name = authUserData.email
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching user data:', error)
-            }
+          return {
+            ...store,
+            store_tags: storeTags,
+            user_name
+          }
+        })
 
-            return {
-              ...store,
-              store_tags: tagsData?.map((tag: any) => ({
-                id: tag.id,
-                tag_id: tag.tag_id,
-                tag: tag.tags
-              })) || [],
-              user_name
-            }
-          })
+        // Batch fetch all library tags
+        const { data: allLibraryTags } = await supabase
+          .from('library_tags')
+          .select(`
+            library_id,
+            tag_id,
+            tags!inner(id, label, category)
+          `)
+          .in('library_id', (librariesData || []).map(l => l.id))
+
+        // Batch fetch all library user profiles
+        const libraryUserIds = (librariesData || []).map(l => l.submitted_by)
+        const { data: allLibraryUserProfiles } = await supabase
+          .from('profiles')
+          .select('id, display_name')
+          .in('id', libraryUserIds)
+
+        // Create library user lookup map
+        const libraryUserMap = new Map(
+          (allLibraryUserProfiles || []).map(user => [user.id, user.display_name])
         )
 
         // Process libraries with tags and user info
-        const librariesWithTags = await Promise.all(
-          (librariesData || []).map(async (library) => {
-            const { data: tagsData } = await supabase
-              .from('library_tags')
-              .select(`
-                id,
-                tag_id,
-                tags!inner(id, label, category)
-              `)
-              .eq('library_id', library.id)
+        const librariesWithTags = (librariesData || []).map((library) => {
+          const libraryTags = (allLibraryTags || [])
+            .filter(tag => tag.library_id === library.id)
+            .map((tag: any) => ({
+              id: tag.id,
+              tag_id: tag.tag_id,
+              tag: tag.tags
+            }))
 
-            let user_name = 'Unknown user'
-            try {
-              const { data: userData } = await supabase
-                .from('profiles')
-                .select('display_name')
-                .eq('id', library.submitted_by)
-                .single()
+          const user_name = libraryUserMap.get(library.submitted_by) || 'Unknown user'
 
-              if (userData?.display_name) {
-                user_name = userData.display_name
-              } else {
-                const { data: authUserData } = await supabase
-                  .from('auth.users')
-                  .select('email')
-                  .eq('id', library.submitted_by)
-                  .single()
-                
-                if (authUserData?.email) {
-                  user_name = authUserData.email
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching user data:', error)
-            }
-
-            return {
-              ...library,
-              library_tags: tagsData?.map((tag: any) => ({
-                id: tag.id,
-                tag_id: tag.tag_id,
-                tag: tag.tags
-              })) || [],
-              user_name
-            }
-          })
-        )
+          return {
+            ...library,
+            library_tags: libraryTags,
+            user_name
+          }
+        })
 
         setStores(storesWithTags)
         setLibraries(librariesWithTags)
@@ -215,7 +200,16 @@ export default function HomePage() {
     fetchData()
   }, [])
 
-  // Filter stores and libraries based on search query
+  // Debounce search query to improve performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Filter stores and libraries based on debounced search query
   useEffect(() => {
     if (!stores || !libraries) return
 
@@ -223,8 +217,8 @@ export default function HomePage() {
     let filteredLibraries = libraries
 
     // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase().trim()
       
       filteredStores = stores.filter(store => 
         store.name.toLowerCase().includes(query) ||
@@ -245,7 +239,7 @@ export default function HomePage() {
 
     setFilteredStores(filteredStores)
     setFilteredLibraries(filteredLibraries)
-  }, [stores, libraries, searchQuery])
+  }, [stores, libraries, debouncedSearchQuery])
 
   if (loading) {
     return (
@@ -504,11 +498,17 @@ export default function HomePage() {
           <div className="lg:sticky lg:top-6">
             <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
-                <StoreMap 
-                  stores={stores}
-                  libraries={libraries}
-                  searchQuery={searchQuery}
-                />
+                {loading ? (
+                  <div className="h-96 bg-stone-100 animate-pulse flex items-center justify-center">
+                    <div className="text-stone-500">Loading map...</div>
+                  </div>
+                ) : (
+                  <StoreMap 
+                    stores={stores}
+                    libraries={libraries}
+                    searchQuery={debouncedSearchQuery}
+                  />
+                )}
               </CardContent>
             </Card>
 
