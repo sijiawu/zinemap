@@ -565,7 +565,8 @@ export default function LibraryDetailPage() {
                       href={library.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400"
+                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400 url-break"
+                      title={library.website}
                     >
                       {library.website.replace("https://", "").replace("www.", "")}
                     </a>
@@ -842,16 +843,14 @@ export default function LibraryDetailPage() {
                 {user ? (
                   <Button
                     onClick={() => setShowNoteForm(true)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-gloria"
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Share Your Experience
+                    share your experience
                   </Button>
                 ) : (
                   <Link href="/login">
-                    <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Sign in to Share Your Experience
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria">
+                      sign in to share your experience
                     </Button>
                   </Link>
                 )}

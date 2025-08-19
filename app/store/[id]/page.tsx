@@ -601,7 +601,8 @@ export default function StoreDetailPage() {
                       href={store.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400"
+                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400 url-break"
+                      title={store.website}
                     >
                       {store.website.replace("https://", "").replace("www.", "")}
                     </a>
@@ -872,16 +873,14 @@ export default function StoreDetailPage() {
                 {user ? (
                   <Button
                     onClick={() => setShowNoteForm(true)}
-                    className="bg-rose-500 hover:bg-rose-600 text-white"
+                    className="bg-rose-500 hover:bg-rose-600 text-white font-gloria"
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Share Your Experience
+                    share your experience
                   </Button>
                 ) : (
                   <Link href="/login">
-                    <Button className="bg-rose-500 hover:bg-rose-600 text-white">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Sign in to Share Your Experience
+                    <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
+                    sign in to share your experience
                     </Button>
                   </Link>
                 )}

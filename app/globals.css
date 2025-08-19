@@ -30,6 +30,19 @@
   .font-gloria {
     font-family: 'Gloria Hallelujah', cursive;
   }
+  
+  .url-break {
+    word-break: break-all;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+  
+  .url-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
 }
 
 @layer base {
