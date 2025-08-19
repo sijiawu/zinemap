@@ -410,20 +410,20 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="stores" className="flex items-center gap-2">
+          <TabsList className="flex w-full mb-8 overflow-x-auto">
+            <TabsTrigger value="stores" className="flex items-center gap-2 whitespace-nowrap">
               <Store className="h-4 w-4" />
               Stores ({unapprovedStores.length})
             </TabsTrigger>
-            <TabsTrigger value="libraries" className="flex items-center gap-2">
+            <TabsTrigger value="libraries" className="flex items-center gap-2 whitespace-nowrap">
               <BookOpen className="h-4 w-4" />
               Libraries ({unapprovedLibraries.length})
             </TabsTrigger>
-            <TabsTrigger value="store-edits" className="flex items-center gap-2">
+            <TabsTrigger value="store-edits" className="flex items-center gap-2 whitespace-nowrap">
               <Edit3 className="h-4 w-4" />
               Store Edits ({storeEdits.length})
             </TabsTrigger>
-            <TabsTrigger value="library-edits" className="flex items-center gap-2">
+            <TabsTrigger value="library-edits" className="flex items-center gap-2 whitespace-nowrap">
               <Edit3 className="h-4 w-4" />
               Library Edits ({libraryEdits.length})
             </TabsTrigger>
