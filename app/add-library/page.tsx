@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, MapPin, Mail, Globe, FileText, CheckCircle, Library, Tag, MessageSquare, Plus } from "lucide-react"
+import { ArrowLeft, MapPin, Mail, Globe, FileText, CheckCircle, Library as LibraryIcon, Tag as TagIcon, MessageSquare, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,28 +15,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { nanoid } from "nanoid"
 
-interface Tag {
-  id: string
-  label: string
-  category: string
-}
-
-interface Library {
-  id: string
-  name: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_visited_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-}
+import { Tag, Library } from "@/lib/types"
 
 export default function AddLibraryPage() {
   const { user, loading } = useSupabaseUser()
@@ -475,7 +454,7 @@ export default function AddLibraryPage() {
         {/* Page Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-200 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Library className="h-8 w-8 text-blue-600" />
+                            <LibraryIcon className="h-8 w-8 text-blue-600" />
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Library to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
@@ -489,7 +468,7 @@ export default function AddLibraryPage() {
           <Card className="bg-white border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Library className="h-5 w-5 mr-2 text-blue-500" />
+                <LibraryIcon className="h-5 w-5 mr-2 text-blue-500" />
                 Library Details
               </CardTitle>
             </CardHeader>
@@ -668,7 +647,7 @@ export default function AddLibraryPage() {
           <Card className="bg-white border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Tag className="h-5 w-5 mr-2 text-blue-500" />
+                <TagIcon className="h-5 w-5 mr-2 text-blue-500" />
                 Library Features
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What services and access does this library offer? (Select all that apply)</p>

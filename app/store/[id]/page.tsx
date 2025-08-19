@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2, Heart, Store } from "lucide-react"
+import { ArrowLeft, MapPin, Mail, Globe, CheckCircle, AlertCircle, MessageSquare, User, Calendar, Edit, X, Save, FileText, Trash2, Heart, Store as StoreIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,49 +13,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
-interface Store {
-  id: string
-  name: string
-  state: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_stocked_before: boolean
-  submitted_by: string
-  created_at: string
-  updated_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-}
-
-interface StoreTag {
-  id: string
-  store_id: string
-  tag_id: string
-  tag: {
-    id: string
-    label: string
-    category: string
-  }
-}
-
-interface CommunityNote {
-  id: string
-  store_id: string
-  user_id: string | null
-  text: string
-  anonymous: boolean
-  has_stocked_here: boolean
-  submitted_at: string
-  user?: {
-    display_name: string | null
-    email: string
-  }
-}
+import { Store, StoreTag, CommunityNote } from "@/lib/types"
 
 export default function StoreDetailPage() {
   const params = useParams()
@@ -567,7 +525,7 @@ export default function StoreDetailPage() {
               <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
                 {isOwner ? (
                   <>
-                    <Store className="h-3 w-3 mr-1" />
+                    <StoreIcon className="h-3 w-3 mr-1" />
                     Added by shop staff
                   </>
                 ) : (

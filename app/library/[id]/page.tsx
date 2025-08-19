@@ -13,49 +13,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
-interface Library {
-  id: string
-  name: string
-  state: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_visited_before: boolean
-  submitted_by: string
-  created_at: string
-  updated_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-}
-
-interface LibraryTag {
-  id: string
-  library_id: string
-  tag_id: string
-  tag: {
-    id: string
-    label: string
-    category: string
-  }
-}
-
-interface CommunityNote {
-  id: string
-  library_id: string
-  user_id: string | null
-  text: string
-  anonymous: boolean
-  has_stocked_here: boolean
-  submitted_at: string
-  user?: {
-    display_name: string | null
-    email: string
-  }
-}
+import { Library, LibraryTag, CommunityNote } from "@/lib/types"
 
 export default function LibraryDetailPage() {
   const params = useParams()

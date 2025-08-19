@@ -4,7 +4,7 @@ import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
-import { ArrowLeft, Store, Plus, Check, MapPin, MessageSquare, Tag } from "lucide-react"
+import { ArrowLeft, Store as StoreIcon, Plus, Check, MapPin, MessageSquare, Tag as TagIcon } from "lucide-react"
 import { nanoid } from "nanoid"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,28 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 
-interface Tag {
-  id: string
-  label: string
-  category: string
-}
-
-interface Store {
-  id: string
-  name: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_stocked_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-}
+import { Tag, Store } from "@/lib/types"
 
 export default function AddStorePage() {
   const { user, loading } = useSupabaseUser()
@@ -481,7 +460,7 @@ export default function AddStorePage() {
         {/* Page Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-rose-200 to-orange-200 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="h-8 w-8 text-rose-600" />
+                            <StoreIcon className="h-8 w-8 text-rose-600" />
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Store to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
@@ -495,7 +474,7 @@ export default function AddStorePage() {
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Store className="h-5 w-5 mr-2 text-rose-500" />
+                <StoreIcon className="h-5 w-5 mr-2 text-rose-500" />
                 Store Details
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">The basics about this zine-friendly spot</p>
@@ -680,7 +659,7 @@ export default function AddStorePage() {
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Tag className="h-5 w-5 mr-2 text-rose-500" />
+                <TagIcon className="h-5 w-5 mr-2 text-rose-500" />
                 Consignment Terms
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What are their policies? (Select all that apply)</p>

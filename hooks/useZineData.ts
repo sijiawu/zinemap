@@ -3,39 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
-
-export interface Zine {
-  id: string
-  user_id: string
-  title: string
-  description: string | null
-  cover_image: string | null
-  retail_price: number | null
-  permalink: string
-  created_at: string
-  batches?: Batch[]
-}
-
-export interface Batch {
-  id: string
-  zine_id: string
-  store_id: string | null
-  store_name: string | null
-  user_id: string
-  date_placed: string
-  copies_placed: number
-  copies_sold: number | null
-  price_per_copy: number | null
-  split_percent: number | null
-  paid: boolean | null
-  status: string | null
-  last_checkin: string | null
-  checkin_notes: string | null
-  notes: string | null
-  created_at: string
-  next_checkin: string | null
-  paid_upfront: boolean | null
-}
+import { Zine, Batch, UserProfile } from '@/lib/types'
 
 export interface DashboardStats {
   totalZines: number
@@ -43,12 +11,6 @@ export interface DashboardStats {
   totalCopiesOut: number
   totalCopiesSold: number
   totalEarnings: number
-}
-
-export interface UserProfile {
-  id: string
-  email: string
-  display_name: string | null
 }
 
 export function useZineData(user: User | null, refreshKey: number = 0) {

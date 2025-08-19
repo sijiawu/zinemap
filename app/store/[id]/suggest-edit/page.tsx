@@ -4,7 +4,7 @@ import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
-import { ArrowLeft, Store, Plus, Check, MapPin, MessageSquare, Tag, Save } from "lucide-react"
+import { ArrowLeft, Store as StoreIcon, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,29 +16,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
 
-interface Tag {
-  id: string
-  label: string
-  category: string
-}
-
-interface Store {
-  id: string
-  name: string
-  city: string
-  state: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_stocked_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-}
+import { Tag, Store } from "@/lib/types"
 
 export default function SuggestStoreEditPage() {
   const { user, loading: authLoading } = useSupabaseUser()
@@ -334,7 +312,7 @@ export default function SuggestStoreEditPage() {
         {/* Page Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-rose-200 to-orange-200 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="h-8 w-8 text-rose-600" />
+            <StoreIcon className="h-8 w-8 text-rose-600" />
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Suggest Edit for {store?.name}</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
@@ -347,7 +325,7 @@ export default function SuggestStoreEditPage() {
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Store className="h-5 w-5 mr-2 text-rose-500" />
+                <StoreIcon className="h-5 w-5 mr-2 text-rose-500" />
                 Store Details
               </CardTitle>
             </CardHeader>
@@ -455,7 +433,7 @@ export default function SuggestStoreEditPage() {
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
-                <Tag className="h-5 w-5 mr-2 text-rose-500" />
+                <TagIcon className="h-5 w-5 mr-2 text-rose-500" />
                 Consignment Terms
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What are their policies? (Select all that apply)</p>

@@ -5,61 +5,7 @@ import { MapPin, ExternalLink, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-
-interface Store {
-  id: string
-  name: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_stocked_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-  store_tags?: {
-    id: string
-    tag_id: string
-    tag: {
-      id: string
-      label: string
-      category: string
-    }
-  }[]
-  user_name?: string
-}
-
-interface Library {
-  id: string
-  name: string
-  city: string
-  state: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_visited_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-  library_tags?: {
-    id: string
-    tag_id: string
-    tag: {
-      id: string
-      label: string
-      category: string
-    }
-  }[]
-  user_name?: string
-}
+import { Store, Library } from "@/lib/types"
 
 interface StoreMapProps {
   stores: Store[]

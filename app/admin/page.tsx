@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, Store, MapPin, Clock, User, BookOpen, Edit3 } from "lucide-react"
+import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,43 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
-
-interface Store {
-  id: string
-  name: string
-  city: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_stocked_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-  approved: boolean
-}
-
-interface Library {
-  id: string
-  name: string
-  city: string
-  state: string
-  country: string
-  address: string
-  email?: string
-  website?: string
-  notes?: string
-  has_visited_before: boolean
-  submitted_by: string
-  created_at: string
-  permalink?: string
-  latitude?: number
-  longitude?: number
-  approved: boolean
-}
+import { Store, Library } from "@/lib/types"
 
 export default function AdminPage() {
   const { user, loading } = useSupabaseUser()
@@ -412,7 +376,7 @@ export default function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex w-full mb-8 overflow-x-auto">
             <TabsTrigger value="stores" className="flex items-center gap-2 whitespace-nowrap">
-              <Store className="h-4 w-4" />
+                              <StoreIcon className="h-4 w-4" />
               Stores ({unapprovedStores.length})
             </TabsTrigger>
             <TabsTrigger value="libraries" className="flex items-center gap-2 whitespace-nowrap">
@@ -459,7 +423,7 @@ export default function AdminPage() {
             ) : unapprovedStores.length === 0 ? (
               <Card className="bg-white border-stone-200 shadow-sm">
                 <CardContent className="p-12 text-center">
-                  <Store className="h-16 w-16 mx-auto mb-4 text-stone-400" />
+                  <StoreIcon className="h-16 w-16 mx-auto mb-4 text-stone-400" />
                   <h3 className="text-xl font-semibold text-stone-800 mb-2">No stores pending approval</h3>
                   <p className="text-stone-600">All submitted stores have been reviewed.</p>
                 </CardContent>
