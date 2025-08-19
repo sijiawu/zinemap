@@ -180,7 +180,7 @@ export default function LibraryDetailPage() {
               submitted_at
             `)
             .eq('library_id', libraryData.id)
-            .order('submitted_at', { ascending: false })
+            .order('submitted_at', { ascending: true })
 
 
 

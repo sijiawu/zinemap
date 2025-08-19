@@ -180,7 +180,7 @@ export default function StoreDetailPage() {
               submitted_at
             `)
             .eq('store_id', storeData.id)
-            .order('submitted_at', { ascending: false })
+            .order('submitted_at', { ascending: true })
 
 
 
