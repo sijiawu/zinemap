@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { generatePermalink } from '@/lib/utils'
 
 export default function ProfileOnboardingModal({ user, show, onComplete }: { user: any, show: boolean, onComplete: () => void }) {
   const [displayName, setDisplayName] = useState('')
@@ -22,7 +23,12 @@ export default function ProfileOnboardingModal({ user, show, onComplete }: { use
       return
     }
     // Insert profile row
-    const { error: insertError } = await supabase.from('profiles').insert({ id: user.id, email: user.email, display_name: displayName })
+    const { error: insertError } = await supabase.from('profiles').insert({ 
+      id: user.id, 
+      email: user.email, 
+      display_name: displayName,
+      permalink: generatePermalink(displayName)
+    })
     if (insertError) {
       setError(insertError.message)
       setLoading(false)

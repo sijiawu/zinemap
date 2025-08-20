@@ -158,7 +158,7 @@ export default function StoreDetailPage() {
             if (userIds.length > 0) {
               const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, display_name, email')
+                .select('id, display_name, email, permalink')
                 .in('id', userIds)
               
               if (profilesData) {
@@ -735,7 +735,18 @@ export default function StoreDetailPage() {
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                           <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
                             {!note.anonymous && note.user && (
-                              <span>{note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}</span>
+                              <span>
+                                {note.user.permalink ? (
+                                  <Link 
+                                    href={`/profile/${note.user.permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                  </Link>
+                                ) : (
+                                  note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                )}
+                              </span>
                             )}
                             {note.anonymous && (
                               <span>Anonymous</span>

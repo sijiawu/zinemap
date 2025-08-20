@@ -205,7 +205,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
 
       {/* Location Popup */}
       {selectedLocation && (
-        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-xs z-10">
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-sm z-10">
           <button
             onClick={() => setSelectedLocation(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
@@ -213,13 +213,17 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
             ×
           </button>
 
-          <div className="flex items-center gap-2 mb-2">
-            {locationType === 'store' ? (
-              <MapPin className="h-4 w-4 text-rose-500" />
-            ) : (
-              <BookOpen className="h-4 w-4 text-blue-500" />
-            )}
-            <h3 className="font-semibold text-gray-800 pr-6">{selectedLocation.name}</h3>
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex-shrink-0 mt-0.5">
+              {locationType === 'store' ? (
+                <MapPin className="h-5 w-5 text-rose-500" />
+              ) : (
+                <BookOpen className="h-5 w-5 text-blue-500" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-800 text-base leading-tight">{selectedLocation.name}</h3>
+            </div>
           </div>
 
           <p className="text-sm text-gray-600 mb-3">
@@ -247,7 +251,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
                 <Badge
                   key={libraryTag.id}
                   variant="outline"
-                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                  className="text-xs bg-stone-50 text-stone-700 border-stone-200"
                 >
                   {libraryTag.tag.label}
                 </Badge>
@@ -258,7 +262,17 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
           {/* User info */}
           {selectedLocation.user_name && (
             <p className="text-xs text-gray-500 mb-3">
-              Added by {selectedLocation.user_name}
+              Added by{' '}
+              {selectedLocation.user_permalink ? (
+                <Link 
+                  href={`/profile/${selectedLocation.user_permalink}`}
+                  className="text-stone-800 hover:underline transition-colors"
+                >
+                  {selectedLocation.user_name}
+                </Link>
+              ) : (
+                selectedLocation.user_name
+              )}
             </p>
           )}
 

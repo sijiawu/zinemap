@@ -27,6 +27,7 @@ export interface Store {
   approved?: boolean
   store_tags?: StoreTag[]
   user_name?: string
+  user_permalink?: string
 }
 
 export interface Library {
@@ -49,6 +50,7 @@ export interface Library {
   approved?: boolean
   library_tags?: LibraryTag[]
   user_name?: string
+  user_permalink?: string
 }
 
 export interface StoreTag {
@@ -77,6 +79,7 @@ export interface CommunityNote {
   user?: {
     display_name: string | null
     email: string
+    permalink: string | null
   }
 }
 
@@ -88,6 +91,7 @@ export interface Zine {
   cover_image: string | null
   retail_price: number | null
   permalink: string
+  is_public: boolean
   created_at: string
   batches?: Batch[]
 }
@@ -117,6 +121,11 @@ export interface UserProfile {
   id: string
   display_name: string | null
   email: string
+  site: string | null
+  bio: string | null
+  permalink: string | null
+  profile_image: string | null
+  created_at: string
   // Add other profile properties as needed
 }
 

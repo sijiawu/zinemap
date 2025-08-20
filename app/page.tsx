@@ -53,6 +53,7 @@ export default function HomePage() {
         const { data: allStoreTags } = await supabase
           .from('store_tags')
           .select(`
+            id,
             store_id,
             tag_id,
             tags!inner(id, label, category)
@@ -63,12 +64,12 @@ export default function HomePage() {
         const storeUserIds = (storesData || []).map(s => s.submitted_by)
         const { data: allStoreUserProfiles } = await supabase
           .from('profiles')
-          .select('id, display_name')
+          .select('id, display_name, permalink')
           .in('id', storeUserIds)
 
         // Create user lookup map
         const storeUserMap = new Map(
-          (allStoreUserProfiles || []).map(user => [user.id, user.display_name])
+          (allStoreUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
 
         // Process stores with tags and user info
@@ -76,17 +77,20 @@ export default function HomePage() {
           const storeTags = (allStoreTags || [])
             .filter(tag => tag.store_id === store.id)
             .map((tag: any) => ({
-              id: tag.id,
+              id: tag.id || `store-tag-${store.id}-${tag.tag_id}`,
               tag_id: tag.tag_id,
               tag: tag.tags
             }))
 
-          const user_name = storeUserMap.get(store.submitted_by) || 'Unknown user'
+          const userData = storeUserMap.get(store.submitted_by) || { display_name: 'Unknown user', permalink: null }
+          const user_name = userData.display_name
+          const user_permalink = userData.permalink
 
           return {
             ...store,
             store_tags: storeTags,
-            user_name
+            user_name,
+            user_permalink
           }
         })
 
@@ -94,6 +98,7 @@ export default function HomePage() {
         const { data: allLibraryTags } = await supabase
           .from('library_tags')
           .select(`
+            id,
             library_id,
             tag_id,
             tags!inner(id, label, category)
@@ -104,12 +109,12 @@ export default function HomePage() {
         const libraryUserIds = (librariesData || []).map(l => l.submitted_by)
         const { data: allLibraryUserProfiles } = await supabase
           .from('profiles')
-          .select('id, display_name')
+          .select('id, display_name, permalink')
           .in('id', libraryUserIds)
 
         // Create library user lookup map
         const libraryUserMap = new Map(
-          (allLibraryUserProfiles || []).map(user => [user.id, user.display_name])
+          (allLibraryUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
 
         // Process libraries with tags and user info
@@ -117,17 +122,20 @@ export default function HomePage() {
           const libraryTags = (allLibraryTags || [])
             .filter(tag => tag.library_id === library.id)
             .map((tag: any) => ({
-              id: tag.id,
+              id: tag.id || `library-tag-${library.id}-${tag.tag_id}`,
               tag_id: tag.tag_id,
               tag: tag.tags
             }))
 
-          const user_name = libraryUserMap.get(library.submitted_by) || 'Unknown user'
+          const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
+          const user_name = userData.display_name
+          const user_permalink = userData.permalink
 
           return {
             ...library,
             library_tags: libraryTags,
-            user_name
+            user_name,
+            user_permalink
           }
         })
 
@@ -306,9 +314,9 @@ export default function HomePage() {
                           {/* Store Tags */}
                           {store.store_tags && store.store_tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">
-                              {store.store_tags.map((storeTag) => (
+                              {store.store_tags.map((storeTag, index) => (
                                 <Badge
-                                  key={storeTag.id}
+                                  key={storeTag.id || `store-tag-${store.id}-${index}`}
                                   variant="outline"
                                   className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
                                 >
@@ -325,7 +333,17 @@ export default function HomePage() {
                           </p>
                           {store.user_name && (
                             <p className="text-xs text-gray-500 mb-3">
-                              Added by {store.user_name}
+                              Added by{' '}
+                              {store.user_permalink ? (
+                                <Link 
+                                  href={`/profile/${store.user_permalink}`}
+                                  className="text-stone-800 hover:underline transition-colors"
+                                >
+                                  {store.user_name}
+                                </Link>
+                              ) : (
+                                store.user_name
+                              )}
                             </p>
                           )}
                           <Link href={`/store/${store.permalink || store.id}`}>
@@ -398,11 +416,11 @@ export default function HomePage() {
                           {/* Library Tags */}
                           {library.library_tags && library.library_tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">
-                              {library.library_tags.map((libraryTag) => (
+                              {library.library_tags.map((libraryTag, index) => (
                                 <Badge
-                                  key={libraryTag.id}
+                                  key={libraryTag.id || `library-tag-${library.id}-${index}`}
                                   variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                  className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
                                 >
                                   {libraryTag.tag.label}
                                 </Badge>
@@ -417,7 +435,17 @@ export default function HomePage() {
                           </p>
                           {library.user_name && (
                             <p className="text-xs text-gray-500 mb-3">
-                              Added by {library.user_name}
+                              Added by{' '}
+                              {library.user_permalink ? (
+                                <Link 
+                                  href={`/profile/${library.user_permalink}`}
+                                  className="text-stone-800 hover:underline transition-colors"
+                                >
+                                  {library.user_name}
+                                </Link>
+                              ) : (
+                                library.user_name
+                              )}
                             </p>
                           )}
                           <Link href={`/library/${library.permalink || library.id}`}>
@@ -480,7 +508,7 @@ export default function HomePage() {
       <footer className="mt-16 bg-white border-t border-stone-200">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <p className="text-stone-600 text-sm">
-            © 2025 zinemap. created by <a href="https://ko-fi.com/cjwucomics" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops that carry us!
+            © 2025 zinemap. created by <a href="https://ko-fi.com/cjwucomics" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops and libraries that carry our work!
           </p>
         </div>
       </footer>
