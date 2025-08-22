@@ -112,18 +112,21 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
     })
   }
 
+
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Check file size (1MB limit)
-      if (file.size > 1024 * 1024) {
-        setError('Image must be smaller than 1MB')
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB')
         return
       }
 
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file')
+      // Check file type - only allow JPG, PNG, GIF
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please select a JPG, PNG, or GIF file')
         return
       }
 
@@ -363,7 +366,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
                   <label htmlFor="cover-image" className="cursor-pointer">
                     <ImageIcon className="h-8 w-8 text-stone-400 mx-auto mb-2" />
                     <p className="text-sm text-stone-600">Click to upload cover image</p>
-                    <p className="text-xs text-stone-500 mt-1">JPG, PNG, GIF up to 1MB</p>
+                    <p className="text-xs text-stone-500 mt-1">JPG, PNG, GIF up to 5MB</p>
                   </label>
                 </div>
               )}
