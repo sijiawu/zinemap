@@ -741,26 +741,6 @@ export default function EventDetailPage() {
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Event Location */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-stone-800">Event Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-stone-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-stone-800">{event.address}</p>
-                      <p className="text-sm text-stone-600">
-                        {event.city}{event.state && `, ${event.state}`}, {event.country}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Contact & Links */}
             {(event.email || event.website || event.social) && (
               <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm overflow-hidden">
@@ -907,7 +887,26 @@ export default function EventDetailPage() {
                     <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <MessageSquare className="h-8 w-8 text-stone-400" />
                     </div>
-                    <p className="text-stone-500 text-lg font-medium mb-2">No community notes yet</p>
+                    <p className="text-stone-500 text-lg font-medium mb-6">No community notes yet</p>
+                    
+                    {!user ? (
+                      <Link href="/login">
+                        <Button
+                          size="sm"
+                          className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                        >
+                          Sign in to add a note
+                        </Button>
+                      </Link>
+                    ) : !userHasNote && (
+                      <Button
+                        onClick={() => setShowNoteForm(true)}
+                        size="sm"
+                        className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        Add a note
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1137,33 +1136,66 @@ export default function EventDetailPage() {
               </div>
             </div>
 
-            {/* Add Note Buttons */}
-            <div className="flex justify-center pt-4">
-              {!user ? (
-                <Link href="/login">
-                  <Button
-                    size="sm"
-                    className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    Sign in to add a note
-                  </Button>
-                </Link>
-              ) : !userHasNote && (
-                <Button
-                  onClick={() => setShowNoteForm(true)}
-                  size="sm"
-                  className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  Add a note
-                </Button>
-              )}
-            </div>
+
 
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
+            {/* Event Location */}
+            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-stone-800">Event Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-stone-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-stone-800">{event.address}</p>
+                      <p className="text-sm text-stone-600">
+                        {event.city}{event.state && `, ${event.state}`}, {event.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
+            {/* Who's Going */}
+            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-stone-800">Who's Going</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {attendees.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                                             {attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).slice(0, 8).map((attendee) => (
+                         <Link 
+                           key={attendee.id}
+                           href={`/profile/${attendee.user?.permalink || ''}`}
+                           className="hover:opacity-80 transition-opacity"
+                         >
+                           <Avatar className="h-10 w-10">
+                             <AvatarImage src={attendee.user?.profile_image || ''} alt={attendee.user?.display_name || 'User'} />
+                           </Avatar>
+                         </Link>
+                       ))}
+                      {attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).length > 8 && (
+                        <div className="flex items-center justify-center h-10 w-10 bg-stone-100 rounded-full text-stone-500 text-xs font-medium">
+                          +{attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).length - 8}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-stone-500 text-center py-4">
+                      No one has RSVP'd yet
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
