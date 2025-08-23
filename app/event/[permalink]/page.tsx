@@ -1003,7 +1003,7 @@ export default function EventDetailPage() {
                                   {note.anonymous && (
                                     <span className="font-medium text-stone-600">Anonymous</span>
                                   )}
-                                  {note.user?.email === event.email && (
+                                  {note.user?.email?.toLowerCase() === event.email?.toLowerCase() && (
                                     <Badge variant="outline" className="text-xs border-green-500 text-green-700 bg-green-50">
                                       Event Organizer
                                     </Badge>

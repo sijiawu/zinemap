@@ -97,7 +97,7 @@ export default function LibraryDetailPage() {
               setLibrarySubmitter(submitterData)
               
               // Check if submitter is the owner (email matches library email)
-              if (libraryData.email && submitterData.email === libraryData.email) {
+              if (libraryData.email && submitterData.email?.toLowerCase() === libraryData.email?.toLowerCase()) {
                 setIsOwner(true)
               }
             }

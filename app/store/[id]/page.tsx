@@ -97,7 +97,7 @@ export default function StoreDetailPage() {
               setStoreSubmitter(submitterData)
               
               // Check if submitter is the owner (email matches store email)
-              if (storeData.email && submitterData.email === storeData.email) {
+              if (storeData.email && submitterData.email?.toLowerCase() === storeData.email?.toLowerCase()) {
                 setIsOwner(true)
               }
             }
