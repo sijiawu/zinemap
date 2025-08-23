@@ -73,7 +73,7 @@ export default function HomePage() {
           .select('*')
           .eq('approved', true)
           .gte('end_date', new Date().toISOString().split('T')[0]) // Only future events
-          .order('start_date', { ascending: true })
+          .order('created_at', { ascending: false })
 
         if (eventsError) {
           console.error('Error fetching events:', eventsError)
