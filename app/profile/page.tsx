@@ -509,8 +509,8 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Profile Section */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardContent className="pt-6">
+            <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
+              <CardContent className="pt-6 overflow-hidden">
                 {isEditing ? (
                   <div className="space-y-3 sm:space-y-4">
                     <div>
@@ -605,7 +605,7 @@ export default function ProfilePage() {
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-xs text-stone-500 mt-1 break-words">
+                      <p className="text-xs text-stone-500 mt-1 break-words overflow-hidden" style={{ wordBreak: 'break-all' }}>
                         This will be your profile URL: zinemap.com/profile/{formData.permalink || 'your-url'}
                       </p>
                       {fieldErrors.permalink && (
@@ -678,7 +678,7 @@ export default function ProfilePage() {
                       {/* Profile Info */}
                       <div className="flex-1 min-w-0">
                         {/* Display Name with Profile URL Link */}
-                        <h2 className="text-xl sm:text-2xl font-bold text-stone-800 mb-2 font-gloria truncate">
+                        <h2 className="text-xl sm:text-2xl font-bold text-stone-800 mb-2 font-gloria">
                           {profile.display_name ? (
                             <Link 
                               href={`/profile/${profile.permalink}`}
@@ -693,16 +693,19 @@ export default function ProfilePage() {
                         
                         {/* Website Link */}
                         {profile.site && (
-                          <a 
-                            href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors max-w-full"
-                          >
-                            <Globe className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm truncate min-w-0">{profile.site}</span>
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          </a>
+                          <div className="w-full">
+                            <a 
+                              href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors w-full max-w-full"
+                              style={{ wordBreak: 'break-all' }}
+                            >
+                              <Globe className="h-4 w-4 flex-shrink-0" />
+                              <span className="text-sm min-w-0 flex-1 break-all">{profile.site}</span>
+                              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                            </a>
+                          </div>
                         )}
                         
                         {/* Bio */}
@@ -772,7 +775,7 @@ export default function ProfilePage() {
                     {zines.map((zine) => (
                       <div
                         key={zine.id}
-                        className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                        className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
                       >
                         {/* Cover Image */}
                         <div className="flex-shrink-0">
@@ -792,7 +795,7 @@ export default function ProfilePage() {
                         {/* Zine Info */}
                         <div className="flex-1 min-w-0">
                           <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800 truncate">{zine.title}</h3>
+                            <h3 className="font-semibold text-stone-800">{zine.title}</h3>
                           </div>
                           {zine.description && (
                             <p className="text-sm text-stone-600 line-clamp-2">
@@ -856,7 +859,7 @@ export default function ProfilePage() {
                     {attendingEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                        className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
                       >
                         {/* Event Icon */}
                         <div className="flex-shrink-0">
@@ -868,7 +871,7 @@ export default function ProfilePage() {
                         {/* Event Info */}
                         <div className="flex-1 min-w-0">
                           <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800 truncate">{event.name}</h3>
+                            <h3 className="font-semibold text-stone-800">{event.name}</h3>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
                               <Badge 
                                 className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"

@@ -140,7 +140,7 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Back to Map Button */}
         <div className="mb-6">
           <Link href="/">
@@ -151,14 +151,14 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Profile and Stats Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Profile Section */}
           <div className="lg:col-span-2">
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="space-y-6">
+            <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
+              <CardContent className="pt-6 overflow-hidden">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Profile Header */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                     {/* Profile Image */}
                     <div className="flex-shrink-0">
                       {profile.profile_image ? (
@@ -177,22 +177,23 @@ export default function PublicProfilePage() {
                     {/* Profile Info */}
                     <div className="flex-1 min-w-0">
                       {/* Display Name with Profile URL Link */}
-                                          <h2 className="text-2xl font-bold text-stone-800 mb-2 font-gloria">
-                      {profile.display_name || 'Anonymous User'}
-                    </h2>
+                      <h2 className="text-2xl font-bold text-stone-800 mb-2 font-gloria">
+                        {profile.display_name || 'Anonymous User'}
+                      </h2>
                       
-                      {/* Website Link */}
-                                              {profile.site && (
-                          <a 
-                            href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors"
-                          >
-                            {profile.site}
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
+                                              {/* Website Link */}
+                      {profile.site && (
+                        <a 
+                          href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors"
+                          style={{ wordBreak: 'break-all' }}
+                        >
+                          {profile.site}
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
                     </div>
                   </div>
 
@@ -211,7 +212,7 @@ export default function PublicProfilePage() {
 
           {/* Stats Section */}
           <div>
-            <Card className="bg-white border-stone-200 shadow-sm">
+            <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-lg font-gloria">Stats</CardTitle>
               </CardHeader>
@@ -270,8 +271,8 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Public Zines Section */}
-        <div className="mb-8">
-          <Card className="bg-white border-stone-200 shadow-sm">
+        <div className="mb-6 sm:mb-8">
+          <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-gloria">
                 <BookOpen className="h-5 w-5" />
@@ -286,7 +287,7 @@ export default function PublicProfilePage() {
                   <p className="text-stone-600">This user hasn't made any zines public yet.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {publicZines.map((zine) => (
                     <div
                       key={zine.id}

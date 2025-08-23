@@ -638,7 +638,7 @@ export default function EventDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-stone-50 font-serif">
       {/* Header */}
       <header className="w-full bg-white/70 backdrop-blur-sm border-b border-stone-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <Link href="/">
               <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800">
@@ -647,9 +647,9 @@ export default function EventDetailPage() {
             </Link>
           </div>
           
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-0">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-3">
                 <Badge className={`${getCategoryColor(event.category)} text-sm font-medium`}>
                   {getCategoryIcon(event.category)} {getEventCategoryDisplay(event.category)}
                 </Badge>
@@ -668,14 +668,14 @@ export default function EventDetailPage() {
                 )}
               </div>
               
-              <h1 className="text-3xl md:text-4xl font-bold text-stone-800 mb-2">{event.name}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-stone-800 mb-2 break-words">{event.name}</h1>
               
-              <div className="flex items-center text-stone-600 text-lg mb-4">
-                <MapPin className="h-5 w-5 mr-2" />
-                {event.city}{event.state && `, ${event.state}`}, {event.country}
+              <div className="flex items-center text-stone-600 text-lg mb-4 break-words">
+                <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
+                <span className="break-words">{event.city}{event.state && `, ${event.state}`}, {event.country}</span>
               </div>
 
-              <div className="flex items-center gap-6 text-stone-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-stone-600">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
                   {event.start_date === event.end_date 
@@ -697,7 +697,7 @@ export default function EventDetailPage() {
                   <Button
                     className="w-full bg-[#009035] hover:bg-[#007a2a] text-white"
                   >
-                    Sign in to indicate you're going
+                    Sign in to RSVP
                   </Button>
                 </Link>
               </div>
@@ -736,25 +736,44 @@ export default function EventDetailPage() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-6">
 
+            {/* Event Location */}
+            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-stone-800">Event Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-stone-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-stone-800">{event.address}</p>
+                      <p className="text-sm text-stone-600">
+                        {event.city}{event.state && `, ${event.state}`}, {event.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Contact & Links */}
             {(event.email || event.website || event.social) && (
-              <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+              <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold text-stone-800">Contact & Links</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 overflow-hidden">
                   {event.email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-stone-500" />
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-4 w-4 text-stone-500 flex-shrink-0 mt-0.5" />
                       <a 
                         href={`mailto:${event.email}`}
-                        className="text-[#009035] hover:text-[#007a2a] hover:underline"
+                        className="text-[#009035] hover:text-[#007a2a] hover:underline break-all"
                       >
                         {event.email}
                       </a>
@@ -762,35 +781,35 @@ export default function EventDetailPage() {
                   )}
                   
                   {event.website && (
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-stone-500" />
+                    <div className="flex items-start gap-3">
+                      <Globe className="h-4 w-4 text-stone-500 flex-shrink-0 mt-0.5" />
                       <a 
                         href={event.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#009035] hover:text-[#007a2a] hover:underline flex items-center gap-1"
+                        className="text-[#009035] hover:text-[#007a2a] hover:underline flex items-center gap-1 break-all"
                       >
-                        {event.website}
-                        <ExternalLink className="h-3 w-3" />
+                        <span className="break-all">{event.website}</span>
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
                       </a>
                     </div>
                   )}
                   
                   {event.social && (
-                    <div className="flex items-center gap-3">
-                      <Share2 className="h-4 w-4 text-stone-500" />
+                    <div className="flex items-start gap-3">
+                      <Share2 className="h-4 w-4 text-stone-500 flex-shrink-0 mt-0.5" />
                       {event.social.startsWith('http://') || event.social.startsWith('https://') ? (
                         <a 
                           href={event.social}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#009035] hover:text-[#007a2a] hover:underline flex items-center gap-1"
+                          className="text-[#009035] hover:text-[#007a2a] hover:underline flex items-center gap-1 break-all"
                         >
-                          {event.social}
-                          <ExternalLink className="h-3 w-3" />
+                          <span className="break-all">{event.social}</span>
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
                         </a>
                       ) : (
-                        <span className="text-stone-700">{event.social}</span>
+                        <span className="text-stone-700 break-words">{event.social}</span>
                       )}
                     </div>
                   )}
@@ -798,36 +817,18 @@ export default function EventDetailPage() {
               </Card>
             )}
 
+
+
             {/* Community Notes */}
             <Card className="bg-gradient-to-br from-white to-stone-50 border border-stone-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
-                      <MessageSquare className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-semibold text-stone-800">Community Notes</CardTitle>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-green-600" />
                   </div>
-                  {!user ? (
-                    <Link href="/login">
-                      <Button
-                        size="sm"
-                                                className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                      >
-                        Sign in to add a note
-                      </Button>
-                    </Link>
-                  ) : !userHasNote && (
-                    <Button
-                      onClick={() => setShowNoteForm(true)}
-                      size="sm"
-                      className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                      >
-                        Add a note
-                      </Button>
-                  )}
+                  <div>
+                    <CardTitle className="text-xl font-semibold text-stone-800">Community Notes</CardTitle>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1008,33 +1009,31 @@ export default function EventDetailPage() {
                                       Event Organizer
                                     </Badge>
                                   )}
+                                  <span className="text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
+                                    {formatDateReadable(note.submitted_at)}
+                                  </span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
-                                  {formatDateReadable(note.submitted_at)}
-                                </span>
-                                {user && note.user_id === user.id && (
-                                  <div className="flex gap-1 flex-shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleEditNote(note)}
-                                      className="text-stone-500 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteNote(note)}
-                                      className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-all duration-200"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
+                              {user && note.user_id === user.id && (
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditNote(note)}
+                                    className="text-stone-500 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteNote(note)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-green-50 transition-all duration-200"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                             
                             <div className="pl-11">
@@ -1138,74 +1137,32 @@ export default function EventDetailPage() {
               </div>
             </div>
 
+            {/* Add Note Buttons */}
+            <div className="flex justify-center pt-4">
+              {!user ? (
+                <Link href="/login">
+                  <Button
+                    size="sm"
+                    className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    Sign in to add a note
+                  </Button>
+                </Link>
+              ) : !userHasNote && (
+                <Button
+                  onClick={() => setShowNoteForm(true)}
+                  size="sm"
+                  className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  Add a note
+                </Button>
+              )}
+            </div>
+
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            {/* Event Location */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-stone-800">Event Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-stone-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-stone-800">{event.address}</p>
-                      <p className="text-sm text-stone-600">
-                        {event.city}{event.state && `, ${event.state}`}, {event.country}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Who's Going */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-stone-800">Who's Going ({attendeeCount})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                
-                {attendees.length === 0 ? (
-                  <p className="text-stone-500 text-center py-4">No one has indicated they're going yet.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {attendees.slice(0, 20).map((attendee) => (
-                      attendee.user?.permalink ? (
-                        <Link 
-                          key={attendee.id}
-                          href={`/profile/${attendee.user.permalink}`}
-                          className="hover:opacity-80 transition-opacity"
-                        >
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={attendee.user?.profile_image || "/placeholder-user.jpg"} />
-                            <AvatarFallback className="bg-stone-100 text-stone-600 text-xs">
-                              {attendee.user?.display_name?.charAt(0) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        </Link>
-                      ) : (
-                        <Avatar key={attendee.id} className="h-10 w-10">
-                          <AvatarImage src={attendee.user?.profile_image || "/placeholder-user.jpg"} />
-                          <AvatarFallback className="bg-stone-100 text-stone-600 text-xs">
-                            {attendee.user?.display_name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      )
-                    ))}
-                    {attendees.length > 20 && (
-                      <p className="text-sm text-stone-500 text-center pt-2">
-                        +{attendees.length - 20} more
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
 
           </div>
         </div>
