@@ -13,7 +13,7 @@ import {
   AlertCircle,
   ChevronUp,
   Calendar,
-  Store,
+  Store as StoreIcon,
   Save,
   DollarSign,
   X,
@@ -33,6 +33,8 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Zine, Batch, Store, CommunityNote } from "@/lib/types"
+import { formatDateReadable } from "@/lib/utils"
 
 function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; retailPrice?: number; onBatchAdded: () => void }) {
   const { user } = useSupabaseUser()
@@ -188,7 +190,7 @@ function AddBatchForm({ zineId, retailPrice, onBatchAdded }: { zineId: string; r
         <Card className="bg-gradient-to-br from-orange-50 to-rose-50 border-2 border-orange-200 shadow-lg mb-8">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center text-stone-800 text-xl font-serif">
-              <Store className="h-5 w-5 mr-2 text-orange-500" />
+              <StoreIcon className="h-5 w-5 mr-2 text-orange-500" />
               New Batch Drop-off
             </CardTitle>
             <p className="text-sm text-stone-600 font-mono">Record a new batch of zines placed at a store</p>
@@ -631,7 +633,7 @@ function CompactEditableBatchCard({ batch, onSave, onDelete, getStoreDetails, fo
             <div className="bg-stone-50 p-2 rounded border border-stone-100">
               <div className="text-stone-500 mb-1 text-xs font-mono">Placed</div>
               <div className="font-semibold text-stone-800 font-mono">
-                {new Date(batch.date_placed).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {formatDateReadable(batch.date_placed)}
               </div>
             </div>
             <div className="bg-stone-50 p-2 rounded border border-stone-100">
@@ -1002,7 +1004,9 @@ function BatchCard({ batch, isArchived = false, getStoreDetails, formatStoreLoca
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
           <div className="bg-rose-50 p-2 rounded border border-rose-100">
             <div className="text-stone-600 mb-1 text-xs">Placed</div>
-            <div className="font-semibold text-stone-800">{batch.copies_placed} copies</div>
+            <div className="font-semibold text-stone-800">
+              {new Date(batch.date_placed).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </div>
           </div>
           <div className="bg-blue-50 p-2 rounded border border-blue-100">
             <div className="text-stone-600 mb-1 text-xs">Sold</div>
@@ -1296,7 +1300,7 @@ export default function ZineDetailPage() {
           {activeBatches.length === 0 ? (
             <div className="text-center py-12">
               <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm max-w-md mx-auto">
-                <Store className="h-12 w-12 text-stone-400 mx-auto mb-4" />
+                <StoreIcon className="h-12 w-12 text-stone-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-stone-800 mb-2">No active batches</h3>
                 <p className="text-stone-600">Use the form above to add your first batch and start tracking sales.</p>
               </div>

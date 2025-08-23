@@ -219,14 +219,15 @@ export default function SuggestStoreEditPage() {
 
       const editSummary = changes.join('\n\n')
 
-      // Insert into store_edits table
+      // Insert into locale_edits table
       const { error: insertError } = await supabase
-        .from('store_edits')
+        .from('locale_edits')
         .insert([
           {
             store_id: store.id,
             user_id: user.id,
-            edit_summary: editSummary
+            edit_summary: editSummary,
+            status: 'pending'
           }
         ])
 

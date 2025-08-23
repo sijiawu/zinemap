@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Filter, ExternalLink, User, BookOpen } from "lucide-react"
+import { Search, MapPin, Filter, ExternalLink, User, BookOpen, Calendar, Clock, Plus, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -11,17 +11,35 @@ import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { Store, Library } from "@/lib/types"
+import { Store, Library, Event } from "@/lib/types"
+import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
 
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
   const [libraries, setLibraries] = useState<Library[]>([])
+  const [events, setEvents] = useState<Event[]>([])
   const [filteredStores, setFilteredStores] = useState<Store[]>([])
   const [filteredLibraries, setFilteredLibraries] = useState<Library[]>([])
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("stores")
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
+
+  // Handle clicks outside the add menu to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isAddMenuOpen && !(event.target as Element).closest('.add-menu-container')) {
+        setIsAddMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isAddMenuOpen])
 
 
   useEffect(() => {
@@ -47,6 +65,18 @@ export default function HomePage() {
 
         if (librariesError) {
           console.error('Error fetching libraries:', librariesError)
+        }
+
+        // Fetch events
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('approved', true)
+          .gte('end_date', new Date().toISOString().split('T')[0]) // Only future events
+          .order('start_date', { ascending: true })
+
+        if (eventsError) {
+          console.error('Error fetching events:', eventsError)
         }
 
         // Batch fetch all store tags
@@ -139,8 +169,34 @@ export default function HomePage() {
           }
         })
 
+        // Batch fetch all event user profiles
+        const eventUserIds = (eventsData || []).map(e => e.submitted_by)
+        const { data: allEventUserProfiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', eventUserIds)
+
+        // Create event user lookup map
+        const eventUserMap = new Map(
+          (allEventUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+        )
+
+        // Process events with user info
+        const eventsWithUser = (eventsData || []).map((event) => {
+          const userData = eventUserMap.get(event.submitted_by) || { display_name: 'Unknown user', permalink: null }
+          const user_name = userData.display_name
+          const user_permalink = userData.permalink
+
+          return {
+            ...event,
+            user_name,
+            user_permalink
+          }
+        })
+
         setStores(storesWithTags)
         setLibraries(librariesWithTags)
+        setEvents(eventsWithUser)
       } catch (error) {
         console.error('Error fetching data:', error)
         setStores([])
@@ -162,12 +218,13 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Filter stores and libraries based on debounced search query
+  // Filter stores, libraries, and events based on debounced search query
   useEffect(() => {
-    if (!stores || !libraries) return
+    if (!stores || !libraries || !events) return
 
     let filteredStores = stores
     let filteredLibraries = libraries
+    let filteredEvents = events
 
     // Apply search filter
     if (debouncedSearchQuery.trim()) {
@@ -188,11 +245,21 @@ export default function HomePage() {
         library.country.toLowerCase().includes(query) ||
         library.address.toLowerCase().includes(query)
       )
+
+      filteredEvents = events.filter(event => 
+        event.name.toLowerCase().includes(query) ||
+        event.city.toLowerCase().includes(query) ||
+        (event.state && event.state.toLowerCase().includes(query)) ||
+        event.country.toLowerCase().includes(query) ||
+        event.address.toLowerCase().includes(query) ||
+        event.category.toLowerCase().includes(query)
+      )
     }
 
     setFilteredStores(filteredStores)
     setFilteredLibraries(filteredLibraries)
-  }, [stores, libraries, debouncedSearchQuery])
+    setFilteredEvents(filteredEvents)
+  }, [stores, libraries, events, debouncedSearchQuery])
 
   if (loading) {
     return (
@@ -250,7 +317,7 @@ export default function HomePage() {
           {/* List View with Tabs */}
           <div className="space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="stores" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Stores ({filteredStores.length})
@@ -258,6 +325,10 @@ export default function HomePage() {
                 <TabsTrigger value="libraries" className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
                   Libraries ({filteredLibraries.length})
+                </TabsTrigger>
+                <TabsTrigger value="events" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Events ({filteredEvents.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -303,7 +374,14 @@ export default function HomePage() {
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <div>
-                              <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{store.name}</CardTitle>
+                              <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
+                                <Link 
+                                  href={`/store/${store.permalink || store.id}`}
+                                  className="hover:text-rose-600 transition-colors"
+                                >
+                                  {store.name}
+                                </Link>
+                              </CardTitle>
                               <div className="flex items-center text-stone-600 text-sm mb-2">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {store.city}{store.state && `, ${store.state}`}, {store.country}
@@ -405,7 +483,14 @@ export default function HomePage() {
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <div>
-                              <CardTitle className="text-lg font-semibold text-stone-800 mb-1">{library.name}</CardTitle>
+                              <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
+                                <Link 
+                                  href={`/library/${library.permalink || library.id}`}
+                                  className="hover:text-blue-600 transition-colors"
+                                >
+                                  {library.name}
+                                </Link>
+                              </CardTitle>
                               <div className="flex items-center text-stone-600 text-sm mb-2">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {library.city}{library.state && `, ${library.state}`}, {library.country}
@@ -464,6 +549,124 @@ export default function HomePage() {
                   )}
                 </div>
               </TabsContent>
+
+              {/* Events Tab */}
+              <TabsContent value="events" className="space-y-4">
+                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                  {filteredEvents.length === 0 ? (
+                    <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
+                      <CardContent className="p-6 text-center">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 text-[#009035]" />
+                        <h3 className="text-lg font-semibold text-stone-800 mb-2">
+                          {events.length === 0 ? "No events yet" : "No events match your filters"}
+                        </h3>
+                        <p className="text-stone-600 mb-4">
+                          {events.length === 0 
+                            ? "Be the first to add a zine event to the map!"
+                            : "Try adjusting your search or filter criteria."
+                          }
+                        </p>
+                        {events.length === 0 ? (
+                          <Link href="/add-event">
+                            <Button className="bg-[#009035] hover:bg-[#007a2a] text-white font-gloria">
+                              add first event
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button 
+                            onClick={() => setSearchQuery("")}
+                            variant="outline"
+                            className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                          >
+                            Clear Filters
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    filteredEvents.map((event) => (
+                      <Card
+                        key={event.id}
+                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
+                                <Link 
+                                  href={`/event/${event.permalink || event.id}`}
+                                  className="hover:text-[#009035] transition-colors"
+                                >
+                                  {event.name}
+                                </Link>
+                              </CardTitle>
+                              <div className="flex items-center text-stone-600 text-sm mb-2">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {event.city}{event.state && `, ${event.state}`}, {event.country}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Event Category and Dates */}
+                          <div className="flex items-center gap-2 mt-3">
+                            <Badge 
+                              variant="outline"
+                              className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                            >
+                              {getEventCategoryDisplay(event.category)}
+                            </Badge>
+                            <div className="flex items-center text-xs text-stone-500">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {formatDateReadable(event.start_date)}
+                              {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                            </div>
+                            {/* {event.category === "festival" && event.application_deadline && (
+                              <div className="flex items-center text-xs text-stone-500">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {new Date(event.application_deadline) < new Date() 
+                                  ? "Deadline passed" 
+                                  : `Apply by ${formatDateReadable(event.application_deadline)}`
+                                }
+                              </div>
+                            )} */}
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="pt-0">
+                          <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
+                            {event.notes}
+                          </p>
+                          {event.user_name && (
+                            <p className="text-xs text-gray-500 mb-3">
+                              Added by{' '}
+                              {event.user_permalink ? (
+                                <Link 
+                                  href={`/profile/${event.user_permalink}`}
+                                  className="text-stone-800 hover:underline transition-colors"
+                                >
+                                  {event.user_name}
+                                </Link>
+                              ) : (
+                                event.user_name
+                              )}
+                            </p>
+                          )}
+                          <Link href={`/event/${event.permalink || event.id}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-[#009035] text-[#009035] hover:bg-green-50 hover:border-[#007a2a] hover:text-[#007a2a] transition-colors bg-transparent"
+                            >
+                              View Details
+                              <ExternalLink className="h-3 w-3 ml-2" />
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
 
@@ -479,25 +682,48 @@ export default function HomePage() {
                   <StoreMap 
                     stores={stores}
                     libraries={libraries}
+                    events={events}
                     searchQuery={debouncedSearchQuery}
                   />
                 )}
               </CardContent>
             </Card>
 
-            {/* Add Store and Library buttons under the map */}
-            <div className="mt-8">
-              <div className="flex justify-center gap-4">
-                <Link href="/add-store">
-                  <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria px-6 py-3 text-lg rounded-lg shadow-md transition-colors">
-                    add a store
-                  </Button>
-                </Link>
-                <Link href="/add-library">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria px-6 py-3 text-lg rounded-lg shadow-md transition-colors">
-                    add a library
-                  </Button>
-                </Link>
+            {/* Add Store, Library, and Event buttons under the map */}
+            <div className="mt-8 flex justify-center">
+              <div className="relative add-menu-container">
+                <Button 
+                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                  className="bg-stone-800 hover:bg-stone-900 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors"
+                >
+                  Drop a Pin
+                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isAddMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
+                
+                {isAddMenuOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                    <div className="p-2 space-y-1">
+                      <Link href="/add-store" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-rose-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add a Store</span>
+                        </div>
+                      </Link>
+                      <Link href="/add-library" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-blue-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add a Library</span>
+                        </div>
+                      </Link>
+                      <Link href="/add-event" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-green-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-[#009035] rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add an Event</span>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

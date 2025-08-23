@@ -19,3 +19,113 @@ export function generatePermalink(displayName: string): string {
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
 }
+
+/**
+ * Format a date string consistently without timezone issues
+ * This ensures that dates like "2024-09-06" display as "9/6" regardless of timezone
+ */
+export function formatDate(dateString: string | Date): string {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  
+  // Handle invalid dates
+  if (isNaN(date.getTime())) return ''
+  
+  // Use UTC methods to avoid timezone shifts
+  const month = date.getUTCMonth() + 1
+  const day = date.getUTCDate()
+  const year = date.getUTCFullYear()
+  
+  // Format as M/D/YYYY
+  return `${month}/${day}/${year}`
+}
+
+/**
+ * Format a date string for display (M/D format)
+ * This ensures that dates like "2024-09-06" display as "9/6" regardless of timezone
+ */
+export function formatDateShort(dateString: string | Date): string {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  
+  // Handle invalid dates
+  if (isNaN(date.getTime())) return ''
+  
+  // Use UTC methods to avoid timezone shifts
+  const month = date.getUTCMonth() + 1
+  const day = date.getUTCDate()
+  
+  // Format as M/D
+  return `${month}/${day}`
+}
+
+/**
+ * Format a date string for display (Month Day, Year format)
+ * This ensures that dates like "2024-09-06" display as "Sept 6, 2025" regardless of timezone
+ */
+export function formatDateReadable(dateString: string | Date): string {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  
+  // Handle invalid dates
+  if (isNaN(date.getTime())) return ''
+  
+  // Use UTC methods to avoid timezone shifts
+  const month = date.getUTCMonth()
+  const day = date.getUTCDate()
+  const year = date.getUTCFullYear()
+  
+  // Month names
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
+  ]
+  
+  // Format as "Month Day, Year"
+  return `${monthNames[month]} ${day}, ${year}`
+}
+
+/**
+ * Format a date string for display (Month Day format)
+ * This ensures that dates like "2024-09-06" display as "Sept 6" regardless of timezone
+ */
+export function formatDateMonthDay(dateString: string | Date): string {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  
+  // Handle invalid dates
+  if (isNaN(date.getTime())) return ''
+  
+  // Use UTC methods to avoid timezone shifts
+  const month = date.getUTCMonth()
+  const day = date.getUTCDate()
+  
+  // Month names
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
+  ]
+  
+  // Format as "Month Day"
+  return `${monthNames[month]} ${day}`
+}
+
+/**
+ * Convert database event category to readable display name
+ */
+export function getEventCategoryDisplay(category: string): string {
+  switch (category) {
+    case 'festival':
+      return 'Festival/Fair'
+    case 'swap':
+      return 'Swap/Exchange'
+    case 'workshop':
+      return 'Workshop/Meetup'
+    default:
+      return category.replace(/\b\w/g, l => l.toUpperCase())
+  }
+}

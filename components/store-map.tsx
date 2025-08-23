@@ -1,25 +1,27 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
 import Link from "next/link"
-import { Store, Library } from "@/lib/types"
+import { Store, Library, Event } from "@/lib/types"
 
 interface StoreMapProps {
   stores: Store[]
   libraries: Library[]
+  events: Event[]
   searchQuery?: string
 }
 
-export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps) {
+export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
-  const [selectedLocation, setSelectedLocation] = useState<Store | Library | null>(null)
-  const [locationType, setLocationType] = useState<'store' | 'library'>('store')
-  const [mapView, setMapView] = useState<'stores' | 'libraries' | 'both'>('both')
+  const [selectedLocation, setSelectedLocation] = useState<Store | Library | Event | null>(null)
+  const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
+  const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
 
   // Initialize map (only once)
@@ -67,7 +69,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
     if (!map.current || !mapReady) return
     
     // Don't add markers if data isn't loaded yet
-    if (!stores || !libraries) return
+    if (!stores || !libraries || !events) return
 
 
 
@@ -98,8 +100,20 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
         )
       : libraries
 
-    // Add store markers (red) if stores should be shown
-    if (mapView === 'stores' || mapView === 'both') {
+    // Filter events based on search query
+    const filteredEvents = searchQuery.trim()
+      ? events.filter(event => 
+          event.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          event.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          (event.state && event.state.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
+          event.country.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          event.address.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          event.category.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        )
+      : events
+
+    // Add store markers (rose) if stores should be shown
+    if (mapView === 'stores' || mapView === 'all') {
       filteredStores.forEach((store) => {
         if (!store.latitude || !store.longitude) return
 
@@ -107,7 +121,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
         
         const markerEl = document.createElement("div")
         markerEl.innerHTML = `
-          <div style="background: #ef4444; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
+          <div style="background: #e11d48; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
@@ -128,7 +142,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
     }
 
     // Add library markers (blue) if libraries should be shown
-    if (mapView === 'libraries' || mapView === 'both') {
+    if (mapView === 'libraries' || mapView === 'all') {
       filteredLibraries.forEach((library) => {
         if (!library.latitude || !library.longitude) return
 
@@ -155,7 +169,36 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
         markersRef.current.push(marker)
       })
     }
-  }, [stores, libraries, mapView, searchQuery, mapReady])
+
+    // Add event markers (green) if events should be shown
+    if (mapView === 'events' || mapView === 'all') {
+      filteredEvents.forEach((event) => {
+        if (!event.latitude || !event.longitude) return
+
+        const mapboxgl = require("mapbox-gl")
+        
+        const markerEl = document.createElement("div")
+        markerEl.innerHTML = `
+          <div style="background: #009035; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        `
+
+        markerEl.addEventListener("click", () => {
+          setSelectedLocation(event)
+          setLocationType('event')
+        })
+
+        const marker = new mapboxgl.Marker(markerEl)
+          .setLngLat([event.longitude, event.latitude])
+          .addTo(map.current)
+
+        markersRef.current.push(marker)
+      })
+    }
+  }, [stores, libraries, events, mapView, searchQuery, mapReady])
 
   return (
     <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
@@ -168,12 +211,12 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
             onClick={() => setMapView('stores')}
             className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
               mapView === 'stores' 
-                ? 'bg-rose-500 text-white' 
+                ? 'bg-[#e11d48] text-white' 
                 : 'bg-stone-100 text-stone-700 hover:bg-rose-50 hover:bg-rose-100'
             }`}
           >
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-rose-500 rounded-full"></div>
+              <div className="w-2.5 h-2.5 bg-[#e11d48] rounded-full"></div>
               Stores
             </div>
           </button>
@@ -191,9 +234,22 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
             </div>
           </button>
           <button
-            onClick={() => setMapView('both')}
+            onClick={() => setMapView('events')}
             className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              mapView === 'both' 
+              mapView === 'events' 
+                ? 'bg-[#009035] text-white' 
+                : 'bg-stone-100 text-stone-700 hover:bg-green-50 hover:bg-green-100'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-[#009035] rounded-full"></div>
+              Events
+            </div>
+          </button>
+          <button
+            onClick={() => setMapView('all')}
+            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              mapView === 'all' 
                 ? 'bg-[#DBDBDC] text-stone-800' 
                 : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
@@ -205,7 +261,7 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
 
       {/* Location Popup */}
       {selectedLocation && (
-        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 max-w-sm z-10">
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 w-80 z-10">
           <button
             onClick={() => setSelectedLocation(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
@@ -216,13 +272,38 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
           <div className="flex items-start gap-3 mb-3">
             <div className="flex-shrink-0 mt-0.5">
               {locationType === 'store' ? (
-                <MapPin className="h-5 w-5 text-rose-500" />
-              ) : (
+                <MapPin className="h-5 w-5 text-[#e11d48]" />
+              ) : locationType === 'library' ? (
                 <BookOpen className="h-5 w-5 text-blue-500" />
+              ) : (
+                <MapPin className="h-5 w-5 text-[#009035]" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-800 text-base leading-tight">{selectedLocation.name}</h3>
+              <h3 className="font-semibold text-gray-800 text-base leading-tight">
+                {locationType === 'store' ? (
+                  <Link 
+                    href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    className="hover:text-[#e11d48] transition-colors"
+                  >
+                    {selectedLocation.name}
+                  </Link>
+                ) : locationType === 'library' ? (
+                  <Link 
+                    href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    {selectedLocation.name}
+                  </Link>
+                ) : (
+                  <Link 
+                    href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    className="hover:text-[#009035] transition-colors"
+                  >
+                    {selectedLocation.name}
+                  </Link>
+                )}
+              </h3>
             </div>
           </div>
 
@@ -230,7 +311,36 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
             📍 {selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}
           </p>
 
-          {/* Tags */}
+          {/* Event-specific info */}
+          {locationType === 'event' && 'category' in selectedLocation && selectedLocation.category && (
+            <div className="mb-4">
+              <Badge 
+                variant="outline"
+                className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 mb-2"
+              >
+                {getEventCategoryDisplay(selectedLocation.category)}
+              </Badge>
+              {'start_date' in selectedLocation && selectedLocation.start_date && (
+                <p className="text-xs text-gray-500">
+                  📅 {formatDateReadable(selectedLocation.start_date)}
+                  {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && 
+                    ` - ${formatDateReadable(selectedLocation.end_date)}`
+                  }
+                </p>
+              )}
+              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (
+                <p className="text-xs text-gray-500 mt-1">
+                  <Clock className="h-3 w-3 inline mr-1" />
+                  {new Date(selectedLocation.application_deadline) < new Date() 
+                    ? "Deadline passed" 
+                    : `Apply by ${formatDateReadable(selectedLocation.application_deadline)}`
+                  }
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Tags - Show for all types to maintain consistent spacing */}
           {locationType === 'store' && 'store_tags' in selectedLocation && selectedLocation.store_tags && selectedLocation.store_tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-4">
               {selectedLocation.store_tags.map((storeTag) => (
@@ -259,6 +369,13 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
             </div>
           )}
 
+          {/* Empty space for events to maintain consistent height */}
+          {locationType === 'event' && (
+            <div className="mb-4">
+              {/* This empty div ensures events have the same spacing as stores/libraries with tags */}
+            </div>
+          )}
+
           {/* User info */}
           {selectedLocation.user_name && (
             <p className="text-xs text-gray-500 mb-3">
@@ -279,13 +396,19 @@ export function StoreMap({ stores, libraries, searchQuery = "" }: StoreMapProps)
           {/* View Details Button */}
           {locationType === 'store' ? (
             <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
-              <Button size="sm" variant="outline" className="w-full border-rose-300 text-rose-700 hover:bg-rose-50">
+              <Button size="sm" variant="outline" className="w-full border-[#e11d48] text-[#e11d48] hover:bg-rose-50">
+                View Details
+              </Button>
+            </Link>
+          ) : locationType === 'library' ? (
+            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+              <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
                 View Details
               </Button>
             </Link>
           ) : (
-            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
-              <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+            <Link href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+              <Button size="sm" variant="outline" className="w-full border-[#009035] text-[#009035] hover:bg-green-50">
                 View Details
               </Button>
             </Link>

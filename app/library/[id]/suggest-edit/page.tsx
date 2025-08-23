@@ -228,14 +228,15 @@ export default function SuggestLibraryEditPage() {
 
       const editSummary = changes.join('\n\n')
 
-      // Insert into library_edits table
+      // Insert into locale_edits table
       const { error: insertError } = await supabase
-        .from('library_edits')
+        .from('locale_edits')
         .insert([
           {
             library_id: library.id,
             user_id: user.id,
-            edit_summary: editSummary
+            edit_summary: editSummary,
+            status: 'pending'
           }
         ])
 

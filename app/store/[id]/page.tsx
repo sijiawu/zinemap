@@ -158,7 +158,7 @@ export default function StoreDetailPage() {
             if (userIds.length > 0) {
               const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, display_name, email, permalink')
+                .select('id, display_name, email, permalink, profile_image')
                 .in('id', userIds)
               
               if (profilesData) {
@@ -282,7 +282,7 @@ export default function StoreDetailPage() {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email')
+            .select('id, display_name, email, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -383,7 +383,7 @@ export default function StoreDetailPage() {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email')
+            .select('id, display_name, email, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -645,24 +645,32 @@ export default function StoreDetailPage() {
         )}
 
         {/* Share Your Experience */}
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 shadow-sm">
+        <Card className="bg-gradient-to-br from-white to-rose-50 border border-rose-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="pb-4">
-            <CardTitle className="text-stone-800 text-xl flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-rose-600" />
-              Community Notes ({notes.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-rose-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-stone-800 text-xl font-semibold">Community Notes ({notes.length})</CardTitle>
+                  <p className="text-sm text-stone-600">Share your thoughts and experiences</p>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Note List */}
             {notes.length > 0 && (
               <div className="space-y-4 mb-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="bg-white p-4 rounded-lg border border-rose-100">
+                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-rose-100 hover:border-rose-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-rose-50 hover:to-white">
                     {editingNote?.id === note.id ? (
                       // Edit form
                       <form onSubmit={handleUpdateNote} className="space-y-4">
                         <div>
-                          <Label htmlFor="editNote" className="text-sm font-medium text-stone-700">
+                          <Label htmlFor="editNote" className="text-sm font-medium text-stone-700 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-rose-600" />
                             Your Note *
                           </Label>
                           <Textarea
@@ -670,7 +678,8 @@ export default function StoreDetailPage() {
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             placeholder="Share your experience at this store..."
-                            className="mt-1 min-h-[120px]"
+                            className="mt-2 bg-white border-stone-300 focus:border-rose-400 focus:ring-rose-200 transition-all duration-200"
+                            rows={3}
                             maxLength={1000}
                             required
                           />
@@ -686,6 +695,7 @@ export default function StoreDetailPage() {
                                 id="editHasStockedHere"
                                 checked={editHasStockedHere}
                                 onCheckedChange={(checked) => setEditHasStockedHere(checked as boolean)}
+                                className="text-rose-600 border-stone-300"
                               />
                               <Label htmlFor="editHasStockedHere" className="text-sm text-stone-600">
                                 I have stocked zines at this location
@@ -696,6 +706,7 @@ export default function StoreDetailPage() {
                                 id="editAnonymous"
                                 checked={editAnonymous}
                                 onCheckedChange={(checked) => setEditAnonymous(checked as boolean)}
+                                className="text-rose-600 border-stone-300"
                               />
                               <Label htmlFor="editAnonymous" className="text-sm text-stone-600">
                                 Submit anonymously
@@ -705,7 +716,10 @@ export default function StoreDetailPage() {
                         </div>
 
                         {editError && (
-                          <div className="text-red-600 text-sm">{editError}</div>
+                          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            {editError}
+                          </div>
                         )}
 
                         <div className="flex flex-col sm:flex-row justify-end gap-2">
@@ -714,7 +728,7 @@ export default function StoreDetailPage() {
                             variant="outline"
                             size="sm"
                             onClick={handleCancelEdit}
-                            className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                            className="border-stone-300 text-stone-700 hover:bg-stone-50 transition-all duration-200"
                           >
                             <X className="h-4 w-4 mr-1" />
                             Cancel
@@ -722,7 +736,7 @@ export default function StoreDetailPage() {
                           <Button
                             type="submit"
                             size="sm"
-                            className="bg-rose-500 hover:bg-rose-600 text-white"
+                            className="bg-rose-500 hover:bg-rose-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
                           >
                             <Save className="h-4 w-4 mr-1" />
                             Save Changes
@@ -732,32 +746,56 @@ export default function StoreDetailPage() {
                     ) : (
                       // Display note
                       <>
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
-                            {!note.anonymous && note.user && (
-                              <span>
-                                {note.user.permalink ? (
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center overflow-hidden">
+                              {!note.anonymous && note.user ? (
+                                note.user.profile_image ? (
                                   <Link 
-                                    href={`/profile/${note.user.permalink}`}
-                                    className="text-stone-800 hover:underline transition-colors"
+                                    href={`/profile/${note.user.permalink || note.user.id}`}
+                                    className="hover:opacity-80 transition-opacity"
                                   >
-                                    {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                    <img 
+                                      src={note.user.profile_image} 
+                                      alt={note.user.display_name || 'User'} 
+                                      className="w-full h-full object-cover"
+                                    />
                                   </Link>
                                 ) : (
-                                  note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
-                                )}
+                                  <User className="h-4 w-4 text-rose-600" />
+                                )
+                              ) : (
+                                <User className="h-4 w-4 text-rose-600" />
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
+                              {!note.anonymous && note.user && (
+                                <span className="font-medium text-stone-800">
+                                  {note.user.permalink ? (
+                                    <Link 
+                                      href={`/profile/${note.user.permalink}`}
+                                      className="hover:text-rose-600 hover:underline transition-colors"
+                                    >
+                                      {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                    </Link>
+                                  ) : (
+                                    note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                  )}
+                                </span>
+                              )}
+                              {note.anonymous && (
+                                <span className="font-medium text-stone-600">Anonymous</span>
+                              )}
+                              <span className="text-stone-400">|</span>
+                              <span className="bg-stone-100 px-2 py-1 rounded-full text-xs">
+                                {new Date(note.submitted_at).toLocaleDateString()}
                               </span>
-                            )}
-                            {note.anonymous && (
-                              <span>Anonymous</span>
-                            )}
-                            <span>|</span>
-                            <span>{new Date(note.submitted_at).toLocaleDateString()}</span>
-                            {note.has_stocked_here && (
-                              <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-xs">
-                                has stocked zines here
-                              </Badge>
-                            )}
+                              {note.has_stocked_here && (
+                                <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 text-xs">
+                                  has stocked zines here
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           {user && note.user_id === user.id && (
                             <div className="flex gap-1 flex-shrink-0">
@@ -765,7 +803,7 @@ export default function StoreDetailPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleEditNote(note)}
-                                className="text-stone-500 hover:text-stone-700"
+                                className="text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -773,14 +811,16 @@ export default function StoreDetailPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDeleteNote(note)}
-                                className="text-red-500 hover:text-red-700"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-all duration-200"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           )}
                         </div>
-                        <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        <div className="pl-11">
+                          <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        </div>
                       </>
                     )}
                   </div>
@@ -790,8 +830,12 @@ export default function StoreDetailPage() {
             
             {/* No notes message */}
             {notes.length === 0 && !loading && (
-              <div className="text-center py-4 mb-6">
-                <p className="text-stone-500 text-sm">No community notes yet. Be the first to share your experience!</p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-stone-400" />
+                </div>
+                <p className="text-stone-500 text-lg font-medium mb-2">No community notes yet</p>
+                <p className="text-stone-400 text-sm">Be the first to share your experience at this store!</p>
               </div>
             )}
 
@@ -911,7 +955,7 @@ export default function StoreDetailPage() {
                   e.preventDefault()
                   setFeedbackError(null)
                   try {
-                    const { error } = await supabase.from('store_feedback').insert([
+                    const { error } = await supabase.from('locale_feedback').insert([
                       {
                         store_id: store.id,
                         feedback,

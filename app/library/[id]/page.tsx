@@ -158,7 +158,7 @@ export default function LibraryDetailPage() {
             if (userIds.length > 0) {
               const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, display_name, email, permalink')
+                .select('id, display_name, email, profile_image, permalink')
                 .in('id', userIds)
               
               if (profilesData) {
@@ -289,7 +289,7 @@ export default function LibraryDetailPage() {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email')
+            .select('id, display_name, email, profile_image, permalink')
             .in('id', userIds)
           
           if (profilesData) {
@@ -609,24 +609,32 @@ export default function LibraryDetailPage() {
         )}
 
         {/* Share Your Experience */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-sm">
+        <Card className="bg-gradient-to-br from-white to-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="pb-4">
-            <CardTitle className="text-stone-800 text-xl flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
-              Community Notes ({notes.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-stone-800 text-xl font-semibold">Community Notes ({notes.length})</CardTitle>
+                  <p className="text-sm text-stone-600">Share your thoughts and experiences</p>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Note List */}
             {notes.length > 0 && (
               <div className="space-y-4 mb-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="bg-white p-4 rounded-lg border border-blue-100">
+                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-white">
                     {editingNote?.id === note.id ? (
                       // Edit form
                       <form onSubmit={handleUpdateNote} className="space-y-4">
                         <div>
-                          <Label htmlFor="editNote" className="text-sm font-medium text-stone-700">
+                          <Label htmlFor="editNote" className="text-sm font-medium text-stone-700 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
                             Your Note *
                           </Label>
                           <Textarea
@@ -634,7 +642,8 @@ export default function LibraryDetailPage() {
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             placeholder="Share your experience at this library..."
-                            className="mt-1 min-h-[120px]"
+                            className="mt-2 bg-white border-stone-300 focus:border-blue-400 focus:ring-blue-200 transition-all duration-200"
+                            rows={3}
                             maxLength={1000}
                             required
                           />
@@ -650,6 +659,7 @@ export default function LibraryDetailPage() {
                                 id="editHasVisitedHere"
                                 checked={editHasVisitedHere}
                                 onCheckedChange={(checked) => setEditHasVisitedHere(checked as boolean)}
+                                className="text-blue-600 border-stone-300"
                               />
                               <Label htmlFor="editHasVisitedHere" className="text-sm text-stone-600">
                                 I have visited this library
@@ -660,6 +670,7 @@ export default function LibraryDetailPage() {
                                 id="editAnonymous"
                                 checked={editAnonymous}
                                 onCheckedChange={(checked) => setEditAnonymous(checked as boolean)}
+                                className="text-blue-600 border-stone-300"
                               />
                               <Label htmlFor="editAnonymous" className="text-sm text-stone-600">
                                 Submit anonymously
@@ -669,7 +680,10 @@ export default function LibraryDetailPage() {
                         </div>
 
                         {editError && (
-                          <div className="text-red-600 text-sm">{editError}</div>
+                          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            {editError}
+                          </div>
                         )}
 
                         <div className="flex flex-col sm:flex-row justify-end gap-2">
@@ -678,7 +692,7 @@ export default function LibraryDetailPage() {
                             variant="outline"
                             size="sm"
                             onClick={handleCancelEdit}
-                            className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                            className="border-stone-300 text-stone-700 hover:bg-stone-50 transition-all duration-200"
                           >
                             <X className="h-4 w-4 mr-1" />
                             Cancel
@@ -686,7 +700,7 @@ export default function LibraryDetailPage() {
                           <Button
                             type="submit"
                             size="sm"
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                            className="bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
                           >
                             <Save className="h-4 w-4 mr-1" />
                             Save Changes
@@ -696,42 +710,67 @@ export default function LibraryDetailPage() {
                     ) : (
                       // Display note
                       <>
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
-                            {!note.anonymous && note.user && (
-                              <span>
-                                {note.user.permalink ? (
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center overflow-hidden">
+                              {!note.anonymous && note.user ? (
+                                note.user.profile_image ? (
                                   <Link 
-                                    href={`/profile/${note.user.permalink}`}
-                                    className="text-stone-800 hover:underline transition-colors"
+                                    href={`/profile/${note.user.permalink || note.user.id}`}
+                                    className="hover:opacity-80 transition-opacity"
                                   >
-                                    {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                    <img 
+                                      src={note.user.profile_image} 
+                                      alt={note.user.display_name || 'User'} 
+                                      className="w-full h-full object-cover"
+                                    />
                                   </Link>
                                 ) : (
-                                  note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
-                                )}
-                              </span>
-                            )}
-                            {note.anonymous && (
-                              <span className="italic">Anonymous</span>
-                            )}
-                            {note.has_stocked_here && (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                has been here
-                              </Badge>
-                            )}
+                                  <User className="h-4 w-4 text-blue-600"
+                                />
+                                )
+                              ) : (
+                                <User className="h-4 w-4 text-blue-600" />
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600">
+                              {!note.anonymous && note.user && (
+                                <span className="font-medium text-stone-800">
+                                  {note.user.permalink ? (
+                                    <Link 
+                                      href={`/profile/${note.user.permalink}`}
+                                      className="hover:text-blue-600 hover:underline transition-colors"
+                                    >
+                                      {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                    </Link>
+                                  ) : (
+                                    note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                  )}
+                                </span>
+                              )}
+                              {note.anonymous && (
+                                <span className="font-medium text-stone-600 italic">Anonymous</span>
+                              )}
+                              {note.has_stocked_here && (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  has been here
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           
                           <div className="flex items-center gap-2 text-xs text-stone-500">
-                            <span>{new Date(note.submitted_at).toLocaleDateString()}</span>
+                            <span className="bg-stone-100 px-2 py-1 rounded-full">
+                              {new Date(note.submitted_at).toLocaleDateString()}
+                            </span>
                             {user && note.user_id === user.id && (
                               <div className="flex gap-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditNote(note)}
-                                  className="h-6 w-6 p-0 text-stone-400 hover:text-stone-600"
+                                  className="h-6 w-6 p-0 text-stone-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
                                 >
                                   <Edit className="h-3 w-3" />
                                 </Button>
@@ -739,7 +778,7 @@ export default function LibraryDetailPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeleteNote(note)}
-                                  className="h-6 w-6 p-0 text-stone-400 hover:text-red-600"
+                                  className="h-6 w-6 p-0 text-stone-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -748,7 +787,9 @@ export default function LibraryDetailPage() {
                           </div>
                         </div>
                         
-                        <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        <div className="pl-11">
+                          <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        </div>
                       </>
                     )}
                   </div>
@@ -756,12 +797,14 @@ export default function LibraryDetailPage() {
               </div>
             )}
 
-
-
             {/* No notes message */}
             {notes.length === 0 && !loading && (
-              <div className="text-center py-4 mb-6">
-                <p className="text-stone-500 text-sm">No community notes yet. Be the first to share your experience!</p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-stone-400" />
+                </div>
+                <p className="text-stone-500 text-lg font-medium mb-2">No community notes yet</p>
+                <p className="text-stone-400 text-sm">Be the first to share your experience at this library!</p>
               </div>
             )}
 
@@ -885,7 +928,7 @@ export default function LibraryDetailPage() {
                   e.preventDefault()
                   setFeedbackError(null)
                   try {
-                    const { error } = await supabase.from('library_feedback').insert([
+                    const { error } = await supabase.from('locale_feedback').insert([
                       {
                         library_id: library.id,
                         feedback,

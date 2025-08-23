@@ -9,13 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Edit, Globe, User, FileText, BookOpen, Store, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight } from "lucide-react"
+import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { UserProfile, Zine } from '@/lib/types'
-import { generatePermalink } from '@/lib/utils'
+import { generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 import AddZineModal from '@/components/AddZineModal'
+import { Store, Library, Event } from "@/lib/types"
+import { formatDateReadable } from "@/lib/utils"
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useSupabaseUser()
@@ -32,8 +34,9 @@ export default function ProfilePage() {
   const [contributions, setContributions] = useState<{
     stores: number
     libraries: number
+    events: number
     notes: number
-  }>({ stores: 0, libraries: 0, notes: 0 })
+  }>({ stores: 0, libraries: 0, events: 0, notes: 0 })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +62,17 @@ export default function ProfilePage() {
     is_public: boolean
   } | null>(null)
   const [showZineModal, setShowZineModal] = useState(false)
+  const [attendingEvents, setAttendingEvents] = useState<{
+    id: string
+    name: string
+    category: string
+    start_date: string
+    end_date: string
+    city: string
+    state?: string
+    country: string
+    permalink?: string
+  }[]>([])
 
   const fetchProfileData = useCallback(async () => {
     if (!user) return
@@ -105,6 +119,41 @@ export default function ProfilePage() {
       // Fetch user's contributions (stores, libraries, community notes)
       await fetchContributions(user.id)
 
+      // Fetch events the user is attending
+      const { data: attendingEventsData } = await supabase
+        .from('event_attendees')
+        .select(`
+          event_id,
+          events!inner(
+            id,
+            name,
+            category,
+            start_date,
+            end_date,
+            city,
+            state,
+            country,
+            permalink
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (attendingEventsData) {
+        const events = attendingEventsData.map((item: any) => ({
+          id: item.events.id,
+          name: item.events.name,
+          category: item.events.category,
+          start_date: item.events.start_date,
+          end_date: item.events.end_date,
+          city: item.events.city,
+          state: item.events.state,
+          country: item.events.country,
+          permalink: item.events.permalink
+        }))
+        setAttendingEvents(events)
+      }
+
     } catch (err) {
       console.error('Error fetching profile data:', err)
       setError('Failed to load profile data')
@@ -128,6 +177,12 @@ export default function ProfilePage() {
         .select('*', { count: 'exact', head: true })
         .eq('submitted_by', userId)
 
+      // Count events
+      const { count: eventsCount } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId)
+
       // Count community notes
       const { count: notesCount } = await supabase
         .from('community_notes')
@@ -137,11 +192,12 @@ export default function ProfilePage() {
       setContributions({
         stores: storesCount || 0,
         libraries: librariesCount || 0,
+        events: eventsCount || 0,
         notes: notesCount || 0
       })
     } catch (err) {
       console.error('Contributions fetch error:', err)
-      setContributions({ stores: 0, libraries: 0, notes: 0 })
+      setContributions({ stores: 0, libraries: 0, events: 0, notes: 0 })
     }
   }
 
@@ -709,13 +765,16 @@ export default function ProfilePage() {
                   </div>
                   <div className="relative group">
                     <span className="text-lg font-semibold text-stone-800 cursor-help">
-                      {contributions.stores + contributions.libraries + contributions.notes}
+                      {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
                     </span>
                     {/* Hover tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       <div className="text-center">
                         <div className="text-stone-300 text-xs">
                           spots: {contributions.stores + contributions.libraries}
+                        </div>
+                        <div className="text-stone-300 text-xs mt-1">
+                          events: {contributions.events}
                         </div>
                         <div className="text-stone-300 text-xs mt-1">
                           notes: {contributions.notes}
@@ -833,6 +892,77 @@ export default function ProfilePage() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Events Section */}
+        <div className="mt-8">
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events I'm Going To
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendingEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                  <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
+                  <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
+                  <Link href="/">
+                    <Button>Browse Events</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {attendingEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                    >
+                      {/* Event Icon */}
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
+                          <Calendar className="h-8 w-8 text-[#009035]" />
+                        </div>
+                      </div>
+                      
+                      {/* Event Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-2">
+                          <h3 className="font-semibold text-stone-800">{event.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge 
+                              className="text-xs bg-green-50 text-[#009035] border-green-200"
+                            >
+                              {getEventCategoryDisplay(event.category)}
+                            </Badge>
+                            <span className="text-sm text-stone-500">
+                              {new Date(event.start_date).toLocaleDateString()}
+                              {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-stone-600">
+                          📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
+                        </p>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-3">
+                        <Link href={`/event/${event.permalink || event.id}`}>
+                          <Button variant="outline" size="sm">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Event
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   ))}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3 } from "lucide-react"
+import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,23 +11,35 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
-import { Store, Library } from "@/lib/types"
+import { Store, Library, Event } from "@/lib/types"
+import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
 
 export default function AdminPage() {
   const { user, loading } = useSupabaseUser()
   const router = useRouter()
   const [unapprovedStores, setUnapprovedStores] = useState<Store[]>([])
   const [unapprovedLibraries, setUnapprovedLibraries] = useState<Library[]>([])
+  const [unapprovedEvents, setUnapprovedEvents] = useState<Event[]>([])
+
+  // Debug: Log when unapprovedEvents changes
+  useEffect(() => {
+    console.log('unapprovedEvents state updated:', unapprovedEvents)
+  }, [unapprovedEvents])
   const [storeEdits, setStoreEdits] = useState<any[]>([])
   const [libraryEdits, setLibraryEdits] = useState<any[]>([])
+  const [eventEdits, setEventEdits] = useState<any[]>([])
   const [loadingStores, setLoadingStores] = useState(true)
   const [loadingLibraries, setLoadingLibraries] = useState(true)
+  const [loadingEvents, setLoadingEvents] = useState(true)
   const [loadingStoreEdits, setLoadingStoreEdits] = useState(true)
   const [loadingLibraryEdits, setLoadingLibraryEdits] = useState(true)
+  const [loadingEventEdits, setLoadingEventEdits] = useState(true)
   const [processingStore, setProcessingStore] = useState<string | null>(null)
   const [processingLibrary, setProcessingLibrary] = useState<string | null>(null)
+  const [processingEvent, setProcessingEvent] = useState<string | null>(null)
   const [processingStoreEdit, setProcessingStoreEdit] = useState<string | null>(null)
   const [processingLibraryEdit, setProcessingLibraryEdit] = useState<string | null>(null)
+  const [processingEventEdit, setProcessingEventEdit] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("stores")
@@ -49,8 +61,10 @@ export default function AdminPage() {
     if (isAdmin) {
       fetchUnapprovedStores()
       fetchUnapprovedLibraries()
+      fetchUnapprovedEvents()
       fetchStoreEdits()
       fetchLibraryEdits()
+      fetchEventEdits()
     }
   }, [user, loading, isAdmin, router])
 
@@ -101,6 +115,36 @@ export default function AdminPage() {
       setError('Failed to load unapproved libraries')
     } finally {
       setLoadingLibraries(false)
+    }
+  }
+
+  const fetchUnapprovedEvents = async () => {
+    try {
+      setLoadingEvents(true)
+      setError(null)
+
+      console.log('Fetching unapproved events...')
+      
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('approved', false)
+        .order('created_at', { ascending: false })
+
+      console.log('Supabase response:', { data, error })
+
+      if (error) {
+        console.error('Error fetching unapproved events:', error)
+        setError('Failed to load unapproved events')
+      } else {
+        console.log('Setting unapproved events:', data)
+        setUnapprovedEvents(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching unapproved events:', error)
+      setError('Failed to load unapproved events')
+    } finally {
+      setLoadingEvents(false)
     }
   }
 
@@ -208,18 +252,71 @@ export default function AdminPage() {
     }
   }
 
+  const handleApproveEvent = async (eventId: string) => {
+    try {
+      setProcessingEvent(eventId)
+      setError(null)
+      setSuccess(null)
+
+      const { error } = await supabase
+        .from('events')
+        .update({ approved: true })
+        .eq('id', eventId)
+
+      if (error) {
+        console.error('Error approving event:', error)
+        setError('Failed to approve event')
+      } else {
+        setSuccess('Event approved successfully!')
+        // Remove the event from the list
+        setUnapprovedEvents(prev => prev.filter(event => event.id !== eventId))
+      }
+    } catch (error) {
+      console.error('Error approving event:', error)
+    } finally {
+      setProcessingEvent(null)
+    }
+  }
+
+  const handleRejectEvent = async (eventId: string) => {
+    try {
+      setProcessingEvent(eventId)
+      setError(null)
+      setSuccess(null)
+
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId)
+
+      if (error) {
+        console.error('Error rejecting event:', error)
+        setError('Failed to reject event')
+      } else {
+        setSuccess('Event rejected and removed')
+        // Remove the event from the list
+        setUnapprovedEvents(prev => prev.filter(event => event.id !== eventId))
+      }
+    } catch (error) {
+      console.error('Error rejecting event:', error)
+    } finally {
+      setProcessingEvent(null)
+    }
+  }
+
   const fetchStoreEdits = async () => {
     try {
       setLoadingStoreEdits(true)
       setError(null)
 
       const { data, error } = await supabase
-        .from('store_edits')
+        .from('locale_edits')
         .select(`
           *,
           stores!inner(name, city, country)
         `)
         .eq('status', 'pending')
+        .not('store_id', 'is', null)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -230,7 +327,6 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching store edits:', error)
-      setError('Failed to load store edits')
     } finally {
       setLoadingStoreEdits(false)
     }
@@ -242,12 +338,13 @@ export default function AdminPage() {
       setError(null)
 
       const { data, error } = await supabase
-        .from('library_edits')
+        .from('locale_edits')
         .select(`
           *,
           libraries!inner(name, city, country)
         `)
         .eq('status', 'pending')
+        .not('library_id', 'is', null)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -258,9 +355,36 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching library edits:', error)
-      setError('Failed to load library edits')
     } finally {
       setLoadingLibraryEdits(false)
+    }
+  }
+
+  const fetchEventEdits = async () => {
+    try {
+      setLoadingEventEdits(true)
+      setError(null)
+
+      const { data, error } = await supabase
+        .from('locale_edits')
+        .select(`
+          *,
+          events!inner(name, city, country)
+        `)
+        .eq('status', 'pending')
+        .not('event_id', 'is', null)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching event edits:', error)
+        setError('Failed to load event edits')
+      } else {
+        setEventEdits(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching event edits:', error)
+    } finally {
+      setLoadingEventEdits(false)
     }
   }
 
@@ -271,7 +395,7 @@ export default function AdminPage() {
       setSuccess(null)
 
       const { error } = await supabase
-        .from('store_edits')
+        .from('locale_edits')
         .update({ status: 'addressed' })
         .eq('id', editId)
 
@@ -297,7 +421,7 @@ export default function AdminPage() {
       setSuccess(null)
 
       const { error } = await supabase
-        .from('library_edits')
+        .from('locale_edits')
         .update({ status: 'addressed' })
         .eq('id', editId)
 
@@ -305,12 +429,40 @@ export default function AdminPage() {
         console.error('Error marking library edit as addressed:', error)
         setError('Failed to mark library edit as addressed')
       } else {
+        setSuccess('Library edit marked as addressed!')
+        // Remove the edit from the list
         setLibraryEdits(prev => prev.filter(edit => edit.id !== editId))
       }
     } catch (error) {
       console.error('Error marking library edit as addressed:', error)
     } finally {
       setProcessingLibraryEdit(null)
+    }
+  }
+
+  const handleMarkEventEditAddressed = async (editId: string) => {
+    try {
+      setProcessingEventEdit(editId)
+      setError(null)
+      setSuccess(null)
+
+      const { error } = await supabase
+        .from('locale_edits')
+        .update({ status: 'addressed' })
+        .eq('id', editId)
+
+      if (error) {
+        console.error('Error marking event edit as addressed:', error)
+        setError('Failed to mark event edit as addressed')
+      } else {
+        setSuccess('Event edit marked as addressed!')
+        // Remove the edit from the list
+        setEventEdits(prev => prev.filter(edit => edit.id !== editId))
+      }
+    } catch (error) {
+      console.error('Error marking event edit as addressed:', error)
+    } finally {
+      setProcessingEventEdit(null)
     }
   }
 
@@ -383,13 +535,13 @@ export default function AdminPage() {
               <BookOpen className="h-4 w-4" />
               Libraries ({unapprovedLibraries.length})
             </TabsTrigger>
-            <TabsTrigger value="store-edits" className="flex items-center gap-2 whitespace-nowrap">
-              <Edit3 className="h-4 w-4" />
-              Store Edits ({storeEdits.length})
+            <TabsTrigger value="events" className="flex items-center gap-2 whitespace-nowrap">
+              <Calendar className="h-4 w-4" />
+              Events ({unapprovedEvents.length})
             </TabsTrigger>
-            <TabsTrigger value="library-edits" className="flex items-center gap-2 whitespace-nowrap">
+            <TabsTrigger value="edits" className="flex items-center gap-2 whitespace-nowrap">
               <Edit3 className="h-4 w-4" />
-              Library Edits ({libraryEdits.length})
+              Edit Suggestions ({storeEdits.length + libraryEdits.length + eventEdits.length})
             </TabsTrigger>
           </TabsList>
 
@@ -645,21 +797,21 @@ export default function AdminPage() {
             )}
           </TabsContent>
 
-          {/* Store Edits Tab */}
-          <TabsContent value="store-edits" className="space-y-6">
+          {/* Events Tab */}
+          <TabsContent value="events" className="space-y-6">
             {/* Stats */}
             <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Store Edit Suggestions</h2>
+                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Event Approval Queue</h2>
                   <p className="text-stone-600">
-                    {storeEdits.length} edit suggestion{storeEdits.length !== 1 ? 's' : ''} waiting for review
+                    {unapprovedEvents.length} event{unapprovedEvents.length !== 1 ? 's' : ''} waiting for approval
                   </p>
                 </div>
                 <Button 
-                  onClick={fetchStoreEdits} 
+                  onClick={fetchUnapprovedEvents} 
                   variant="outline" 
-                  disabled={loadingStoreEdits}
+                  disabled={loadingEvents}
                   className="border-stone-300 text-stone-700 hover:bg-stone-50"
                 >
                   Refresh
@@ -667,27 +819,176 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Store Edits List */}
-            {loadingStoreEdits ? (
+            {/* Event List */}
+            {loadingEvents ? (
               <div className="text-center py-12">
-                <div className="text-stone-500 text-lg">Loading store edit suggestions...</div>
+                <div className="text-stone-500 text-lg">Loading unapproved events...</div>
               </div>
-            ) : storeEdits.length === 0 ? (
+            ) : unapprovedEvents.length === 0 ? (
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <Calendar className="h-16 w-16 mx-auto mb-4 text-[#009035]" />
+                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No events pending approval</h3>
+                  <p className="text-stone-600">All submitted events have been reviewed.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {unapprovedEvents.map((event) => (
+                  <Card key={event.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-semibold text-stone-800 mb-2">{event.name}</CardTitle>
+                          <div className="flex items-center text-stone-600 text-sm mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {event.city}{event.state && `, ${event.state}`}, {event.country}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm mb-2">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {getEventCategoryDisplay(event.category)} • {new Date(event.start_date).toLocaleDateString()}
+                            {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm mb-3">
+                            <User className="h-4 w-4 mr-1" />
+                            Submitted by: {event.submitted_by ? 'User ID: ' + event.submitted_by.slice(0, 8) + '...' : 'Unknown user'}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Submitted {new Date(event.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {/* Event Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <strong className="text-stone-700">Address:</strong>
+                            <p className="text-stone-600">{event.address}</p>
+                          </div>
+                          {event.email && (
+                            <div>
+                              <strong className="text-stone-700">Email:</strong>
+                              <p className="text-stone-600">{event.email}</p>
+                            </div>
+                          )}
+                          {event.website && (
+                            <div>
+                              <strong className="text-stone-700">Website:</strong>
+                              <p className="text-stone-600">
+                                <a 
+                                  href={event.website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 underline"
+                                >
+                                  {event.website}
+                                </a>
+                              </p>
+                            </div>
+                          )}
+                          {event.social && (
+                            <div>
+                              <strong className="text-stone-700">Social Media:</strong>
+                              <p className="text-stone-600">{event.social}</p>
+                            </div>
+                          )}
+                          {event.application_deadline && (
+                            <div>
+                              <strong className="text-stone-700">Application Deadline:</strong>
+                              <p className="text-stone-600">{new Date(event.application_deadline).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Notes */}
+                        {event.notes && (
+                          <div>
+                            <strong className="text-stone-700 text-sm">Notes:</strong>
+                            <p className="text-stone-600 text-sm mt-1">{event.notes}</p>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t border-stone-100">
+                          <Button
+                            onClick={() => handleApproveEvent(event.id)}
+                            disabled={processingEvent === event.id}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            {processingEvent === event.id ? 'Approving...' : 'Approve'}
+                          </Button>
+                          <Button
+                            onClick={() => handleRejectEvent(event.id)}
+                            disabled={processingEvent === event.id}
+                            variant="destructive"
+                            className="flex-1"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            {processingEvent === event.id ? 'Rejecting...' : 'Reject'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Edits Tab */}
+          <TabsContent value="edits" className="space-y-6">
+            {/* Stats */}
+            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Edit Suggestions</h2>
+                  <p className="text-stone-600">
+                    {storeEdits.length + libraryEdits.length + eventEdits.length} edit suggestion{storeEdits.length + libraryEdits.length + eventEdits.length !== 1 ? 's' : ''} waiting for review
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => {
+                    fetchStoreEdits();
+                    fetchLibraryEdits();
+                    fetchEventEdits();
+                  }} 
+                  variant="outline" 
+                  disabled={loadingStoreEdits || loadingLibraryEdits || loadingEventEdits}
+                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                >
+                  Refresh All
+                </Button>
+              </div>
+            </div>
+
+            {/* Edit List */}
+            {loadingStoreEdits || loadingLibraryEdits || loadingEventEdits ? (
+              <div className="text-center py-12">
+                <div className="text-stone-500 text-lg">Loading edit suggestions...</div>
+              </div>
+            ) : (storeEdits.length + libraryEdits.length + eventEdits.length) === 0 ? (
               <Card className="bg-white border-stone-200 shadow-sm">
                 <CardContent className="p-12 text-center">
                   <Edit3 className="h-16 w-16 mx-auto mb-4 text-stone-400" />
-                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No store edit suggestions</h3>
+                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No edit suggestions</h3>
                   <p className="text-stone-600">All edit suggestions have been reviewed.</p>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-6">
+                {/* Store Edits */}
                 {storeEdits.map((edit) => (
-                  <Card key={edit.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                  <Card key={`store-${edit.id}`} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <CardTitle className="text-xl font-semibold text-stone-800 mb-2">
+                            <Badge variant="outline" className="mr-2 text-xs">Store</Badge>
                             Edit for: {edit.stores?.name || 'Unknown Store'}
                           </CardTitle>
                           <div className="flex items-center text-stone-600 text-sm mb-2">
@@ -731,53 +1032,15 @@ export default function AdminPage() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            )}
-          </TabsContent>
 
-          {/* Library Edits Tab */}
-          <TabsContent value="library-edits" className="space-y-6">
-            {/* Stats */}
-            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-gloria text-xl font-semibold text-stone-800 mb-2">Library Edit Suggestions</h2>
-                  <p className="text-stone-600">
-                    {libraryEdits.length} edit suggestion{libraryEdits.length !== 1 ? 's' : ''} waiting for review
-                  </p>
-                </div>
-                <Button 
-                  onClick={fetchLibraryEdits} 
-                  variant="outline" 
-                  disabled={loadingLibraryEdits}
-                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
-                >
-                  Refresh
-                </Button>
-              </div>
-            </div>
-
-            {/* Library Edits List */}
-            {loadingLibraryEdits ? (
-              <div className="text-center py-12">
-                <div className="text-stone-500 text-lg">Loading library edit suggestions...</div>
-              </div>
-            ) : libraryEdits.length === 0 ? (
-              <Card className="bg-white border-stone-200 shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <Edit3 className="h-16 w-16 mx-auto mb-4 text-blue-400" />
-                  <h3 className="text-xl font-semibold text-stone-800 mb-2">No library edit suggestions</h3>
-                  <p className="text-stone-600">All edit suggestions have been reviewed.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
+                {/* Library Edits */}
                 {libraryEdits.map((edit) => (
-                  <Card key={edit.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                  <Card key={`library-${edit.id}`} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <CardTitle className="text-xl font-semibold text-stone-800 mb-2">
+                            <Badge variant="outline" className="mr-2 text-xs">Library</Badge>
                             Edit for: {edit.libraries?.name || 'Unknown Library'}
                           </CardTitle>
                           <div className="flex items-center text-stone-600 text-sm mb-2">
@@ -815,6 +1078,58 @@ export default function AdminPage() {
                           >
                             <Check className="h-4 w-4 mr-2" />
                             {processingLibraryEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Event Edits */}
+                {eventEdits.map((edit) => (
+                  <Card key={`event-${edit.id}`} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-semibold text-stone-800 mb-2">
+                            <Badge variant="outline" className="mr-2 text-xs">Event</Badge>
+                            Edit for: {edit.events?.name || 'Unknown Event'}
+                          </CardTitle>
+                          <div className="flex items-center text-stone-600 text-sm mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {edit.events?.city}, {edit.events?.country}
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm mb-3">
+                            <User className="h-4 w-4 mr-1" />
+                            Suggested by: User ID: {edit.user_id?.slice(0, 8)}...
+                          </div>
+                          <div className="flex items-center text-stone-500 text-sm">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Suggested {new Date(edit.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {/* Edit Summary */}
+                        <div>
+                          <strong className="text-stone-700 text-sm">Suggested Changes:</strong>
+                          <div className="mt-2 p-3 bg-stone-50 rounded-lg border border-stone-200">
+                            <pre className="text-sm text-stone-700 whitespace-pre-wrap font-mono">{edit.edit_summary}</pre>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t border-stone-100">
+                          <Button
+                            onClick={() => handleMarkEventEditAddressed(edit.id)}
+                            disabled={processingEventEdit === edit.id}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            {processingEventEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
                           </Button>
                         </div>
                       </div>

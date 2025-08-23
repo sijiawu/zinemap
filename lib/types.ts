@@ -53,6 +53,35 @@ export interface Library {
   user_permalink?: string
 }
 
+export interface Event {
+  id: string
+  name: string
+  city: string
+  state?: string
+  country: string
+  address: string
+  email?: string
+  website?: string
+  social?: string
+  category: 'festival' | 'swap' | 'workshop'
+  start_date: string
+  end_date: string
+  application_deadline?: string
+  notes?: string
+  submitted_by: string
+  created_at: string
+  updated_at?: string
+  permalink?: string
+  latitude?: number
+  longitude?: number
+  approved?: boolean
+  user_name?: string
+  user_permalink?: string
+  user_email?: string
+  attendees_count?: number
+  user_is_attending?: boolean
+}
+
 export interface StoreTag {
   id: string
   store_id: string
@@ -71,15 +100,31 @@ export interface CommunityNote {
   id: string
   store_id?: string
   library_id?: string
+  event_id?: string
   user_id: string | null
   text: string
   anonymous: boolean
   has_stocked_here: boolean
   submitted_at: string
   user?: {
+    id: string
     display_name: string | null
     email: string
     permalink: string | null
+    profile_image?: string | null
+  }
+}
+
+export interface EventAttendee {
+  id: string
+  event_id: string
+  user_id: string
+  created_at: string
+  user?: {
+    display_name: string | null
+    email: string
+    permalink: string | null
+    profile_image?: string | null
   }
 }
 
@@ -154,6 +199,22 @@ export interface LibraryFormData {
   notes?: string
   has_visited_before: boolean
   selectedTags: string[]
+}
+
+export interface EventFormData {
+  name: string
+  city: string
+  state: string
+  country: string
+  address: string
+  email?: string
+  website?: string
+  social?: string
+  category: 'festival' | 'swap' | 'workshop'
+  start_date: string
+  end_date: string
+  application_deadline?: string
+  notes?: string
 }
 
 // API response types
