@@ -44,7 +44,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.js"></script>
-        <script async defer src="https://analytics.umami.is/script.js" data-website-id="a0c0c0c0-c0c0-c0c0-c0c0-c0c0c0c0c0c0"></script>
       </head>
       <body>
         <ClientRoot>{children}</ClientRoot>

@@ -637,7 +637,7 @@ export default function EventDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-stone-50 font-serif">
       {/* Header */}
-      <header className="w-full bg-white/70 backdrop-blur-sm border-b border-stone-200 shadow-sm">
+      <header id="event-header" className="w-full bg-white/70 backdrop-blur-sm border-b border-stone-200 shadow-sm order-1 lg:order-none">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <Link href="/">
@@ -737,13 +737,13 @@ export default function EventDetailPage() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Column - Event Details */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 order-5 lg:order-none">
 
             {/* Contact & Links */}
             {(event.email || event.website || event.social) && (
-              <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm overflow-hidden">
+              <Card id="contact-links" className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm overflow-hidden order-3 lg:order-none">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold text-stone-800">Contact & Links</CardTitle>
                 </CardHeader>
@@ -800,7 +800,7 @@ export default function EventDetailPage() {
 
 
             {/* Community Notes */}
-            <Card className="bg-gradient-to-br from-white to-stone-50 border border-stone-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card id="community-notes" className="bg-gradient-to-br from-white to-stone-50 border border-stone-200 shadow-sm hover:shadow-md transition-all duration-300 order-4 lg:order-none">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
@@ -890,14 +890,17 @@ export default function EventDetailPage() {
                     <p className="text-stone-500 text-lg font-medium mb-6">No community notes yet</p>
                     
                     {!user ? (
-                      <Link href="/login">
-                        <Button
-                          size="sm"
-                          className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                        >
-                          Sign in to add a note
-                        </Button>
-                      </Link>
+                      <div className="space-y-3">
+                        <p className="text-stone-600 text-sm">Sign in to share your experience and add a community note</p>
+                        <Link href="/login">
+                          <Button
+                            size="sm"
+                            className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                          >
+                            Sign in to add a note
+                          </Button>
+                        </Link>
+                      </div>
                     ) : !userHasNote && (
                       <Button
                         onClick={() => setShowNoteForm(true)}
@@ -910,6 +913,36 @@ export default function EventDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {!user ? (
+                      <div className="text-center py-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                        <div className="flex flex-col items-center gap-3">
+                          <MessageSquare className="h-6 w-6 text-green-600" />
+                          <p className="text-stone-700 font-medium">Want to share what you know about this event?</p>
+                          <Link href="/login">
+                            <Button
+                              size="sm"
+                              className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
+                            >
+                              Sign in to add a note
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : !userHasNote && !showNoteForm && (
+                      <div className="text-center py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                        <div className="flex flex-col items-center gap-3">
+                          <MessageSquare className="h-5 w-5 text-green-600" />
+                          <p className="text-stone-700 font-medium">Want to share what you know about this event?</p>
+                          <Button
+                            onClick={() => setShowNoteForm(true)}
+                            size="sm"
+                            className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
+                          >
+                            Add a note
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     {notes.map((note) => (
                       <div key={note.id} className="group p-5 bg-white rounded-xl border border-stone-200 hover:border-green-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-white">
                         {editingNote?.id === note.id ? (
@@ -1048,7 +1081,7 @@ export default function EventDetailPage() {
             </Card>
 
             {/* Feedback Section */}
-            <div className="text-center py-6">
+            <div id="feedback-section" className="text-center py-6 order-6 lg:order-none">
               <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
                 {feedbackSubmitted ? (
                   <p className="text-green-600 text-sm">Thank you for your feedback!</p>
@@ -1141,9 +1174,9 @@ export default function EventDetailPage() {
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 order-2 lg:order-none">
             {/* Event Location */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <Card id="event-location" className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-stone-800">Event Location</CardTitle>
               </CardHeader>
@@ -1163,7 +1196,7 @@ export default function EventDetailPage() {
             </Card>
 
             {/* Who's Going */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <Card id="whos-going" className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-stone-800">Who's Going</CardTitle>
               </CardHeader>
