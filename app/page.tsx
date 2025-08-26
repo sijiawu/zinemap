@@ -706,19 +706,19 @@ export default function HomePage() {
                       <Link href="/add-store" onClick={() => setIsAddMenuOpen(false)}>
                         <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-rose-50 transition-colors cursor-pointer w-full">
                           <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add a Store</span>
+                          <span className="text-stone-800 font-medium font-gloria">Add a store</span>
                         </div>
                       </Link>
                       <Link href="/add-library" onClick={() => setIsAddMenuOpen(false)}>
                         <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-blue-50 transition-colors cursor-pointer w-full">
                           <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add a Library</span>
+                          <span className="text-stone-800 font-medium font-gloria">Add a library</span>
                         </div>
                       </Link>
                       <Link href="/add-event" onClick={() => setIsAddMenuOpen(false)}>
                         <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-green-50 transition-colors cursor-pointer w-full">
                           <div className="w-3 h-3 bg-[#009035] rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add an Event</span>
+                          <span className="text-stone-800 font-medium font-gloria">Add an event</span>
                         </div>
                       </Link>
                     </div>
