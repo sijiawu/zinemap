@@ -271,8 +271,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
-      {/* Header */}
-      <header className="w-full bg-white border-b border-stone-200 shadow-sm">
+      {/* Header - Mobile: order-1 */}
+      <header className="order-1 w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <h1 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">ZineMap</h1>
           <div className="flex justify-center items-center mb-3">
@@ -290,32 +290,96 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Search and Filters */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
-              <Input
-                placeholder="Search by city, state, or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
-              />
-            </div>
+      {/* Main Content - Mobile Stack / Desktop Grid Layout */}
+      <div className="order-3 max-w-7xl mx-auto px-4 py-6">
+        {/* Search and Filters - Desktop only, appears above grid */}
+        <div className="hidden lg:block mb-3 lg:mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Bar */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
+                                  <Input
+                    placeholder="Search by city, state, or name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
+                  />
+              </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Add more filters here in the future */}
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Add more filters here in the future */}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* List View with Tabs */}
-          <div className="space-y-4">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
+          {/* Interactive Map - Mobile: order-2, Desktop: right column */}
+          <div className="order-2 lg:order-2 lg:sticky lg:top-6">
+            <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
+                    <div className="text-stone-500">Loading map...</div>
+                  </div>
+                ) : (
+                  <div className="w-full h-96 lg:h-full">
+                    <StoreMap 
+                      stores={stores}
+                      libraries={libraries}
+                      events={events}
+                      searchQuery={debouncedSearchQuery}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Add Store, Library, and Event buttons under the map - Mobile: order-3 */}
+            <div className="mt-6 lg:mt-8 flex justify-center order-3">
+              <div className="relative add-menu-container">
+                <Button 
+                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                  className="bg-stone-800 hover:bg-stone-900 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors"
+                >
+                  Add a store / library / event
+                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isAddMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
+                
+                {isAddMenuOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                    <div className="p-2 space-y-1">
+                      <Link href="/add-store" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-rose-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add a store</span>
+                        </div>
+                      </Link>
+                      <Link href="/add-library" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-blue-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add a library</span>
+                        </div>
+                      </Link>
+                      <Link href="/add-event" onClick={() => setIsAddMenuOpen(false)}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-green-50 transition-colors cursor-pointer w-full">
+                          <div className="w-3 h-3 bg-[#009035] rounded-full"></div>
+                          <span className="text-stone-800 font-medium font-gloria">Add an event</span>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+
+
+          {/* List View with Tabs - Mobile: order-5, Desktop: left column */}
+          <div className="order-5 lg:order-1 space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="stores" className="flex items-center gap-2">
@@ -668,64 +732,6 @@ export default function HomePage() {
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-
-          {/* Interactive Map */}
-          <div className="lg:sticky lg:top-6">
-            <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
-              <CardContent className="p-0">
-                {loading ? (
-                  <div className="h-96 bg-stone-100 animate-pulse flex items-center justify-center">
-                    <div className="text-stone-500">Loading map...</div>
-                  </div>
-                ) : (
-                  <StoreMap 
-                    stores={stores}
-                    libraries={libraries}
-                    events={events}
-                    searchQuery={debouncedSearchQuery}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Add Store, Library, and Event buttons under the map */}
-            <div className="mt-8 flex justify-center">
-              <div className="relative add-menu-container">
-                <Button 
-                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                  className="bg-stone-800 hover:bg-stone-900 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors"
-                >
-                  Add a store / library / event
-                  <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isAddMenuOpen ? 'rotate-180' : ''}`} />
-                </Button>
-                
-                {isAddMenuOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-lg z-50 min-w-[200px]">
-                    <div className="p-2 space-y-1">
-                      <Link href="/add-store" onClick={() => setIsAddMenuOpen(false)}>
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-rose-50 transition-colors cursor-pointer w-full">
-                          <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add a store</span>
-                        </div>
-                      </Link>
-                      <Link href="/add-library" onClick={() => setIsAddMenuOpen(false)}>
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-blue-50 transition-colors cursor-pointer w-full">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add a library</span>
-                        </div>
-                      </Link>
-                      <Link href="/add-event" onClick={() => setIsAddMenuOpen(false)}>
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-green-50 transition-colors cursor-pointer w-full">
-                          <div className="w-3 h-3 bg-[#009035] rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add an event</span>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>

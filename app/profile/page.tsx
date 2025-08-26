@@ -482,7 +482,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
+                    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
       {/* Header with back button */}
       <div className="bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -493,7 +493,7 @@ export default function ProfilePage() {
             </Button>
           </Link>
         </div>
-      </div>
+        </div>
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -590,7 +590,7 @@ export default function ProfilePage() {
                   )}
                 </>
               ) : (
-                <CardContent className="pt-6 overflow-hidden">
+              <CardContent className="pt-6 overflow-hidden">
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <Label htmlFor="display_name">Display Name</Label>
@@ -658,15 +658,15 @@ export default function ProfilePage() {
                     
                     <div>
                       <Label htmlFor="permalink">Profile URL</Label>
-                      <Input
-                        id="permalink"
-                        value={formData.permalink}
-                        onChange={(e) => {
-                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                          setFormData(prev => ({ ...prev, permalink: value }))
-                        }}
-                        placeholder="Enter profile URL"
-                        className="mt-1"
+                        <Input
+                          id="permalink"
+                          value={formData.permalink}
+                          onChange={(e) => {
+                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                            setFormData(prev => ({ ...prev, permalink: value }))
+                          }}
+                          placeholder="Enter profile URL"
+                          className="mt-1"
                       />
                       <p className="text-xs text-stone-500 mt-1 break-words overflow-hidden" style={{ wordBreak: 'break-all' }}>
                         This will be your profile URL: zinemap.com/profile/{formData.permalink || 'your-url'}
@@ -722,8 +722,8 @@ export default function ProfilePage() {
                 </CardContent>
               )}
             </Card>
-          </div>
-
+                      </div>
+                      
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <Card className="bg-white border-stone-200 shadow-sm">
@@ -736,21 +736,21 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-blue-500" />
                     <span className="text-sm text-stone-600">Joined</span>
-                  </div>
+                          </div>
                   <span className="text-sm font-medium text-stone-800">
                     {profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { 
                       month: 'long', 
                       year: 'numeric' 
                     }) : 'Unknown'}
                   </span>
-                </div>
-
+                      </div>
+                      
                 {/* Contributions with hover tooltip */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-blue-500" />
                     <span className="text-sm text-stone-600">Contributions</span>
-                  </div>
+                      </div>
                   <div className="relative group">
                     <span className="text-lg font-semibold text-stone-800 cursor-help">
                       {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
@@ -760,10 +760,10 @@ export default function ProfilePage() {
                       <div className="text-center">
                         <div className="text-stone-300 text-xs">
                           spots: {contributions.stores + contributions.libraries}
-                        </div>
+                    </div>
                         <div className="text-stone-300 text-xs mt-1">
                           events: {contributions.events}
-                        </div>
+                  </div>
                         <div className="text-stone-300 text-xs mt-1">
                           notes: {contributions.notes}
                         </div>
@@ -789,177 +789,177 @@ export default function ProfilePage() {
 
         {/* Zines Section - Full Width */}
         <div className="mt-8 mb-6 sm:mb-8">
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <BookOpen className="h-5 w-5" />
-                Your Zines
-              </CardTitle>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditingZine(null)
-                    setShowZineModal(true)
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  Add Zine
-                </Button>
-                <Link href="/dashboard" className="w-full sm:w-auto">
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                    Go to Dashboard
+            <Card className="bg-white border-stone-200 shadow-sm">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <CardTitle className="flex items-center gap-2 font-gloria">
+                  <BookOpen className="h-5 w-5" />
+                  Your Zines
+                </CardTitle>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingZine(null)
+                      setShowZineModal(true)
+                    }}
+                    className="w-full sm:w-auto"
+                  >
+                    Add Zine
                   </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {zines.length === 0 ? (
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                  <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
-                  <p className="text-stone-600 mb-4">Start creating your first zine!</p>
-                  <Link href="/dashboard">
-                    <Button>Go to Dashboard</Button>
+                  <Link href="/dashboard" className="w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                      Go to Dashboard
+                    </Button>
                   </Link>
                 </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {zines.map((zine) => (
-                    <div
-                      key={zine.id}
+              </CardHeader>
+              <CardContent>
+                {zines.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
+                    <p className="text-stone-600 mb-4">Start creating your first zine!</p>
+                    <Link href="/dashboard">
+                      <Button>Go to Dashboard</Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3 sm:space-y-4">
+                    {zines.map((zine) => (
+                      <div
+                        key={zine.id}
                       className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
-                    >
-                      {/* Cover Image */}
-                      <div className="flex-shrink-0">
-                        {zine.cover_image ? (
-                          <img
-                            src={zine.cover_image}
-                            alt={`${zine.title} cover`}
-                            className="w-16 h-20 object-cover rounded border border-stone-200"
-                          />
-                        ) : (
-                          <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
-                            <BookOpen className="h-8 w-8 text-stone-400" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Zine Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="mb-2">
-                          <h3 className="font-semibold text-stone-800">{zine.title}</h3>
-                        </div>
-                        {zine.description && (
-                          <p className="text-sm text-stone-600 line-clamp-2">
-                            {zine.description}
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={zine.is_public}
-                            onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
-                          />
-                          <span className="text-sm text-stone-600">
-                            {zine.is_public ? 'Public' : 'Private'}
-                          </span>
+                      >
+                        {/* Cover Image */}
+                        <div className="flex-shrink-0">
+                          {zine.cover_image ? (
+                            <img
+                              src={zine.cover_image}
+                              alt={`${zine.title} cover`}
+                              className="w-16 h-20 object-cover rounded border border-stone-200"
+                            />
+                          ) : (
+                            <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
+                              <BookOpen className="h-8 w-8 text-stone-400" />
+                            </div>
+                          )}
                         </div>
                         
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setEditingZine(zine)
-                            setShowZineModal(true)
-                          }}
-                          className="w-full sm:w-auto"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
+                        {/* Zine Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2">
+                            <h3 className="font-semibold text-stone-800">{zine.title}</h3>
+                          </div>
+                          {zine.description && (
+                            <p className="text-sm text-stone-600 line-clamp-2">
+                              {zine.description}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Actions */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={zine.is_public}
+                              onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
+                            />
+                            <span className="text-sm text-stone-600">
+                              {zine.is_public ? 'Public' : 'Private'}
+                            </span>
+                          </div>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingZine(zine)
+                              setShowZineModal(true)
+                            }}
+                            className="w-full sm:w-auto"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
         </div>
 
         {/* Events Section - Full Width */}
         <div className="mb-6 sm:mb-8">
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <Calendar className="h-5 w-5" />
-                Events I'm Going To
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {attendingEvents.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                  <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
-                  <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
-                  <Link href="/">
+            <Card className="bg-white border-stone-200 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 font-gloria">
+                  <Calendar className="h-5 w-5" />
+                  Events I'm Going To
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {attendingEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
+                    <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
+                    <Link href="/">
                     <Button>Go to Dashboard</Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {attendingEvents.map((event) => (
-                    <div
-                      key={event.id}
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3 sm:space-y-4">
+                    {attendingEvents.map((event) => (
+                      <div
+                        key={event.id}
                       className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
-                    >
-                      {/* Event Icon */}
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
-                          <Calendar className="h-8 w-8 text-[#009035]" />
-                        </div>
-                      </div>
-                      
-                      {/* Event Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="mb-2">
-                          <h3 className="font-semibold text-stone-800">{event.name}</h3>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                            <Badge 
-                              className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"
-                            >
-                              {getEventCategoryDisplay(event.category)}
-                            </Badge>
-                            <span className="text-sm text-stone-500">
-                              {new Date(event.start_date).toLocaleDateString()}
-                              {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
-                            </span>
+                      >
+                        {/* Event Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
+                            <Calendar className="h-8 w-8 text-[#009035]" />
                           </div>
                         </div>
-                        <p className="text-sm text-stone-600">
-                          📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
-                        </p>
-                      </div>
-                      
-                      {/* Actions */}
+                        
+                        {/* Event Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2">
+                            <h3 className="font-semibold text-stone-800">{event.name}</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                              <Badge 
+                                className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"
+                              >
+                                {getEventCategoryDisplay(event.category)}
+                              </Badge>
+                              <span className="text-sm text-stone-500">
+                                {new Date(event.start_date).toLocaleDateString()}
+                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-stone-600">
+                            📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
+                          </p>
+                        </div>
+                        
+                        {/* Actions */}
                       <div className="w-full sm:w-auto">
-                        <Link href={`/event/${event.permalink || event.id}`} className="w-full sm:w-auto">
-                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            View Event
-                          </Button>
-                        </Link>
+                          <Link href={`/event/${event.permalink || event.id}`} className="w-full sm:w-auto">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View Event
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
         </div>
       </div>
 
