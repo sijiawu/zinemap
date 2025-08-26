@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar } from "lucide-react"
+import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
 import Link from 'next/link'
@@ -140,16 +140,20 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Back to Map Button */}
-        <div className="mb-6">
+      {/* Header with back button */}
+      <div className="bg-white border-b border-stone-200 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           <Link href="/">
-            <Button variant="outline" className="border-stone-300 text-stone-700 hover:bg-stone-50">
-              ← Back to Map
+            <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to map
             </Button>
           </Link>
         </div>
+      </div>
 
+      {/* Main content */}
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Profile and Stats Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Profile Section */}

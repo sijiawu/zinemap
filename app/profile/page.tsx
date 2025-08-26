@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight } from "lucide-react"
+import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { UserProfile, Zine } from '@/lib/types'
@@ -482,17 +482,21 @@ export default function ProfilePage() {
   }
 
   return (
-                    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Back to Map Button */}
-        <div className="mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
+      {/* Header with back button */}
+      <div className="bg-white border-b border-stone-200 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           <Link href="/">
-            <Button variant="outline" className="border-stone-300 text-stone-700 hover:bg-stone-50">
-              ← Back to Map
+            <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to map
             </Button>
           </Link>
         </div>
+      </div>
 
+      {/* Main content */}
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Success/Error Messages */}
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
@@ -510,8 +514,83 @@ export default function ProfilePage() {
           {/* Profile Section */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
-              <CardContent className="pt-6 overflow-hidden">
-                {isEditing ? (
+              {!isEditing ? (
+                <>
+                  <CardHeader className="flex flex-row items-start justify-between gap-4 pb-4">
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                        {/* Profile Image */}
+                        <div className="flex-shrink-0">
+                          {profile.profile_image ? (
+                            <img
+                              src={profile.profile_image}
+                              alt="Profile"
+                              className="w-20 h-20 object-cover rounded-full border-2 border-stone-200"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-200 flex items-center justify-center">
+                              <User className="h-10 w-10 text-stone-400" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Profile Info */}
+                        <div className="flex-1 min-w-0">
+                          {/* Display Name with Profile URL Link */}
+                          <h2 className="text-2xl font-bold text-stone-800 mb-2 font-gloria">
+                            {profile.display_name ? (
+                              <Link 
+                                href={`/profile/${profile.permalink}`}
+                                className="text-stone-800 hover:underline transition-colors"
+                              >
+                                {profile.display_name}
+                              </Link>
+                            ) : (
+                              'No display name set'
+                            )}
+                          </h2>
+                          
+                          {/* Website Link */}
+                          {profile.site && (
+                            <a 
+                              href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors"
+                              style={{ wordBreak: 'break-all' }}
+                            >
+                              {profile.site}
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Edit Button */}
+                    <div className="flex-shrink-0">
+                      <Button
+                        onClick={() => setIsEditing(true)}
+                        variant="outline"
+                        size="sm"
+                        className="whitespace-nowrap"
+                      >
+                        Edit
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  
+                  {/* Bio - Full Width */}
+                  {profile.bio && (
+                    <div className="px-6 pb-4">
+                      <p className="text-stone-700 leading-relaxed">
+                        {profile.bio}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <CardContent className="pt-6 overflow-hidden">
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <Label htmlFor="display_name">Display Name</Label>
@@ -552,7 +631,7 @@ export default function ProfilePage() {
                               size="sm"
                               onClick={() => {
                                 setProfileImage(null)
-                                setProfileImagePreview(profile?.profile_image || null)
+                                setProfileImagePreview(null)
                               }}
                               className="absolute top-0 right-0 h-6 w-6 p-0 bg-white/80 hover:bg-white rounded-full"
                             >
@@ -579,32 +658,16 @@ export default function ProfilePage() {
                     
                     <div>
                       <Label htmlFor="permalink">Profile URL</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="permalink"
-                          value={formData.permalink}
-                          onChange={(e) => {
-                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                            setFormData(prev => ({ ...prev, permalink: value }))
-                          }}
-                          placeholder="Enter profile URL"
-                          className="mt-1 flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (formData.display_name) {
-                              setFormData(prev => ({ ...prev, permalink: generatePermalink(formData.display_name) }))
-                            }
-                          }}
-                          className="mt-1"
-                          disabled={!formData.display_name}
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Input
+                        id="permalink"
+                        value={formData.permalink}
+                        onChange={(e) => {
+                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                          setFormData(prev => ({ ...prev, permalink: value }))
+                        }}
+                        placeholder="Enter profile URL"
+                        className="mt-1"
+                      />
                       <p className="text-xs text-stone-500 mt-1 break-words overflow-hidden" style={{ wordBreak: 'break-all' }}>
                         This will be your profile URL: zinemap.com/profile/{formData.permalink || 'your-url'}
                       </p>
@@ -656,253 +719,8 @@ export default function ProfilePage() {
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Profile Header */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                      {/* Profile Image */}
-                      <div className="flex-shrink-0">
-                        {profile.profile_image ? (
-                          <img
-                            src={profile.profile_image}
-                            alt="Profile"
-                            className="w-20 h-20 object-cover rounded-full border-2 border-stone-200"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-200 flex items-center justify-center">
-                            <User className="h-10 w-10 text-stone-400" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Profile Info */}
-                      <div className="flex-1 min-w-0">
-                        {/* Display Name with Profile URL Link */}
-                        <h2 className="text-xl sm:text-2xl font-bold text-stone-800 mb-2 font-gloria">
-                          {profile.display_name ? (
-                            <Link 
-                              href={`/profile/${profile.permalink}`}
-                              className="text-stone-800 hover:underline transition-colors"
-                            >
-                              {profile.display_name}
-                            </Link>
-                          ) : (
-                            'No display name set'
-                          )}
-                        </h2>
-                        
-                        {/* Website Link */}
-                        {profile.site && (
-                          <div className="w-full">
-                            <a 
-                              href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors w-full max-w-full"
-                              style={{ wordBreak: 'break-all' }}
-                            >
-                              <Globe className="h-4 w-4 flex-shrink-0" />
-                              <span className="text-sm min-w-0 flex-1 break-all">{profile.site}</span>
-                              <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                            </a>
-                          </div>
-                        )}
-                        
-                        {/* Bio */}
-                        {profile.bio && (
-                          <p className="text-stone-600 mt-2 text-sm leading-relaxed">
-                            {profile.bio}
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Edit Button */}
-                      <div className="flex-shrink-0">
-                        <Button
-                          onClick={() => setIsEditing(true)}
-                          variant="outline"
-                          size="sm"
-                          className="whitespace-nowrap"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Zines Section */}
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                <CardTitle className="flex items-center gap-2 font-gloria">
-                  <BookOpen className="h-5 w-5" />
-                  Your Zines
-                </CardTitle>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingZine(null)
-                      setShowZineModal(true)
-                    }}
-                    className="w-full sm:w-auto"
-                  >
-                    Add Zine
-                  </Button>
-                  <Link href="/dashboard" className="w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {zines.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
-                    <p className="text-stone-600 mb-4">Start creating your first zine!</p>
-                    <Link href="/dashboard">
-                      <Button>Go to Dashboard</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-3 sm:space-y-4">
-                    {zines.map((zine) => (
-                      <div
-                        key={zine.id}
-                        className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
-                      >
-                        {/* Cover Image */}
-                        <div className="flex-shrink-0">
-                          {zine.cover_image ? (
-                            <img
-                              src={zine.cover_image}
-                              alt={`${zine.title} cover`}
-                              className="w-16 h-20 object-cover rounded border border-stone-200"
-                            />
-                          ) : (
-                            <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
-                              <BookOpen className="h-8 w-8 text-stone-400" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Zine Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800">{zine.title}</h3>
-                          </div>
-                          {zine.description && (
-                            <p className="text-sm text-stone-600 line-clamp-2">
-                              {zine.description}
-                            </p>
-                          )}
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={zine.is_public}
-                              onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
-                            />
-                            <span className="text-sm text-stone-600">
-                              {zine.is_public ? 'Public' : 'Private'}
-                            </span>
-                          </div>
-                          
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setEditingZine(zine)
-                              setShowZineModal(true)
-                            }}
-                            className="w-full sm:w-auto"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Events Section */}
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 font-gloria">
-                  <Calendar className="h-5 w-5" />
-                  Events I'm Going To
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {attendingEvents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
-                    <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
-                    <Link href="/">
-                      <Button>Browse Events</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-3 sm:space-y-4">
-                    {attendingEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
-                      >
-                        {/* Event Icon */}
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
-                            <Calendar className="h-8 w-8 text-[#009035]" />
-                          </div>
-                        </div>
-                        
-                        {/* Event Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800">{event.name}</h3>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                              <Badge 
-                                className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"
-                              >
-                                {getEventCategoryDisplay(event.category)}
-                              </Badge>
-                              <span className="text-sm text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString()}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-sm text-stone-600">
-                            📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
-                          </p>
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                          <Link href={`/event/${event.permalink || event.id}`} className="w-full sm:w-auto">
-                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View Event
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
           </div>
 
@@ -967,6 +785,181 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Zines Section - Full Width */}
+        <div className="mt-8 mb-6 sm:mb-8">
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <BookOpen className="h-5 w-5" />
+                Your Zines
+              </CardTitle>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingZine(null)
+                    setShowZineModal(true)
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  Add Zine
+                </Button>
+                <Link href="/dashboard" className="w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {zines.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                  <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
+                  <p className="text-stone-600 mb-4">Start creating your first zine!</p>
+                  <Link href="/dashboard">
+                    <Button>Go to Dashboard</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {zines.map((zine) => (
+                    <div
+                      key={zine.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                    >
+                      {/* Cover Image */}
+                      <div className="flex-shrink-0">
+                        {zine.cover_image ? (
+                          <img
+                            src={zine.cover_image}
+                            alt={`${zine.title} cover`}
+                            className="w-16 h-20 object-cover rounded border border-stone-200"
+                          />
+                        ) : (
+                          <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
+                            <BookOpen className="h-8 w-8 text-stone-400" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Zine Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-2">
+                          <h3 className="font-semibold text-stone-800">{zine.title}</h3>
+                        </div>
+                        {zine.description && (
+                          <p className="text-sm text-stone-600 line-clamp-2">
+                            {zine.description}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={zine.is_public}
+                            onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
+                          />
+                          <span className="text-sm text-stone-600">
+                            {zine.is_public ? 'Public' : 'Private'}
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingZine(zine)
+                            setShowZineModal(true)
+                          }}
+                          className="w-full sm:w-auto"
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Events Section - Full Width */}
+        <div className="mb-6 sm:mb-8">
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events I'm Going To
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendingEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                  <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
+                  <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
+                  <Link href="/">
+                    <Button>Go to Dashboard</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {attendingEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                    >
+                      {/* Event Icon */}
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
+                          <Calendar className="h-8 w-8 text-[#009035]" />
+                        </div>
+                      </div>
+                      
+                      {/* Event Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-2">
+                          <h3 className="font-semibold text-stone-800">{event.name}</h3>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                            <Badge 
+                              className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"
+                            >
+                              {getEventCategoryDisplay(event.category)}
+                            </Badge>
+                            <span className="text-sm text-stone-500">
+                              {new Date(event.start_date).toLocaleDateString()}
+                              {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-stone-600">
+                          📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
+                        </p>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="w-full sm:w-auto">
+                        <Link href={`/event/${event.permalink || event.id}`} className="w-full sm:w-auto">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Event
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

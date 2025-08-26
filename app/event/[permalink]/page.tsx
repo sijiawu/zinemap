@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle } from "lucide-react"
+import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -641,8 +641,9 @@ export default function EventDetailPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800">
-                ← Back to map
+              <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to map
               </Button>
             </Link>
           </div>
