@@ -1205,22 +1205,20 @@ export default function EventDetailPage() {
                 <div className="space-y-3">
                   {attendees.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                                             {attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).slice(0, 8).map((attendee) => (
-                         <Link 
-                           key={attendee.id}
-                           href={`/profile/${attendee.user?.permalink || ''}`}
-                           className="hover:opacity-80 transition-opacity"
-                         >
-                           <Avatar className="h-10 w-10">
-                             <AvatarImage src={attendee.user?.profile_image || ''} alt={attendee.user?.display_name || 'User'} />
-                           </Avatar>
-                         </Link>
-                       ))}
-                      {attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).length > 8 && (
-                        <div className="flex items-center justify-center h-10 w-10 bg-stone-100 rounded-full text-stone-500 text-xs font-medium">
-                          +{attendees.filter(attendee => attendee.user?.profile_image && attendee.user?.permalink).length - 8}
-                        </div>
-                      )}
+                      {attendees.map((attendee) => (
+                        <Link 
+                          key={attendee.id}
+                          href={`/profile/${attendee.user?.permalink || ''}`}
+                          className="hover:opacity-80 transition-opacity"
+                        >
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={attendee.user?.profile_image || ''} alt={attendee.user?.display_name || 'User'} />
+                            <AvatarFallback>
+                              {attendee.user?.display_name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-sm text-stone-500 text-center py-4">
