@@ -251,7 +251,7 @@ export default function PublicProfilePage() {
                   </div>
                   <div className="relative group">
                     <span className="text-lg font-semibold text-stone-800 cursor-help">
-                      {contributions.stores + contributions.libraries + contributions.notes}
+                      {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
                     </span>
                     {/* Hover tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
