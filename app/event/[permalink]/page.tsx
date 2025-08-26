@@ -654,18 +654,34 @@ export default function EventDetailPage() {
                 <Badge className={`${getCategoryColor(event.category)} text-sm font-medium`}>
                   {getCategoryIcon(event.category)} {getEventCategoryDisplay(event.category)}
                 </Badge>
-                {event.application_deadline && (
-                  <Badge variant="outline" className={`text-xs ${
-                    new Date(event.application_deadline) < new Date() 
-                      ? "border-red-300 text-red-700" 
-                      : "border-orange-300 text-orange-700"
-                  }`}>
-                    <Clock className="h-3 w-3 mr-1" />
-                    {new Date(event.application_deadline) < new Date() 
-                      ? "Deadline passed" 
-                      : `Apply by ${formatDateReadable(event.application_deadline)}`
-                    }
-                  </Badge>
+                
+                {/* Application Status - Show only one badge based on current state */}
+                {event.application_open && event.application_deadline && (
+                  <>
+                    {/* State 1: Before application open - show "Application opens [date]" */}
+                    {new Date(event.application_open) > new Date() && (
+                      <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-50">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Application opens {formatDateReadable(event.application_open)}
+                      </Badge>
+                    )}
+                    
+                    {/* State 2: Application opened - show "Apply by [date]" */}
+                    {new Date(event.application_open) <= new Date() && new Date(event.application_deadline) > new Date() && (
+                      <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Apply by {formatDateReadable(event.application_deadline)}
+                      </Badge>
+                    )}
+                    
+                    {/* State 3: Application closed - show "Deadline passed" */}
+                    {new Date(event.application_deadline) <= new Date() && (
+                      <Badge variant="outline" className="text-xs border-red-300 text-red-700 bg-red-50">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Deadline passed
+                      </Badge>
+                    )}
+                  </>
                 )}
               </div>
               

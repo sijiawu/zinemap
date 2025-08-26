@@ -66,6 +66,7 @@ export interface Event {
   category: 'festival' | 'swap' | 'workshop'
   start_date: string
   end_date: string
+  application_open?: string
   application_deadline?: string
   notes?: string
   submitted_by: string
@@ -213,6 +214,7 @@ export interface EventFormData {
   category: 'festival' | 'swap' | 'workshop'
   start_date: string
   end_date: string
+  application_open?: string
   application_deadline?: string
   notes?: string
 }

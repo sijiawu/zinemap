@@ -35,6 +35,7 @@ export default function AddEventPage() {
     category: "festival",
     start_date: "",
     end_date: "",
+    application_open: "",
     application_deadline: "",
     notes: ""
   })
@@ -332,6 +333,7 @@ export default function AddEventPage() {
           category: formData.category,
           start_date: new Date(formData.start_date + 'T00:00:00.000Z').toISOString().split('T')[0],
           end_date: new Date(formData.end_date + 'T00:00:00.000Z').toISOString().split('T')[0],
+          application_open: formData.application_open ? new Date(formData.application_open + 'T00:00:00.000Z').toISOString().split('T')[0] : null,
           application_deadline: formData.application_deadline ? new Date(formData.application_deadline + 'T00:00:00.000Z').toISOString().split('T')[0] : null,
           notes: formData.notes?.trim() || null,
           submitted_by: user!.id,
@@ -412,6 +414,7 @@ export default function AddEventPage() {
                       category: "festival",
                       start_date: "",
                       end_date: "",
+                      application_open: "",
                       application_deadline: "",
                       notes: ""
                     })
@@ -552,6 +555,18 @@ export default function AddEventPage() {
               {/* Application Deadline for Festivals */}
               {formData.category === "festival" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="application_open" className="text-stone-700 font-serif font-medium">
+                      Application Opens
+                    </Label>
+                    <Input
+                      id="application_open"
+                      type="date"
+                      value={formData.application_open}
+                      onChange={(e) => handleInputChange("application_open", e.target.value)}
+                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="application_deadline" className="text-stone-700 font-serif font-medium">
                       Application Deadline
