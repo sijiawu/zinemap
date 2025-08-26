@@ -18,8 +18,9 @@ export default function PublicProfilePage() {
   const [contributions, setContributions] = useState<{
     stores: number
     libraries: number
+    events: number
     notes: number
-  }>({ stores: 0, libraries: 0, notes: 0 })
+  }>({ stores: 0, libraries: 0, events: 0, notes: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,6 +45,12 @@ export default function PublicProfilePage() {
         .select('*', { count: 'exact', head: true })
         .eq('submitted_by', userId)
 
+      // Count events
+      const { count: eventsCount } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .eq('submitted_by', userId)
+
       // Count community notes
       const { count: notesCount } = await supabase
         .from('community_notes')
@@ -53,11 +60,12 @@ export default function PublicProfilePage() {
       setContributions({
         stores: storesCount || 0,
         libraries: librariesCount || 0,
+        events: eventsCount || 0,
         notes: notesCount || 0
       })
     } catch (err) {
       console.error('Contributions fetch error:', err)
-      setContributions({ stores: 0, libraries: 0, notes: 0 })
+      setContributions({ stores: 0, libraries: 0, events: 0, notes: 0 })
     }
   }
 
@@ -250,6 +258,9 @@ export default function PublicProfilePage() {
                       <div className="text-center">
                         <div className="text-stone-300 text-xs">
                           spots: {contributions.stores + contributions.libraries}
+                        </div>
+                        <div className="text-stone-300 text-xs mt-1">
+                          events: {contributions.events}
                         </div>
                         <div className="text-stone-300 text-xs mt-1">
                           notes: {contributions.notes}
