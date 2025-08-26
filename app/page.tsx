@@ -696,7 +696,7 @@ export default function HomePage() {
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
                   className="bg-stone-800 hover:bg-stone-900 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors"
                 >
-                  Drop a Pin
+                  Add store / library / event
                   <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${isAddMenuOpen ? 'rotate-180' : ''}`} />
                 </Button>
                 
