@@ -328,12 +328,10 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
                   }
                 </p>
               )}
-              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (
+              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && new Date(selectedLocation.application_deadline) > new Date() && (
                 <p className="text-xs text-gray-500 mt-1">
                   <Clock className="h-3 w-3 inline mr-1" />
-                  {new Date(selectedLocation.application_deadline) > new Date() && 
-                    `Apply by ${formatDateReadable(selectedLocation.application_deadline)}`
-                  }
+                  Apply by {formatDateReadable(selectedLocation.application_deadline)}
                 </p>
               )}
             </div>
