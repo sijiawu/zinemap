@@ -398,7 +398,7 @@ export default function HomePage() {
 
               {/* Stores Tab */}
               <TabsContent value="stores" className="space-y-4">
-                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
                   {filteredStores.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -507,7 +507,7 @@ export default function HomePage() {
 
               {/* Libraries Tab */}
               <TabsContent value="libraries" className="space-y-4">
-                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
                   {filteredLibraries.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -616,7 +616,7 @@ export default function HomePage() {
 
               {/* Events Tab */}
               <TabsContent value="events" className="space-y-4">
-                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
                   {filteredEvents.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
