@@ -286,7 +286,7 @@ export default function HomePage() {
             </div>
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
           </div>
-          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Drop your zines. Find your people.</p>
+          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">A map of the zine universe that grows with you.</p>
         </div>
       </header>
 
