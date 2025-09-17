@@ -25,6 +25,7 @@ export default function AddEventPage() {
 
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
+    venue_name: "",
     city: "",
     state: "",
     country: "",
@@ -323,6 +324,7 @@ export default function AddEventPage() {
         .insert({
           id,
           name: formData.name.trim(),
+          venue_name: formData.venue_name?.trim() || null,
           city: formData.city.trim(),
           state: formData.state.trim() || null,
           country: formData.country.trim(),
@@ -404,6 +406,7 @@ export default function AddEventPage() {
                     setIsSubmitted(false)
                     setFormData({
                       name: "",
+                      venue_name: "",
                       city: "",
                       state: "",
                       country: "",
@@ -514,6 +517,20 @@ export default function AddEventPage() {
                 </div>
               </div>
 
+              {/* Venue Name */}
+              <div className="space-y-2">
+                <Label htmlFor="venue_name" className="text-stone-700 font-serif font-medium">
+                  Venue Name
+                </Label>
+                <Input
+                  id="venue_name"
+                  value={formData.venue_name}
+                  onChange={(e) => handleInputChange("venue_name", e.target.value)}
+                  className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                  placeholder="e.g. Chicago Cultural Center"
+                  autoComplete="off"
+                />
+              </div>
               {/* Event Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">

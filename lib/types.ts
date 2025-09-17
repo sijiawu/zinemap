@@ -56,6 +56,7 @@ export interface Library {
 export interface Event {
   id: string
   name: string
+  venue_name?: string
   city: string
   state?: string
   country: string
@@ -204,6 +205,7 @@ export interface LibraryFormData {
 
 export interface EventFormData {
   name: string
+  venue_name?: string
   city: string
   state: string
   country: string

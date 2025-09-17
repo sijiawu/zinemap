@@ -26,6 +26,7 @@ export default function SuggestEventEditPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    venue_name: "",
     city: "",
     state: "",
     country: "",
@@ -58,6 +59,7 @@ export default function SuggestEventEditPage() {
           setEvent(eventData)
           setFormData({
             name: eventData.name || "",
+            venue_name: eventData.venue_name || "",
             city: eventData.city || "",
             state: eventData.state || "",
             country: eventData.country || "",
@@ -107,7 +109,9 @@ export default function SuggestEventEditPage() {
       if (formData.name !== event.name) {
         changes.push(`old name: ${event.name}\nnew name: ${formData.name}`)
       }
-      if (formData.city !== event.city) {
+      if (formData.venue_name !== event.venue_name) {
+        changes.push(`old venue name: ${event.venue_name || 'none'}nnew venue name: ${formData.venue_name || 'none'}`)
+      }      if (formData.city !== event.city) {
         changes.push(`old city: ${event.city}\nnew city: ${formData.city}`)
       }
       if (formData.state !== event.state) {
@@ -318,6 +322,20 @@ export default function SuggestEventEditPage() {
                 </div>
               </div>
 
+              {/* Venue Name */}
+              <div className="space-y-2">
+                <Label htmlFor="venue_name" className="text-stone-700 font-serif font-medium">
+                  Venue Name
+                </Label>
+                <Input
+                  id="venue_name"
+                  value={formData.venue_name}
+                  onChange={(e) => handleInputChange("venue_name", e.target.value)}
+                  className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                  placeholder="e.g. Chicago Cultural Center"
+                  autoComplete="off"
+                />
+              </div>
               {/* Event Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">

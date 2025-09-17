@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Filter, ExternalLink, User, BookOpen, Calendar, Clock, Plus, ChevronDown } from "lucide-react"
+import { Search, MapPin, Filter, ExternalLink, User, BookOpen, Calendar, Clock, Plus, ChevronDown, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -664,11 +664,16 @@ export default function HomePage() {
                                   {event.name}
                                 </Link>
                               </CardTitle>
+                              {event.venue_name && (
+                                <div className="flex items-center text-stone-600 text-sm mb-1">
+                                  <Landmark className="h-4 w-4 mr-1" />
+                                  <span className="font-medium">{event.venue_name}</span>
+                                </div>
+                              )}
                               <div className="flex items-center text-stone-600 text-sm mb-2">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {event.city}{event.state && `, ${event.state}`}, {event.country}
-                              </div>
-                            </div>
+                              </div>                            </div>
                           </div>
                           
                           {/* Event Category and Dates */}

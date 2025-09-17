@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3, Calendar } from "lucide-react"
+import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3, Calendar, Tent } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -841,9 +841,16 @@ export default function AdminPage() {
                         <div className="flex-1">
                           <CardTitle className="text-xl font-semibold text-stone-800 mb-2">{event.name}</CardTitle>
                           <div className="flex items-center text-stone-600 text-sm mb-2">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {event.city}{event.state && `, ${event.state}`}, {event.country}
-                          </div>
+                            {event.venue_name && (
+                              <div className="flex items-center text-stone-600 text-sm mb-1">
+                                <Landmark className="h-4 w-4 mr-1" />
+                                <span className="font-medium">{event.venue_name}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center text-stone-600 text-sm mb-2">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            </div>                          </div>
                           <div className="flex items-center text-stone-500 text-sm mb-2">
                             <Calendar className="h-4 w-4 mr-1" />
                             {getEventCategoryDisplay(event.category)} • {new Date(event.start_date).toLocaleDateString()}

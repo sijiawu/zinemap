@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle, ArrowLeft } from "lucide-react"
+import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle, ArrowLeft, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -689,7 +689,7 @@ export default function EventDetailPage() {
               
               <div className="flex items-center text-stone-600 text-lg mb-4 break-words">
                 <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
-                <span className="break-words">{event.city}{event.state && `, ${event.state}`}, {event.country}</span>
+<span className="break-words">{event.city}{event.state && `, ${event.state}`}, {event.country}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-stone-600">
@@ -1192,6 +1192,24 @@ export default function EventDetailPage() {
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6 order-2 lg:order-none">
+
+            {/* Event Venue */}
+            {event.venue_name && (
+              <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-stone-800">Event Venue</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start gap-3">
+                    <Landmark className="h-5 w-5 text-stone-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-stone-800">{event.venue_name}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Event Location */}
             <Card id="event-location" className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
               <CardHeader>

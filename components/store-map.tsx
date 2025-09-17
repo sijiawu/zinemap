@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen, Calendar, Clock } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
@@ -307,10 +307,14 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
             </div>
           </div>
 
-          <p className="text-sm text-gray-600 mb-3">
-            📍 {selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}
-          </p>
-
+            {locationType === 'event' && 'venue_name' in selectedLocation && selectedLocation.venue_name && (
+              <div className="text-sm text-gray-600 mb-2">
+                <Landmark className="h-4 w-4 inline mr-1" />{selectedLocation.venue_name}
+              </div>
+            )}
+            <p className="text-sm text-gray-600 mb-3">
+              <MapPin className="h-4 w-4 inline mr-1" />{selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}
+            </p>
           {/* Event-specific info */}
           {locationType === 'event' && 'category' in selectedLocation && selectedLocation.category && (
             <div className="mb-4">
@@ -322,7 +326,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
               </Badge>
               {'start_date' in selectedLocation && selectedLocation.start_date && (
                 <p className="text-xs text-gray-500">
-                  📅 {formatDateReadable(selectedLocation.start_date)}
+                  <Calendar className="h-3 w-3 inline mr-1" />{formatDateReadable(selectedLocation.start_date)}
                   {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && 
                     ` - ${formatDateReadable(selectedLocation.end_date)}`
                   }
