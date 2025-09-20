@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3, Calendar, Tent } from "lucide-react"
+import { ArrowLeft, Check, X, Store as StoreIcon, MapPin, Clock, User, BookOpen, Edit3, Calendar, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
