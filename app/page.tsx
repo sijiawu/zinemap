@@ -689,15 +689,18 @@ export default function HomePage() {
                               {formatDateReadable(event.start_date)}
                               {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
                             </div>
-                            {/* {event.category === "festival" && event.application_deadline && (
+                            {event.category === "festival" && event.application_deadline && (() => {
+                              const today = new Date();
+                              const deadlineDate = new Date(event.application_deadline);
+                              today.setHours(0, 0, 0, 0);
+                              deadlineDate.setHours(0, 0, 0, 0);
+                              return deadlineDate >= today;
+                            })() && (
                               <div className="flex items-center text-xs text-stone-500">
                                 <Clock className="h-3 w-3 mr-1" />
-                                {new Date(event.application_deadline) < new Date() 
-                                  ? "Deadline passed" 
-                                  : `Apply by ${formatDateReadable(event.application_deadline)}`
-                                }
+                                Apply by {formatDateReadable(event.application_deadline)}
                               </div>
-                            )} */}
+                            )}
                           </div>
                         </CardHeader>
 

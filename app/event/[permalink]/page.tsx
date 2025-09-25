@@ -656,33 +656,44 @@ export default function EventDetailPage() {
                 </Badge>
                 
                 {/* Application Status - Show only one badge based on current state */}
-                {event.application_deadline && (
-                  <>
-                    {/* State 1: Before application open - show "Application opens [date]" */}
-                    {event.application_open && new Date(event.application_open) > new Date() && (
-                      <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-50">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        Application opens {formatDateReadable(event.application_open)}
-                      </Badge>
-                    )}
-                    
-                    {/* State 2: Application opened - show "Apply by [date]" */}
-                    {(!event.application_open || new Date(event.application_open) <= new Date()) && new Date(event.application_deadline) > new Date() && (
-                      <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Apply by {formatDateReadable(event.application_deadline)}
-                      </Badge>
-                    )}
-                    
-                    {/* State 3: Application closed - show "Submission closed" */}
-                    {new Date(event.application_deadline) <= new Date() && (
-                      <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Submission closed
-                      </Badge>
-                    )}
-                  </>
-                )}
+                {event.application_deadline && (() => {
+                  const today = new Date();
+                  const deadlineDate = new Date(event.application_deadline);
+                  const openDate = event.application_open ? new Date(event.application_open) : null;
+                  
+                  // Set time to start of day for accurate date comparison
+                  today.setHours(0, 0, 0, 0);
+                  deadlineDate.setHours(0, 0, 0, 0);
+                  if (openDate) openDate.setHours(0, 0, 0, 0);
+                  
+                  return (
+                    <>
+                      {/* State 1: Before application open - show "Application opens [date]" */}
+                      {openDate && openDate > today && (
+                        <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-50">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Application opens {formatDateReadable(event.application_open!)}
+                        </Badge>
+                      )}
+                      
+                      {/* State 2: Application opened - show "Apply by [date]" */}
+                      {(!openDate || openDate <= today) && deadlineDate >= today && (
+                        <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Apply by {formatDateReadable(event.application_deadline)}
+                        </Badge>
+                      )}
+                      
+                      {/* State 3: Application closed - show "Submission closed" */}
+                      {deadlineDate < today && (
+                        <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Submission closed
+                        </Badge>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-stone-800 mb-2 break-words">{event.name}</h1>

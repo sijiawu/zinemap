@@ -332,7 +332,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
                   }
                 </p>
               )}
-              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && new Date(selectedLocation.application_deadline) > new Date() && (
+              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {
+                const today = new Date();
+                const deadlineDate = new Date(selectedLocation.application_deadline);
+                today.setHours(0, 0, 0, 0);
+                deadlineDate.setHours(0, 0, 0, 0);
+                return deadlineDate >= today;
+              })() && (
                 <p className="text-xs text-gray-500 mt-1">
                   <Clock className="h-3 w-3 inline mr-1" />
                   Apply by {formatDateReadable(selectedLocation.application_deadline)}
