@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark, Plus, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
@@ -23,6 +23,21 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
   const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
+
+  // Zoom functions
+  const zoomIn = () => {
+    if (map.current) {
+      const currentZoom = map.current.getZoom()
+      map.current.zoomTo(currentZoom + 1, { duration: 300 })
+    }
+  }
+
+  const zoomOut = () => {
+    if (map.current) {
+      const currentZoom = map.current.getZoom()
+      map.current.zoomTo(currentZoom - 1, { duration: 300 })
+    }
+  }
 
   // Initialize map (only once)
   useEffect(() => {
@@ -203,6 +218,26 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
   return (
     <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
       <div ref={mapContainer} className="w-full h-full" />
+
+      {/* Zoom Controls */}
+      <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
+        <div className="flex flex-col">
+          <button
+            onClick={zoomIn}
+            className="p-2 hover:bg-stone-50 transition-colors border-b border-stone-200 rounded-t-lg"
+            title="Zoom in"
+          >
+            <Plus className="h-4 w-4 text-stone-700" />
+          </button>
+          <button
+            onClick={zoomOut}
+            className="p-2 hover:bg-stone-50 transition-colors rounded-b-lg"
+            title="Zoom out"
+          >
+            <Minus className="h-4 w-4 text-stone-700" />
+          </button>
+        </div>
+      </div>
 
       {/* Map Controls */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-2 z-10">
