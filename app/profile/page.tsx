@@ -852,7 +852,7 @@ export default function ProfilePage() {
                             <h3 className="font-semibold text-stone-800">{zine.title}</h3>
                           </div>
                           {zine.description && (
-                            <p className="text-sm text-stone-600 line-clamp-2">
+                            <p className="text-sm text-stone-600 line-clamp-3">
                               {zine.description}
                             </p>
                           )}

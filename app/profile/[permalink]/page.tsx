@@ -23,6 +23,7 @@ export default function PublicProfilePage() {
   }>({ stores: 0, libraries: 0, events: 0, notes: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedZine, setSelectedZine] = useState<Zine | null>(null)
 
   useEffect(() => {
     if (params.permalink) {
@@ -306,7 +307,8 @@ export default function PublicProfilePage() {
                   {publicZines.map((zine) => (
                     <div
                       key={zine.id}
-                      className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                      className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50 cursor-pointer"
+                      onClick={() => setSelectedZine(zine)}
                     >
                       {/* Cover Image */}
                       <div className="flex-shrink-0">
@@ -329,7 +331,7 @@ export default function PublicProfilePage() {
                           <h3 className="font-semibold text-stone-800">{zine.title}</h3>
                         </div>
                         {zine.description && (
-                          <p className="text-sm text-stone-600 line-clamp-2">
+                          <p className="text-sm text-stone-600 line-clamp-3">
                             {zine.description}
                           </p>
                         )}
@@ -344,10 +346,58 @@ export default function PublicProfilePage() {
           </Card>
         </div>
 
-
-
-
       </div>
+
+      {/* Zine Popup Modal - Outside main content container */}
+      {selectedZine && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedZine(null)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedZine(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+              
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Cover Image */}
+                <div className="flex-shrink-0">
+                  {selectedZine.cover_image ? (
+                    <img
+                      src={selectedZine.cover_image}
+                      alt={`${selectedZine.title} cover`}
+                      className="w-full md:w-64 h-auto max-h-96 object-cover rounded border border-stone-200"
+                    />
+                  ) : (
+                    <div className="w-full md:w-64 h-80 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
+                      <BookOpen className="h-16 w-16 text-stone-400" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Zine Details */}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold text-stone-800 mb-4">{selectedZine.title}</h2>
+                  
+                  {selectedZine.description && (
+                    <div className="mb-4">
+                      <p className="text-stone-600 whitespace-pre-wrap">{selectedZine.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
