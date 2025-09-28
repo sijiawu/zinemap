@@ -18,6 +18,11 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-2xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria">ZineMap</Link>
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/stores" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Stores</Link>
+            <Link href="/libraries" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Libraries</Link>
+            <Link href="/events" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Events</Link>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {!loading && user && (

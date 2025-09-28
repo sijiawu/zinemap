@@ -1,0 +1,508 @@
+"use client"
+
+import { Search, BookOpen, Filter, ExternalLink, User, ChevronDown, ChevronUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { StoreMap } from "@/components/store-map"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
+import { Store, Library, Event, Tag } from "@/lib/types"
+
+export default function LibrariesPage() {
+  const [libraries, setLibraries] = useState<Library[]>([])
+  const [filteredLibraries, setFilteredLibraries] = useState<Library[]>([])
+  const [allTags, setAllTags] = useState<Tag[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+  const [selectedCountry, setSelectedCountry] = useState("all")
+  const [selectedState, setSelectedState] = useState("all")
+  const [selectedCity, setSelectedCity] = useState("all")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+
+  // Get unique countries, states, and cities for filters
+  const countries = Array.from(new Set(libraries.map(l => l.country))).sort()
+  
+  // Filter states and cities based on selected country
+  const filteredLibrariesForLocation = selectedCountry === "all" 
+    ? libraries 
+    : libraries.filter(l => l.country === selectedCountry)
+  
+  const states = Array.from(new Set(filteredLibrariesForLocation.filter(l => l.state).map(l => l.state))).sort()
+  const cities = Array.from(new Set(filteredLibrariesForLocation.map(l => l.city))).sort()
+
+  // Reset state and city when country changes
+  useEffect(() => {
+    if (selectedCountry === "all") {
+      setSelectedState("all")
+      setSelectedCity("all")
+    }
+  }, [selectedCountry])
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch libraries
+        const { data: librariesData, error: librariesError } = await supabase
+          .from('libraries')
+          .select('*')
+          .eq('approved', true)
+          .order('created_at', { ascending: false })
+
+        if (librariesError) {
+          console.error('Error fetching libraries:', librariesError)
+        }
+
+        // Fetch library tags only (service and access categories)
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('tags')
+          .select('*')
+          .in('category', ['service', 'access'])
+          .order('label')
+
+        if (tagsError) {
+          console.error('Error fetching tags:', tagsError)
+        }
+
+        // Batch fetch all library tags
+        const { data: allLibraryTags } = await supabase
+          .from('library_tags')
+          .select(`
+            id,
+            library_id,
+            tag_id,
+            tags!inner(id, label, category)
+          `)
+          .in('library_id', (librariesData || []).map(l => l.id))
+
+        // Batch fetch all user profiles
+        const libraryUserIds = (librariesData || []).map(l => l.submitted_by)
+        const { data: allLibraryUserProfiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', libraryUserIds)
+
+        // Create user lookup map
+        const libraryUserMap = new Map(
+          (allLibraryUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+        )
+
+        // Process libraries with tags and user info
+        const librariesWithTags = (librariesData || []).map((library) => {
+          const libraryTags = (allLibraryTags || [])
+            .filter(tag => tag.library_id === library.id)
+            .map((tag: any) => ({
+              id: tag.id || `library-tag-${library.id}-${tag.tag_id}`,
+              tag_id: tag.tag_id,
+              tag: tag.tags
+            }))
+
+          const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
+          const user_name = userData.display_name
+          const user_permalink = userData.permalink
+
+          return {
+            ...library,
+            library_tags: libraryTags,
+            user_name,
+            user_permalink
+          }
+        })
+
+        setLibraries(librariesWithTags)
+        setAllTags(tagsData || [])
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setLibraries([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Filter libraries based on all criteria
+  useEffect(() => {
+    if (!libraries) return
+
+    let filtered = libraries
+
+    // Apply search filter
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase().trim()
+      filtered = filtered.filter(library => 
+        library.name.toLowerCase().includes(query) ||
+        library.city.toLowerCase().includes(query) ||
+        (library.state && library.state.toLowerCase().includes(query)) ||
+        library.country.toLowerCase().includes(query) ||
+        library.address.toLowerCase().includes(query)
+      )
+    }
+
+    // Apply country filter
+    if (selectedCountry && selectedCountry !== "all") {
+      filtered = filtered.filter(library => library.country === selectedCountry)
+    }
+
+    // Apply state filter
+    if (selectedState && selectedState !== "all") {
+      filtered = filtered.filter(library => library.state === selectedState)
+    }
+
+    // Apply city filter
+    if (selectedCity && selectedCity !== "all") {
+      filtered = filtered.filter(library => library.city === selectedCity)
+    }
+
+    // Apply tag filters
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(library => 
+        library.library_tags && library.library_tags.some(libraryTag => 
+          selectedTags.includes(libraryTag.tag_id)
+        )
+      )
+    }
+
+    setFilteredLibraries(filtered)
+  }, [libraries, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags])
+
+  const handleTagToggle = (tagId: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    )
+  }
+
+  const handleLocationSelect = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
+    // This function is called when a map marker is clicked
+    // The map will handle showing the popup automatically
+  }
+
+  const handleCardClick = (library: Library) => {
+    // When a card is clicked, select it on the map
+    if ((window as any).selectMapLocation) {
+      (window as any).selectMapLocation(library, 'library')
+    }
+  }
+
+  const clearFilters = () => {
+    setSearchQuery("")
+    setSelectedCountry("all")
+    setSelectedState("all")
+    setSelectedCity("all")
+    setSelectedTags([])
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
+        <div className="text-stone-500 text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-stone-50 font-serif">
+      {/* Header */}
+      <header className="w-full bg-white border-b border-stone-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center">
+          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Zine Libraries</h3>
+          <div className="flex justify-center items-center mb-3">
+            <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
+            <div className="mx-3 text-blue-500">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
+          </div>
+          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Find libraries with zine collections and archives</p>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <Button
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            variant="outline"
+            className="w-full justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+            </span>
+            {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filters Column - Hidden on mobile unless open */}
+          <div className={`w-full lg:w-64 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden lg:block'}`}>
+            <Card className="bg-white border-stone-200 shadow-sm rounded-lg sticky top-6">
+              <CardContent className="space-y-6 pt-6">
+                {/* Search */}
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search libraries..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-stone-50 border-stone-300 focus:border-blue-300 focus:ring-blue-200"
+                    />
+                  </div>
+                </div>
+
+                {/* Location Filters */}
+                <div className="space-y-4">
+                  
+                  <div className="space-y-2">
+                    <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                      <SelectTrigger className="bg-stone-50 border-stone-300">
+                        <SelectValue placeholder="All countries" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All countries</SelectItem>
+                        {countries.map(country => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
+                      <SelectTrigger className="bg-stone-50 border-stone-300">
+                        <SelectValue placeholder="All states" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All states</SelectItem>
+                        {states.map(state => (
+                          <SelectItem key={state} value={state}>{state}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedCountry === "all"}>
+                      <SelectTrigger className="bg-stone-50 border-stone-300">
+                        <SelectValue placeholder="All cities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All cities</SelectItem>
+                        {cities.map(city => (
+                          <SelectItem key={city} value={city}>{city}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Tag Filters */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-stone-700">Library Types</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {allTags.map(tag => (
+                      <div key={tag.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`tag-${tag.id}`}
+                          checked={selectedTags.includes(tag.id)}
+                          onCheckedChange={() => handleTagToggle(tag.id)}
+                        />
+                        <label
+                          htmlFor={`tag-${tag.id}`}
+                          className="text-sm text-stone-700 cursor-pointer"
+                        >
+                          {tag.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Clear Filters */}
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  className="w-full border-stone-300 text-stone-700 hover:bg-stone-50"
+                >
+                  Clear All Filters
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Map and List - Mobile: Map first, then List */}
+          <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-6">
+            {/* Map View - Mobile: First */}
+            <div className="order-1 lg:order-2">
+              <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
+                <CardContent className="p-0">
+                  {loading ? (
+                    <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
+                      <div className="text-stone-500">Loading map...</div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-96 lg:h-full">
+                      <StoreMap 
+                        stores={[]}
+                        libraries={libraries}
+                        events={[]}
+                        searchQuery={debouncedSearchQuery}
+                        hideFilterBar={true}
+                        onLocationSelect={handleLocationSelect}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Add Library button under the map */}
+              <div className="mt-6 flex justify-center">
+                <Link href="/add-library">
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors">
+                    Add a library
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* List View - Mobile: Second */}
+            <div className="space-y-4 order-2 lg:order-1">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-stone-800">
+                  Libraries ({filteredLibraries.length})
+                </h2>
+              </div>
+              
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {filteredLibraries.length === 0 ? (
+                  <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
+                    <CardContent className="p-6 text-center">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-blue-400" />
+                      <h3 className="text-lg font-semibold text-stone-800 mb-2">
+                        {libraries.length === 0 ? "No libraries yet" : "No libraries match your filters"}
+                      </h3>
+                      <p className="text-stone-600 mb-4">
+                        {libraries.length === 0 
+                          ? "Be the first to add a zine-friendly library to the map!"
+                          : "Try adjusting your search or filter criteria."
+                        }
+                      </p>
+                      {libraries.length === 0 ? (
+                        <Link href="/add-library">
+                          <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria">
+                            Add first library
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button 
+                          onClick={clearFilters}
+                          variant="outline"
+                          className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredLibraries.map((library) => (
+                    <Card
+                      key={library.id}
+                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                      onClick={() => handleCardClick(library)}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
+                              <Link 
+                                href={`/library/${library.permalink || library.id}`}
+                                className="hover:text-blue-600 transition-colors"
+                              >
+                                {library.name}
+                              </Link>
+                            </CardTitle>
+                            <div className="flex items-center text-stone-600 text-sm mb-2">
+                              <BookOpen className="h-4 w-4 mr-1" />
+                              {library.city}{library.state && `, ${library.state}`}, {library.country}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Library Tags */}
+                        {library.library_tags && library.library_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {library.library_tags.map((libraryTag, index) => (
+                              <Badge
+                                key={libraryTag.id || `library-tag-${library.id}-${index}`}
+                                variant="outline"
+                                className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                              >
+                                {libraryTag.tag.label}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="pt-0">
+                        <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
+                          {library.notes}
+                        </p>
+                        {library.user_name && (
+                          <p className="text-xs text-gray-500 mb-3">
+                            Added by{' '}
+                            {library.user_permalink ? (
+                              <Link 
+                                href={`/profile/${library.user_permalink}`}
+                                className="text-stone-800 hover:underline transition-colors"
+                              >
+                                {library.user_name}
+                              </Link>
+                            ) : (
+                              library.user_name
+                            )}
+                          </p>
+                        )}
+                        <Link href={`/library/${library.permalink || library.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-800 transition-colors bg-transparent"
+                          >
+                            View Details
+                            <ExternalLink className="h-3 w-3 ml-2" />
+                          </Button>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

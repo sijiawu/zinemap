@@ -14,9 +14,10 @@ interface StoreMapProps {
   events: Event[]
   searchQuery?: string
   onLocationSelect?: (location: Store | Library | Event, type: 'store' | 'library' | 'event') => void
+  hideFilterBar?: boolean
 }
 
-export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect }: StoreMapProps) {
+export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, hideFilterBar = false }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -267,59 +268,61 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       </div>
 
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-2 z-10">
-        <div className="flex gap-1">
-          <button
-            onClick={() => setMapView('stores')}
-            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              mapView === 'stores' 
-                ? 'bg-[#e11d48] text-white' 
-                : 'bg-stone-100 text-stone-700 hover:bg-rose-50 hover:bg-rose-100'
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-[#e11d48] rounded-full"></div>
-              Stores
-            </div>
-          </button>
-          <button
-            onClick={() => setMapView('libraries')}
-            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              mapView === 'libraries' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-              Libraries
-            </div>
-          </button>
-          <button
-            onClick={() => setMapView('events')}
-            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              mapView === 'events' 
-                ? 'bg-[#009035] text-white' 
-                : 'bg-stone-100 text-stone-700 hover:bg-green-50 hover:bg-green-100'
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-[#009035] rounded-full"></div>
-              Events
-            </div>
-          </button>
-          <button
-            onClick={() => setMapView('all')}
-            className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              mapView === 'all' 
-                ? 'bg-[#DBDBDC] text-stone-800' 
-                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
-          >
-            All
-          </button>
+      {!hideFilterBar && (
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-stone-200 p-2 z-10">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setMapView('stores')}
+              className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                mapView === 'stores' 
+                  ? 'bg-[#e11d48] text-white' 
+                  : 'bg-stone-100 text-stone-700 hover:bg-rose-50 hover:bg-rose-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-[#e11d48] rounded-full"></div>
+                Stores
+              </div>
+            </button>
+            <button
+              onClick={() => setMapView('libraries')}
+              className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                mapView === 'libraries' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+                Libraries
+              </div>
+            </button>
+            <button
+              onClick={() => setMapView('events')}
+              className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                mapView === 'events' 
+                  ? 'bg-[#009035] text-white' 
+                  : 'bg-stone-100 text-stone-700 hover:bg-green-50 hover:bg-green-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-[#009035] rounded-full"></div>
+                Events
+              </div>
+            </button>
+            <button
+              onClick={() => setMapView('all')}
+              className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                mapView === 'all' 
+                  ? 'bg-[#DBDBDC] text-stone-800' 
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+              }`}
+            >
+              All
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Location Popup */}
       {selectedLocation && (
