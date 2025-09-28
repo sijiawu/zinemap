@@ -24,6 +24,7 @@ export default function StoresPage() {
   const [selectedState, setSelectedState] = useState("all")
   const [selectedCity, setSelectedCity] = useState("all")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [noMaxPrice, setNoMaxPrice] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   // Get unique countries, states, and cities for filters
@@ -170,17 +171,26 @@ export default function StoresPage() {
       filtered = filtered.filter(store => store.city === selectedCity)
     }
 
-    // Apply tag filters
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter(store => 
-        store.store_tags && store.store_tags.some(storeTag => 
+    // Apply tag filters (including "no maximum price" as OR condition)
+    if (selectedTags.length > 0 || noMaxPrice) {
+      filtered = filtered.filter(store => {
+        // Check if store has any of the selected tags
+        const hasSelectedTags = selectedTags.length > 0 && store.store_tags && store.store_tags.some(storeTag => 
           selectedTags.includes(storeTag.tag_id)
         )
-      )
+        
+        // Check if store has no limit tags (when "no maximum price" is selected)
+        const hasNoLimitTags = noMaxPrice && (!store.store_tags || !store.store_tags.some(storeTag => 
+          storeTag.tag && storeTag.tag.category === 'limits'
+        ))
+        
+        // Return true if either condition is met
+        return hasSelectedTags || hasNoLimitTags
+      })
     }
 
     setFilteredStores(filtered)
-  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags])
+  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, noMaxPrice])
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 
@@ -208,6 +218,7 @@ export default function StoresPage() {
     setSelectedState("all")
     setSelectedCity("all")
     setSelectedTags([])
+    setNoMaxPrice(false)
   }
 
   if (loading) {
@@ -320,6 +331,21 @@ export default function StoresPage() {
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium text-stone-700">Stocking Terms</h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {/* No Maximum Price Checkbox */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="no-max-price"
+                        checked={noMaxPrice}
+                        onCheckedChange={(checked) => setNoMaxPrice(checked as boolean)}
+                      />
+                      <label
+                        htmlFor="no-max-price"
+                        className="text-sm text-stone-700 cursor-pointer"
+                      >
+                        No maximum price set
+                      </label>
+                    </div>
+                    
                     {allTags.map(tag => (
                       <div key={tag.id} className="flex items-center space-x-2">
                         <Checkbox
