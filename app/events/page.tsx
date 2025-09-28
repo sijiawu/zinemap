@@ -208,7 +208,7 @@ export default function EventsPage() {
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Zine Events</h3>
+          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Events</h3>
           <div className="flex justify-center items-center mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent"></div>
             <div className="mx-3 text-[#009035]">
@@ -216,7 +216,7 @@ export default function EventsPage() {
             </div>
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent"></div>
           </div>
-          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Find zine festivals, swaps, workshops, and more</p>
+          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Find zine and small-press festivals, meetups, workshops, and more</p>
         </div>
       </header>
 

@@ -223,7 +223,7 @@ export default function StoresPage() {
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Zine Stores</h3>
+          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Stores</h3>
           <div className="flex justify-center items-center mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
             <div className="mx-3 text-rose-500">
@@ -231,7 +231,7 @@ export default function StoresPage() {
             </div>
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
           </div>
-          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Discover zine-friendly shops worldwide</p>
+          <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Discover shops that carry zines worldwide</p>
         </div>
       </header>
 

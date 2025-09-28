@@ -223,7 +223,7 @@ export default function LibrariesPage() {
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Zine Libraries</h3>
+          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Libraries</h3>
           <div className="flex justify-center items-center mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
             <div className="mx-3 text-blue-500">
