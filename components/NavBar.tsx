@@ -59,6 +59,16 @@ export default function NavBar() {
               >
                 Events
               </Link>
+              <Link 
+                href="/zines" 
+                className={`font-gloria text-lg transition-all duration-200 hover:scale-105 ${
+                  isActive('/zines') 
+                    ? 'text-purple-600 font-bold' 
+                    : 'text-stone-700 hover:text-purple-600'
+                }`}
+              >
+                Zines
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -117,7 +127,7 @@ export default function NavBar() {
           </div>
           
           {/* Bottom row: Subpages */}
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-3">
             <Link 
               href="/stores" 
               className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
@@ -147,6 +157,16 @@ export default function NavBar() {
               }`}
             >
               Events
+            </Link>
+            <Link 
+              href="/zines" 
+              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
+                isActive('/zines') 
+                  ? 'text-purple-600 font-bold' 
+                  : 'text-stone-700 hover:text-purple-600'
+              }`}
+            >
+              Zines
             </Link>
           </div>
         </div>

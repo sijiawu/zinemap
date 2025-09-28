@@ -378,7 +378,7 @@ export default function DashboardPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditZine(zine)}>Edit zine</DropdownMenuItem>
-                            <Link href={`/zine/${zine.permalink}`}>
+                            <Link href={`/dashboard/zine/${zine.permalink}`}>
                               <DropdownMenuItem>Add batch</DropdownMenuItem>
                             </Link>
                             <DropdownMenuItem onClick={() => handleDeleteZine(zine)} className="text-red-600">Delete</DropdownMenuItem>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
                           )}
                         </div>
 
-                        <Link href={`/zine/${zine.permalink}`}>
+                        <Link href={`/dashboard/zine/${zine.permalink}`}>
                           <Button
                             variant="outline"
                             size="sm"
