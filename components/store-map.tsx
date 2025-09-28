@@ -13,9 +13,10 @@ interface StoreMapProps {
   libraries: Library[]
   events: Event[]
   searchQuery?: string
+  onLocationSelect?: (location: Store | Library | Event, type: 'store' | 'library' | 'event') => void
 }
 
-export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreMapProps) {
+export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -23,6 +24,29 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
   const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
+
+  // Function to programmatically select a location
+  const selectLocation = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
+    setSelectedLocation(location)
+    setLocationType(type)
+    
+    // Pan to the location if it has coordinates
+    if (location.latitude && location.longitude && map.current) {
+      map.current.flyTo({
+        center: [location.longitude, location.latitude],
+        zoom: 10,
+        duration: 2000
+      })
+    }
+  }
+
+  // Expose selectLocation function to parent components
+  useEffect(() => {
+    if (onLocationSelect) {
+      // Store the selectLocation function on the window object for parent access
+      (window as any).selectMapLocation = selectLocation
+    }
+  }, [onLocationSelect])
 
   // Zoom functions
   const zoomIn = () => {
@@ -146,6 +170,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
         markerEl.addEventListener("click", () => {
           setSelectedLocation(store)
           setLocationType('store')
+          onLocationSelect?.(store, 'store')
         })
 
         const marker = new mapboxgl.Marker(markerEl)
@@ -175,6 +200,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
         markerEl.addEventListener("click", () => {
           setSelectedLocation(library)
           setLocationType('library')
+          onLocationSelect?.(library, 'library')
         })
 
         const marker = new mapboxgl.Marker(markerEl)
@@ -204,6 +230,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "" }: StoreM
         markerEl.addEventListener("click", () => {
           setSelectedLocation(event)
           setLocationType('event')
+          onLocationSelect?.(event, 'event')
         })
 
         const marker = new mapboxgl.Marker(markerEl)

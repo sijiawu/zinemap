@@ -27,6 +27,19 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("stores")
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
 
+  // Handle location selection from list view
+  const handleLocationSelect = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
+    // This function is called when a map marker is clicked
+    // The map will handle showing the popup automatically
+  }
+
+  const handleCardClick = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
+    // When a card is clicked, select it on the map
+    if ((window as any).selectMapLocation) {
+      (window as any).selectMapLocation(location, type)
+    }
+  }
+
   // Handle clicks outside the add menu to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -331,6 +344,7 @@ export default function HomePage() {
                       libraries={libraries}
                       events={events}
                       searchQuery={debouncedSearchQuery}
+                      onLocationSelect={handleLocationSelect}
                     />
                   </div>
                 )}
@@ -433,7 +447,8 @@ export default function HomePage() {
                     filteredStores.map((store) => (
                       <Card
                         key={store.id}
-                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
+                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                        onClick={() => handleCardClick(store, 'store')}
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
@@ -542,7 +557,8 @@ export default function HomePage() {
                     filteredLibraries.map((library) => (
                       <Card
                         key={library.id}
-                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
+                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                        onClick={() => handleCardClick(library, 'library')}
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
@@ -651,7 +667,8 @@ export default function HomePage() {
                     filteredEvents.map((event) => (
                       <Card
                         key={event.id}
-                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg"
+                        className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                        onClick={() => handleCardClick(event, 'event')}
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
