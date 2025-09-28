@@ -330,7 +330,7 @@ export default function StoresPage() {
                 {/* Tag Filters */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium text-stone-700">Stocking Terms</h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
                     {/* No Maximum Price Checkbox */}
                     <div className="flex items-center space-x-2">
                       <Checkbox
