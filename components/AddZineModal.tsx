@@ -316,7 +316,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
           {/* Description */}
           <div>
             <Label htmlFor="description" className="text-sm font-medium text-stone-700">
-              Description (optional)
+              Description (optional but strongly recommended)
             </Label>
             <Textarea
               id="description"
@@ -331,7 +331,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
           {/* Cover Image */}
           <div>
             <Label className="text-sm font-medium text-stone-700">
-              Cover Image (optional)
+              Cover Image (optional but strongly recommended)
             </Label>
             <div className="mt-1">
               {coverImagePreview ? (
