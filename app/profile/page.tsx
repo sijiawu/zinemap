@@ -567,8 +567,18 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     
-                    {/* Edit Button */}
-                    <div className="flex-shrink-0">
+                    {/* Action Buttons */}
+                    <div className="flex-shrink-0 flex gap-2">
+                      <Link href={`/profile/${profile.permalink}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="whitespace-nowrap"
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          View as Public
+                        </Button>
+                      </Link>
                       <Button
                         onClick={() => setIsEditing(true)}
                         variant="outline"
