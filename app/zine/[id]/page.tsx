@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Zine, UserProfile, Store, Batch } from "@/lib/types"
+import { autoLinkText } from "@/lib/utils"
 import ZineMap from "@/components/zine-map"
 
 interface ZineWithAuthor extends Zine {
@@ -17,6 +18,7 @@ interface ZineWithAuthor extends Zine {
 interface ZineWithBatches extends ZineWithAuthor {
   batches: (Batch & { stores: Store })[]
 }
+
 
 export default function PublicZinePage() {
   const params = useParams()
@@ -243,7 +245,7 @@ export default function PublicZinePage() {
                 {zine.description && (
                   <div>
                     <h3 className="font-semibold text-stone-800 mb-2">Description</h3>
-                    <p className="text-stone-600 whitespace-pre-wrap">{zine.description}</p>
+                    <p className="text-stone-600 whitespace-pre-wrap">{autoLinkText(zine.description)}</p>
         </div>
                 )}
 

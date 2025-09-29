@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
+import { autoLinkText } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function PublicProfilePage() {
@@ -389,7 +390,7 @@ export default function PublicProfilePage() {
                   
                   {selectedZine.description && (
                     <div className="mb-4">
-                      <p className="text-stone-600 whitespace-pre-wrap">{selectedZine.description}</p>
+                      <p className="text-stone-600 whitespace-pre-wrap">{autoLinkText(selectedZine.description)}</p>
                     </div>
                   )}
                 </div>

@@ -8,10 +8,12 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Zine, UserProfile } from "@/lib/types"
+import { autoLinkText } from "@/lib/utils"
 
 interface ZineWithAuthor extends Zine {
   profiles: UserProfile
 }
+
 
 export default function ZinesPage() {
   const [zines, setZines] = useState<ZineWithAuthor[]>([])
@@ -237,7 +239,7 @@ export default function ZinesPage() {
                     {/* Description */}
                     {zine.description && (
                       <p className="text-sm text-stone-600 mb-3 line-clamp-3">
-                        {zine.description}
+                        {autoLinkText(zine.description)}
                       </p>
                     )}
 
@@ -325,7 +327,7 @@ export default function ZinesPage() {
 
                     {zine.description && (
                       <p className="text-sm text-stone-600 line-clamp-2 mb-2">
-                        {zine.description}
+                        {autoLinkText(zine.description)}
                       </p>
                     )}
 
@@ -417,7 +419,7 @@ export default function ZinesPage() {
                   
                   {selectedZine.description && (
                     <div className="mb-4">
-                      <p className="text-stone-600 whitespace-pre-wrap">{selectedZine.description}</p>
+                      <p className="text-stone-600 whitespace-pre-wrap">{autoLinkText(selectedZine.description)}</p>
                     </div>
                   )}
 

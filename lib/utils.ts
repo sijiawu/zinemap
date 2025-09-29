@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import React from "react"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -128,4 +129,32 @@ export function getEventCategoryDisplay(category: string): string {
     default:
       return category.replace(/\b\w/g, l => l.toUpperCase())
   }
+}
+
+/**
+ * Auto-link URLs in text by converting them to clickable links
+ * @param text - The text containing potential URLs
+ * @returns React elements with URLs converted to links
+ */
+export function autoLinkText(text: string): React.ReactNode[] {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g
+  const parts = text.split(urlRegex)
+  
+  return parts.map((part, index) => {
+    // Check if this part matches the URL pattern by testing against the original regex
+    const isUrl = /^(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)$/.test(part)
+    
+    if (isUrl) {
+      // Ensure URL has protocol
+      const href = part.startsWith('http') ? part : `https://${part}`
+      return React.createElement('a', {
+        key: index,
+        href: href,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        className: 'text-blue-600 hover:text-blue-800 underline'
+      }, part)
+    }
+    return part
+  })
 }
