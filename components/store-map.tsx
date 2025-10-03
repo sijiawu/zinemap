@@ -26,17 +26,62 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
 
+  // Function to create pin-shaped marker element
+  const createPinMarker = (color: string, isActive: boolean = false) => {
+    const size = isActive ? '32px' : '24px'
+    const iconSize = isActive ? '20px' : '16px'
+    
+    return `
+      <div style="
+        width: ${size};
+        height: ${size};
+        position: relative;
+        cursor: pointer;
+        transform: translate(-50%, -100%);
+        z-index: ${isActive ? '5' : '1'};
+      ">
+        <!-- Pin body -->
+        <div style="
+          width: ${size};
+          height: ${size};
+          background: ${color};
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <!-- Icon container (rotated back) -->
+          <div style="
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+          ">
+            <svg width="${iconSize}" height="${iconSize}" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   // Function to programmatically select a location
   const selectLocation = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
     setSelectedLocation(location)
     setLocationType(type)
     
     // Pan to the location if it has coordinates
+    // Position pin in bottom left to avoid map card coverage
     if (location.latitude && location.longitude && map.current) {
       map.current.flyTo({
         center: [location.longitude, location.latitude],
         zoom: 10,
-        duration: 2000
+        duration: 2000,
+        offset: [-100, 100] // Move pin to bottom left (left, down)
       })
     }
   }
@@ -160,18 +205,30 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         const mapboxgl = require("mapbox-gl")
         
         const markerEl = document.createElement("div")
-        markerEl.innerHTML = `
-          <div style="background: #e11d48; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-          </div>
-        `
+        const isActive = selectedLocation?.id === store.id && locationType === 'store'
+        markerEl.innerHTML = createPinMarker('#e11d48', isActive)
+        if (isActive) {
+          markerEl.setAttribute('data-active', 'true')
+          markerEl.style.zIndex = '5'
+        } else {
+          markerEl.style.zIndex = '1'
+        }
 
         markerEl.addEventListener("click", () => {
           setSelectedLocation(store)
           setLocationType('store')
           onLocationSelect?.(store, 'store')
+          
+          // Fly to the clicked location with reduced zoom and longer duration
+          // Position pin in bottom left to avoid map card coverage
+          if (map.current) {
+            map.current.flyTo({
+              center: [store.longitude, store.latitude],
+              zoom: 12, // Reduced zoom level to be less dizzying
+              duration: 1500, // Longer duration for smoother animation
+              offset: [-100, 100] // Move pin to bottom left (left, down)
+            })
+          }
         })
 
         const marker = new mapboxgl.Marker(markerEl)
@@ -190,18 +247,30 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         const mapboxgl = require("mapbox-gl")
         
         const markerEl = document.createElement("div")
-        markerEl.innerHTML = `
-          <div style="background: #3b82f6; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-          </div>
-        `
+        const isActive = selectedLocation?.id === library.id && locationType === 'library'
+        markerEl.innerHTML = createPinMarker('#3b82f6', isActive)
+        if (isActive) {
+          markerEl.setAttribute('data-active', 'true')
+          markerEl.style.zIndex = '5'
+        } else {
+          markerEl.style.zIndex = '1'
+        }
 
         markerEl.addEventListener("click", () => {
           setSelectedLocation(library)
           setLocationType('library')
           onLocationSelect?.(library, 'library')
+          
+          // Fly to the clicked location with reduced zoom and longer duration
+          // Position pin in bottom left to avoid map card coverage
+          if (map.current) {
+            map.current.flyTo({
+              center: [library.longitude, library.latitude],
+              zoom: 12, // Reduced zoom level to be less dizzying
+              duration: 1500, // Longer duration for smoother animation
+              offset: [-100, 100] // Move pin to bottom left (left, down)
+            })
+          }
         })
 
         const marker = new mapboxgl.Marker(markerEl)
@@ -220,18 +289,30 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         const mapboxgl = require("mapbox-gl")
         
         const markerEl = document.createElement("div")
-        markerEl.innerHTML = `
-          <div style="background: #009035; color: white; padding: 8px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-center;">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-          </div>
-        `
+        const isActive = selectedLocation?.id === event.id && locationType === 'event'
+        markerEl.innerHTML = createPinMarker('#009035', isActive)
+        if (isActive) {
+          markerEl.setAttribute('data-active', 'true')
+          markerEl.style.zIndex = '5'
+        } else {
+          markerEl.style.zIndex = '1'
+        }
 
         markerEl.addEventListener("click", () => {
           setSelectedLocation(event)
           setLocationType('event')
           onLocationSelect?.(event, 'event')
+          
+          // Fly to the clicked location with reduced zoom and longer duration
+          // Position pin in bottom left to avoid map card coverage
+          if (map.current) {
+            map.current.flyTo({
+              center: [event.longitude, event.latitude],
+              zoom: 12, // Reduced zoom level to be less dizzying
+              duration: 1500, // Longer duration for smoother animation
+              offset: [-100, 100] // Move pin to bottom left (left, down)
+            })
+          }
         })
 
         const marker = new mapboxgl.Marker(markerEl)
@@ -241,7 +322,21 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         markersRef.current.push(marker)
       })
     }
-  }, [stores, libraries, events, mapView, searchQuery, mapReady])
+  }, [stores, libraries, events, mapView, searchQuery, mapReady, selectedLocation, locationType])
+
+  // Separate effect to ensure active marker appears on top using CSS z-index
+  useEffect(() => {
+    if (!map.current || !mapReady) return
+
+    // Apply z-index to all markers based on their active state
+    markersRef.current.forEach(marker => {
+      const markerEl = marker.getElement()
+      if (markerEl) {
+        const isActive = markerEl.getAttribute('data-active') === 'true'
+        markerEl.style.zIndex = isActive ? '5' : '1'
+      }
+    })
+  }, [selectedLocation, locationType, mapReady])
 
   return (
     <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
@@ -326,7 +421,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
       {/* Location Popup */}
       {selectedLocation && (
-        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 p-4 w-80 z-10">
+        <div className="absolute top-4 right-20 bg-white rounded-lg shadow-lg border border-stone-200 p-4 w-80 z-20">
           <button
             onClick={() => setSelectedLocation(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
