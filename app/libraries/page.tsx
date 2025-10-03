@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
+import { formatSocialMedia } from "@/lib/utils"
 
 export default function LibrariesPage() {
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -467,7 +468,7 @@ export default function LibrariesPage() {
 
                       <CardContent className="pt-0">
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
-                          {library.notes}
+                          {library.notes ? formatSocialMedia(library.notes, '#3b82f6', '#2563eb') : library.notes}
                         </p>
                         {library.user_name && (
                           <p className="text-xs text-gray-500 mb-3">

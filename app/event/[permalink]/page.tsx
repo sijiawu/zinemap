@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
-import { formatDate, formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
 import Link from "next/link"
 
 export default function EventDetailPage() {
@@ -806,19 +806,9 @@ export default function EventDetailPage() {
                   {event.social && (
                     <div className="flex items-start gap-3">
                       <Share2 className="h-4 w-4 text-stone-500 flex-shrink-0 mt-0.5" />
-                      {event.social.startsWith('http://') || event.social.startsWith('https://') ? (
-                        <a 
-                          href={event.social}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#009035] hover:text-[#007a2a] hover:underline flex items-center gap-1 break-all"
-                        >
-                          <span className="break-all">{event.social}</span>
-                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                        </a>
-                      ) : (
-                        <span className="text-stone-700 break-words">{event.social}</span>
-                      )}
+                      <div className="break-words">
+                        {formatSocialMedia(event.social, '#009035', '#007a2a')}
+                      </div>
                     </div>
                   )}
                 </CardContent>

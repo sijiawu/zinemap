@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
@@ -496,7 +496,7 @@ export default function EventsPage() {
 
                       <CardContent className="pt-0">
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
-                          {event.notes}
+                          {event.notes ? formatSocialMedia(event.notes, '#009035', '#007a2a') : event.notes}
                         </p>
                         {event.user_name && (
                           <p className="text-xs text-gray-500 mb-3">

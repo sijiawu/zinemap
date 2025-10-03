@@ -158,3 +158,65 @@ export function autoLinkText(text: string): React.ReactNode[] {
     return part
   })
 }
+
+/**
+ * Convert social media handle to Instagram link if it starts with @
+ * @param social - The social media string (handle or URL)
+ * @param themeColor - The theme color for the link (e.g., '#009035' for events)
+ * @param hoverColor - The hover color for the link (e.g., '#007a2a' for events)
+ * @returns React element with Instagram link or plain text
+ */
+export function formatSocialMedia(social: string, themeColor: string = '#009035', hoverColor: string = '#007a2a'): React.ReactNode {
+  if (social.startsWith('@')) {
+    const handle = social.substring(1) // Remove the @ symbol
+    return React.createElement('a', {
+      href: `https://instagram.com/${handle}`,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      className: `text-[${themeColor}] hover:text-[${hoverColor}] hover:underline flex items-center gap-1 break-all`,
+      style: { color: themeColor }
+    }, [
+      React.createElement('span', { key: 'text', className: 'break-all' }, social),
+      React.createElement('svg', {
+        key: 'icon',
+        className: 'h-3 w-3 flex-shrink-0',
+        fill: 'none',
+        stroke: 'currentColor',
+        viewBox: '0 0 24 24'
+      }, React.createElement('path', {
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        strokeWidth: 2,
+        d: 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+      }))
+    ])
+  }
+  
+  // If it's already a URL, return as is
+  if (social.startsWith('http://') || social.startsWith('https://')) {
+    return React.createElement('a', {
+      href: social,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      className: `text-[${themeColor}] hover:text-[${hoverColor}] hover:underline flex items-center gap-1 break-all`,
+      style: { color: themeColor }
+    }, [
+      React.createElement('span', { key: 'text', className: 'break-all' }, social),
+      React.createElement('svg', {
+        key: 'icon',
+        className: 'h-3 w-3 flex-shrink-0',
+        fill: 'none',
+        stroke: 'currentColor',
+        viewBox: '0 0 24 24'
+      }, React.createElement('path', {
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        strokeWidth: 2,
+        d: 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+      }))
+    ])
+  }
+  
+  // Otherwise return as plain text
+  return social
+}

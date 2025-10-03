@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
+import { formatSocialMedia } from "@/lib/utils"
 
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -493,7 +494,7 @@ export default function StoresPage() {
 
                       <CardContent className="pt-0">
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
-                          {store.notes}
+                          {store.notes ? formatSocialMedia(store.notes, '#e11d48', '#be123c') : store.notes}
                         </p>
                         {store.user_name && (
                           <p className="text-xs text-gray-500 mb-3">
