@@ -425,10 +425,10 @@ export default function ZinestersPage() {
           opacity: 1;
         }
         .mapboxgl-ctrl-attrib {
-          font-size: 10px !important;
+          font-size: 8px !important;
         }
         .mapboxgl-ctrl-attrib a {
-          font-size: 10px !important;
+          font-size: 8px !important;
         }
       `}</style>
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">

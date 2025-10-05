@@ -21,7 +21,12 @@ export default function HomePage() {
   const [filteredStores, setFilteredStores] = useState<Store[]>([])
   const [filteredLibraries, setFilteredLibraries] = useState<Library[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  // Phased loading states
+  const [phase1Complete, setPhase1Complete] = useState(false) // Basic data loaded
+  const [phase2Complete, setPhase2Complete] = useState(false) // Map ready
+  const [phase3Complete, setPhase3Complete] = useState(false) // Enhanced data loaded
+  
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("stores")
@@ -32,6 +37,12 @@ export default function HomePage() {
     // This function is called when a map marker is clicked
     // The map will handle showing the popup automatically
   }
+
+  // Handle map ready callback
+  const handleMapReady = () => {
+    setPhase2Complete(true)
+  }
+
 
   const handleCardClick = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
     // When a card is clicked, select it on the map
@@ -55,172 +66,190 @@ export default function HomePage() {
   }, [isAddMenuOpen])
 
 
+  // Phase 1: Load basic data immediately (stores, libraries, events without tags/user info)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBasicData = async () => {
       try {
-        // Fetch stores
-        const { data: storesData, error: storesError } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('approved', true)
-          .order('created_at', { ascending: false })
+        // Fetch stores, libraries, and events in parallel
+        const [storesResult, librariesResult, eventsResult] = await Promise.all([
+          supabase
+            .from('stores')
+            .select('*')
+            .eq('approved', true)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('libraries')
+            .select('*')
+            .eq('approved', true)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('events')
+            .select('*')
+            .eq('approved', true)
+            .gte('end_date', new Date().toISOString().split('T')[0])
+            .order('created_at', { ascending: false })
+        ])
 
-        if (storesError) {
-          console.error('Error fetching stores:', storesError)
+        // Set basic data immediately
+        setStores(storesResult.data || [])
+        setLibraries(librariesResult.data || [])
+        setEvents(eventsResult.data || [])
+        
+        setPhase1Complete(true)
+      } catch (error) {
+        console.error('Error fetching basic data:', error)
+        setStores([])
+        setLibraries([])
+        setEvents([])
+        setPhase1Complete(true) // Still mark as complete to show UI
+      }
+    }
+
+    fetchBasicData()
+  }, [])
+
+  // Phase 2: Load enhanced data (tags and user profiles) in background
+  useEffect(() => {
+    if (!phase1Complete) return
+
+    const fetchEnhancedData = async () => {
+      try {
+        // Get current data
+        const currentStores = stores
+        const currentLibraries = libraries
+        const currentEvents = events
+
+        if (currentStores.length === 0 && currentLibraries.length === 0 && currentEvents.length === 0) {
+          setPhase3Complete(true)
+          return
         }
 
-        // Fetch libraries
-        const { data: librariesData, error: librariesError } = await supabase
-          .from('libraries')
-          .select('*')
-          .eq('approved', true)
-          .order('created_at', { ascending: false })
+        // Fetch all enhanced data in parallel
+        const [
+          storeTagsResult,
+          storeUserProfilesResult,
+          libraryTagsResult,
+          libraryUserProfilesResult,
+          eventUserProfilesResult
+        ] = await Promise.all([
+          // Store tags
+          currentStores.length > 0 ? supabase
+            .from('store_tags')
+            .select(`
+              id,
+              store_id,
+              tag_id,
+              tags!inner(id, label, category)
+            `)
+            .in('store_id', currentStores.map(s => s.id)) : Promise.resolve({ data: [] }),
+          
+          // Store user profiles
+          currentStores.length > 0 ? supabase
+            .from('profiles')
+            .select('id, display_name, permalink')
+            .in('id', currentStores.map(s => s.submitted_by)) : Promise.resolve({ data: [] }),
+          
+          // Library tags
+          currentLibraries.length > 0 ? supabase
+            .from('library_tags')
+            .select(`
+              id,
+              library_id,
+              tag_id,
+              tags!inner(id, label, category)
+            `)
+            .in('library_id', currentLibraries.map(l => l.id)) : Promise.resolve({ data: [] }),
+          
+          // Library user profiles
+          currentLibraries.length > 0 ? supabase
+            .from('profiles')
+            .select('id, display_name, permalink')
+            .in('id', currentLibraries.map(l => l.submitted_by)) : Promise.resolve({ data: [] }),
+          
+          // Event user profiles
+          currentEvents.length > 0 ? supabase
+            .from('profiles')
+            .select('id, display_name, permalink')
+            .in('id', currentEvents.map(e => e.submitted_by)) : Promise.resolve({ data: [] })
+        ])
 
-        if (librariesError) {
-          console.error('Error fetching libraries:', librariesError)
-        }
-
-        // Fetch events
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('events')
-          .select('*')
-          .eq('approved', true)
-          .gte('end_date', new Date().toISOString().split('T')[0]) // Only future events
-          .order('created_at', { ascending: false })
-
-        if (eventsError) {
-          console.error('Error fetching events:', eventsError)
-        }
-
-        // Batch fetch all store tags
-        const { data: allStoreTags } = await supabase
-          .from('store_tags')
-          .select(`
-            id,
-            store_id,
-            tag_id,
-            tags!inner(id, label, category)
-          `)
-          .in('store_id', (storesData || []).map(s => s.id))
-
-        // Batch fetch all user profiles
-        const storeUserIds = (storesData || []).map(s => s.submitted_by)
-        const { data: allStoreUserProfiles } = await supabase
-          .from('profiles')
-          .select('id, display_name, permalink')
-          .in('id', storeUserIds)
-
-        // Create user lookup map
+        // Process stores with enhanced data
         const storeUserMap = new Map(
-          (allStoreUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+          (storeUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
-
-        // Process stores with tags and user info
-        const storesWithTags = (storesData || []).map((store) => {
-          const storeTags = (allStoreTags || [])
+        const storesWithTags = currentStores.map((store) => {
+          const storeTags = (storeTagsResult.data || [])
             .filter(tag => tag.store_id === store.id)
             .map((tag: any) => ({
               id: tag.id || `store-tag-${store.id}-${tag.tag_id}`,
+              store_id: store.id,
               tag_id: tag.tag_id,
               tag: tag.tags
             }))
 
           const userData = storeUserMap.get(store.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          const user_name = userData.display_name
-          const user_permalink = userData.permalink
-
           return {
             ...store,
             store_tags: storeTags,
-            user_name,
-            user_permalink
+            user_name: userData.display_name,
+            user_permalink: userData.permalink
           }
         })
 
-        // Batch fetch all library tags
-        const { data: allLibraryTags } = await supabase
-          .from('library_tags')
-          .select(`
-            id,
-            library_id,
-            tag_id,
-            tags!inner(id, label, category)
-          `)
-          .in('library_id', (librariesData || []).map(l => l.id))
-
-        // Batch fetch all library user profiles
-        const libraryUserIds = (librariesData || []).map(l => l.submitted_by)
-        const { data: allLibraryUserProfiles } = await supabase
-          .from('profiles')
-          .select('id, display_name, permalink')
-          .in('id', libraryUserIds)
-
-        // Create library user lookup map
+        // Process libraries with enhanced data
         const libraryUserMap = new Map(
-          (allLibraryUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+          (libraryUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
-
-        // Process libraries with tags and user info
-        const librariesWithTags = (librariesData || []).map((library) => {
-          const libraryTags = (allLibraryTags || [])
+        const librariesWithTags = currentLibraries.map((library) => {
+          const libraryTags = (libraryTagsResult.data || [])
             .filter(tag => tag.library_id === library.id)
             .map((tag: any) => ({
               id: tag.id || `library-tag-${library.id}-${tag.tag_id}`,
+              library_id: library.id,
               tag_id: tag.tag_id,
               tag: tag.tags
             }))
 
           const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          const user_name = userData.display_name
-          const user_permalink = userData.permalink
-
           return {
             ...library,
             library_tags: libraryTags,
-            user_name,
-            user_permalink
+            user_name: userData.display_name,
+            user_permalink: userData.permalink
           }
         })
 
-        // Batch fetch all event user profiles
-        const eventUserIds = (eventsData || []).map(e => e.submitted_by)
-        const { data: allEventUserProfiles } = await supabase
-          .from('profiles')
-          .select('id, display_name, permalink')
-          .in('id', eventUserIds)
-
-        // Create event user lookup map
+        // Process events with enhanced data
         const eventUserMap = new Map(
-          (allEventUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+          (eventUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
-
-        // Process events with user info
-        const eventsWithUser = (eventsData || []).map((event) => {
+        const eventsWithUser = currentEvents.map((event) => {
           const userData = eventUserMap.get(event.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          const user_name = userData.display_name
-          const user_permalink = userData.permalink
-
           return {
             ...event,
-            user_name,
-            user_permalink
+            user_name: userData.display_name,
+            user_permalink: userData.permalink
           }
         })
 
+        // Update with enhanced data
         setStores(storesWithTags)
         setLibraries(librariesWithTags)
         setEvents(eventsWithUser)
+        setPhase3Complete(true)
       } catch (error) {
-        console.error('Error fetching data:', error)
-        setStores([])
-        setLibraries([])
-      } finally {
-        setLoading(false)
+        console.error('Error fetching enhanced data:', error)
+        setPhase3Complete(true) // Still mark as complete
       }
     }
 
-    fetchData()
-  }, [])
+    // Small delay to ensure list view renders first
+    const timer = setTimeout(() => {
+      fetchEnhancedData()
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [phase1Complete, stores, libraries, events])
 
   // Debounce search query to improve performance
   useEffect(() => {
@@ -274,7 +303,8 @@ export default function HomePage() {
     setFilteredEvents(filteredEvents)
   }, [stores, libraries, events, debouncedSearchQuery])
 
-  if (loading) {
+  // Show loading only if we don't have basic data yet
+  if (!phase1Complete) {
     return (
       <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
         <div className="text-stone-500 text-lg">Loading...</div>
@@ -333,19 +363,25 @@ export default function HomePage() {
           <div className="order-2 lg:order-2 lg:sticky lg:top-6">
             <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
-                {loading ? (
+                {!phase1Complete ? (
                   <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
-                    <div className="text-stone-500">Loading map...</div>
+                    <div className="text-stone-500">Preparing map...</div>
                   </div>
                 ) : (
-                  <div className="w-full h-96 lg:h-full">
+                  <div className="w-full h-96 lg:h-full relative">
                     <StoreMap 
                       stores={stores}
                       libraries={libraries}
                       events={events}
                       searchQuery={debouncedSearchQuery}
                       onLocationSelect={handleLocationSelect}
+                      onMapReady={handleMapReady}
                     />
+                    {!phase2Complete && (
+                      <div className="absolute inset-0 bg-stone-100 bg-opacity-75 flex items-center justify-center z-10">
+                        <div className="text-stone-500">Loading map...</div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

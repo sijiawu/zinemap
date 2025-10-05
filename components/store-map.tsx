@@ -14,13 +14,15 @@ interface StoreMapProps {
   events: Event[]
   searchQuery?: string
   onLocationSelect?: (location: Store | Library | Event, type: 'store' | 'library' | 'event') => void
+  onMapReady?: () => void
   hideFilterBar?: boolean
 }
 
-export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, hideFilterBar = false }: StoreMapProps) {
+export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, onMapReady, hideFilterBar = false }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
+  const lastDataRef = useRef<string>('')
   const [selectedLocation, setSelectedLocation] = useState<Store | Library | Event | null>(null)
   const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
@@ -127,15 +129,32 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           zoom: 3.5,
         })
 
+        // Timeout fallback - if map doesn't load within 10 seconds, remove loading state
+        const timeout = setTimeout(() => {
+          setMapReady(true)
+          onMapReady?.()
+        }, 10000)
+
         // Add event listener for when map is ready
         map.current.on('load', () => {
+          clearTimeout(timeout)
           setMapReady(true)
+          onMapReady?.() // Notify parent that map is ready
         })
 
-
+        // Add error handling
+        map.current.on('error', (e: any) => {
+          console.error('Map error:', e)
+          clearTimeout(timeout)
+          setMapReady(true)
+          onMapReady?.()
+        })
 
       } catch (error) {
         console.error("Map error:", error)
+        // If map fails to load, still call onMapReady to remove loading state
+        setMapReady(true)
+        onMapReady?.()
       }
     }
 
@@ -153,41 +172,71 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   useEffect(() => {
     if (!map.current || !mapReady) return
     
-    // Don't add markers if data isn't loaded yet
+    // Don't add markers if data isn't loaded yet or if arrays are empty
     if (!stores || !libraries || !events) return
 
+    // Don't update markers if we're still in the initial loading phase
+    // (when stores, libraries, or events arrays are empty but data is still loading)
+    if (stores.length === 0 && libraries.length === 0 && events.length === 0) return
 
 
 
+
+
+    // Create a data signature to check if markers actually need updating
+    // Only include items that have valid coordinates
+    const validStores = stores.filter(s => s.latitude && s.longitude)
+    const validLibraries = libraries.filter(l => l.latitude && l.longitude)
+    const validEvents = events.filter(e => e.latitude && e.longitude)
+
+    const dataSignature = JSON.stringify({
+      stores: validStores.map(s => ({ id: s.id, lat: s.latitude, lng: s.longitude })),
+      libraries: validLibraries.map(l => ({ id: l.id, lat: l.latitude, lng: l.longitude })),
+      events: validEvents.map(e => ({ id: e.id, lat: e.latitude, lng: e.longitude })),
+      mapView,
+      searchQuery
+    })
+
+    // Only update markers if data has actually changed
+    if (dataSignature === lastDataRef.current) {
+      return
+    }
+
+    // Don't update if we don't have any valid coordinates
+    if (validStores.length === 0 && validLibraries.length === 0 && validEvents.length === 0) {
+      return
+    }
+
+    lastDataRef.current = dataSignature
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove())
     markersRef.current = []
 
-    // Filter stores based on search query
+    // Filter stores based on search query (using pre-filtered valid stores)
     const filteredStores = searchQuery.trim() 
-      ? stores.filter(store => 
+      ? validStores.filter(store => 
           store.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           store.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           store.country.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           store.address.toLowerCase().includes(searchQuery.toLowerCase().trim())
         )
-      : stores
+      : validStores
 
-    // Filter libraries based on search query
+    // Filter libraries based on search query (using pre-filtered valid libraries)
     const filteredLibraries = searchQuery.trim()
-      ? libraries.filter(library => 
+      ? validLibraries.filter(library => 
           library.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           library.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           (library.state && library.state.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
           library.country.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           library.address.toLowerCase().includes(searchQuery.toLowerCase().trim())
         )
-      : libraries
+      : validLibraries
 
-    // Filter events based on search query
+    // Filter events based on search query (using pre-filtered valid events)
     const filteredEvents = searchQuery.trim()
-      ? events.filter(event => 
+      ? validEvents.filter(event => 
           event.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           event.city.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           (event.state && event.state.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
@@ -195,12 +244,11 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           event.address.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
           event.category.toLowerCase().includes(searchQuery.toLowerCase().trim())
         )
-      : events
+      : validEvents
 
     // Add store markers (rose) if stores should be shown
     if (mapView === 'stores' || mapView === 'all') {
       filteredStores.forEach((store) => {
-        if (!store.latitude || !store.longitude) return
 
         const mapboxgl = require("mapbox-gl")
         
@@ -242,7 +290,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     // Add library markers (blue) if libraries should be shown
     if (mapView === 'libraries' || mapView === 'all') {
       filteredLibraries.forEach((library) => {
-        if (!library.latitude || !library.longitude) return
 
         const mapboxgl = require("mapbox-gl")
         
@@ -284,7 +331,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     // Add event markers (green) if events should be shown
     if (mapView === 'events' || mapView === 'all') {
       filteredEvents.forEach((event) => {
-        if (!event.latitude || !event.longitude) return
 
         const mapboxgl = require("mapbox-gl")
         
@@ -322,6 +368,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         markersRef.current.push(marker)
       })
     }
+
   }, [stores, libraries, events, mapView, searchQuery, mapReady, selectedLocation, locationType])
 
   // Separate effect to ensure active marker appears on top using CSS z-index
