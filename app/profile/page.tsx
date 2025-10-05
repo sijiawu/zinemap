@@ -829,7 +829,7 @@ export default function ProfilePage() {
                   <div className="text-center py-8">
                     <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
                     <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
-                    <p className="text-stone-600 mb-4">Start creating your first zine!</p>
+                    <p className="text-stone-600 mb-4">Start adding your first zine!</p>
                     <Link href="/dashboard">
                       <Button>Go to Dashboard</Button>
                     </Link>
@@ -916,8 +916,8 @@ export default function ProfilePage() {
                     <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
                     <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
                     <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
-                    <Link href="/">
-                    <Button>Go to Dashboard</Button>
+                    <Link href="/events">
+                    <Button>Explore events</Button>
                     </Link>
                   </div>
                 ) : (

@@ -19,6 +19,10 @@ export default function NavBar() {
     if (path === '/') {
       return pathname === '/';
     }
+    // Use exact match for paths that might conflict
+    if (path === '/zines' || path === '/zinesters') {
+      return pathname === path;
+    }
     return pathname.startsWith(path);
   };
   return (
@@ -69,6 +73,16 @@ export default function NavBar() {
               >
                 Zines
               </Link>
+              <Link 
+                href="/zinesters" 
+                className={`font-gloria text-lg transition-all duration-200 hover:scale-105 ${
+                  isActive('/zinesters') 
+                    ? 'text-amber-600 font-bold' 
+                    : 'text-stone-700 hover:text-amber-600'
+                }`}
+              >
+                Zinesters
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -82,7 +96,7 @@ export default function NavBar() {
             )}
             {!loading && !user && (
               <Link href="/login">
-                <button className="px-4 py-2 rounded bg-stone-800 hover:bg-stone-900 text-white font-medium transition-colors">Log In</button>
+                <button className="px-4 py-2 rounded bg-stone-800 hover:bg-stone-900 text-white font-gloria transition-colors">Log In</button>
               </Link>
             )}
             {!loading && user && (
@@ -112,7 +126,7 @@ export default function NavBar() {
               )}
               {!loading && !user && (
                 <Link href="/login">
-                  <button className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-900 text-white font-medium text-sm transition-colors">Log In</button>
+                  <button className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-900 text-white font-gloria text-sm transition-colors">Log In</button>
                 </Link>
               )}
               {!loading && user && (
@@ -167,6 +181,16 @@ export default function NavBar() {
               }`}
             >
               Zines
+            </Link>
+            <Link 
+              href="/zinesters" 
+              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
+                isActive('/zinesters') 
+                  ? 'text-amber-600 font-bold' 
+                  : 'text-stone-700 hover:text-amber-600'
+              }`}
+            >
+              Zinesters
             </Link>
           </div>
         </div>
