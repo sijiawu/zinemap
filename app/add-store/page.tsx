@@ -44,7 +44,7 @@ export default function AddStorePage() {
   const [addressSuggestionsLoading, setAddressSuggestionsLoading] = useState(false)
   const addressSuggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Consignment terms from Supabase
+  // Stocking Terms from Supabase
   const [consignmentTerms, setConsignmentTerms] = useState<Tag[]>([])
   const [termsLoading, setTermsLoading] = useState(true)
 
@@ -185,7 +185,7 @@ export default function AddStorePage() {
     setShowAddressSuggestions(false)
   }
 
-  // Fetch consignment terms from Supabase
+  // Fetch Stocking Terms from Supabase
   useEffect(() => {
     const fetchTerms = async () => {
       try {
@@ -655,12 +655,12 @@ export default function AddStorePage() {
             </CardContent>
           </Card>
 
-          {/* Consignment Terms */}
+          {/* Stocking Terms */}
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <TagIcon className="h-5 w-5 mr-2 text-rose-500" />
-                Consignment Terms
+                Stocking Terms
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What are their policies? (Select all that apply)</p>
             </CardHeader>

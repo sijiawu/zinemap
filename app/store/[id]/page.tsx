@@ -616,13 +616,13 @@ export default function StoreDetailPage() {
           </Card>
         </div>
 
-        {/* Consignment Terms */}
+        {/* Stocking Terms */}
         {Object.keys(tagsByCategory).length > 0 && (
           <Card className="bg-white border border-rose-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-stone-800 text-xl flex items-center">
                 <FileText className="h-5 w-5 mr-2 text-rose-600" />
-                Consignment Terms
+                Stocking Terms
               </CardTitle>
             </CardHeader>
             <CardContent>

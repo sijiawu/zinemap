@@ -40,7 +40,7 @@ export default function SuggestStoreEditPage() {
     notes: "",
   })
 
-  // Consignment terms from Supabase
+  // Stocking Terms from Supabase
   const [consignmentTerms, setConsignmentTerms] = useState<Tag[]>([])
   const [termsLoading, setTermsLoading] = useState(true)
 
@@ -430,12 +430,12 @@ export default function SuggestStoreEditPage() {
 
 
 
-          {/* Consignment Terms */}
+          {/* Stocking Terms */}
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <TagIcon className="h-5 w-5 mr-2 text-rose-500" />
-                Consignment Terms
+                Stocking Terms
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What are their policies? (Select all that apply)</p>
             </CardHeader>
@@ -467,7 +467,7 @@ export default function SuggestStoreEditPage() {
 
                   {/* Payment Timing */}
                   <div>
-                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Schedule</h4>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Types</h4>
                     <div className="flex flex-wrap gap-2">
                       {getTermsByCategory("payment").map((term) => (
                         <Badge
