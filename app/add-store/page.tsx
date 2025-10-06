@@ -692,7 +692,7 @@ export default function AddStorePage() {
 
                   {/* Payment Timing */}
                   <div>
-                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Schedule</h4>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Types</h4>
                     <div className="flex flex-wrap gap-2">
                       {getTermsByCategory("payment").map((term) => (
                         <Badge
