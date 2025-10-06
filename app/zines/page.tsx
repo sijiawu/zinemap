@@ -1,9 +1,10 @@
 "use client"
 
-import { Search, BookOpen, User, Calendar } from "lucide-react"
+import { Search, BookOpen, User, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
@@ -22,6 +23,64 @@ export default function ZinesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedZine, setSelectedZine] = useState<ZineWithAuthor | null>(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalZines, setTotalZines] = useState(0)
+  const itemsPerPage = 20
+  
+  // Author filter state
+  const [selectedCreator, setSelectedCreator] = useState("all")
+  const [creators, setCreators] = useState<{id: string, display_name: string, permalink: string}[]>([])
+  const [creatorsLoaded, setCreatorsLoaded] = useState(false)
+  const [loadingAuthors, setLoadingAuthors] = useState(false)
+  
+  // Profile cache to avoid refetching
+  const [profileCache, setProfileCache] = useState<Record<string, any>>({})
+
+  // Fetch author names using a single efficient query with join
+  useEffect(() => {
+    const fetchAuthorNames = async () => {
+      if (creatorsLoaded) return
+
+      try {
+        setLoadingAuthors(true)
+        
+        // Single query with join to get all authors who have published zines
+        const { data: authorsData, error: authorsError } = await supabase
+          .from('profiles')
+          .select(`
+            id, 
+            display_name, 
+            permalink,
+            zines!inner(id)
+          `)
+          .eq('zines.is_public', true)
+          .order('display_name', { ascending: true })
+
+        if (authorsError) {
+          console.error('Error fetching authors:', authorsError)
+          return
+        }
+
+        const authorNames = authorsData?.map(profile => ({
+          id: profile.id,
+          display_name: profile.display_name || 'Unknown Author',
+          permalink: profile.permalink || profile.id
+        })) || []
+
+        setCreators(authorNames)
+        setCreatorsLoaded(true)
+      } catch (error) {
+        console.error('Error fetching author names:', error)
+      } finally {
+        setLoadingAuthors(false)
+      }
+    }
+
+    fetchAuthorNames()
+  }, [creatorsLoaded])
 
   // Debounce search query
   useEffect(() => {
@@ -31,43 +90,55 @@ export default function ZinesPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Fetch data
+  // Fetch data with pagination using database joins
   useEffect(() => {
     const fetchZines = async () => {
       try {
         setLoading(true)
 
-        // Fetch all public zines
+        // First, get total count
+        const { count: totalCount, error: countError } = await supabase
+          .from('zines')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_public', true)
+
+        if (countError) {
+          console.error('Error fetching zine count:', countError)
+          return
+        }
+
+        setTotalZines(totalCount || 0)
+        setTotalPages(Math.ceil((totalCount || 0) / itemsPerPage))
+
+        // Calculate offset for pagination
+        const offset = (currentPage - 1) * itemsPerPage
+
+        // Single query with join to get zines with author profiles
         const { data: zinesData, error: zinesError } = await supabase
           .from('zines')
-          .select('*')
+          .select(`
+            *,
+            profiles!inner(id, display_name, profile_image, permalink)
+          `)
           .eq('is_public', true)
           .order('created_at', { ascending: false })
+          .range(offset, offset + itemsPerPage - 1)
 
         if (zinesError) {
           console.error('Error fetching zines:', zinesError)
           return
         }
 
-        // Fetch all profiles for the zine authors
-        const userIds = [...new Set(zinesData?.map(zine => zine.user_id) || [])]
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, display_name, profile_image, permalink')
-          .in('id', userIds)
+        // Cache profiles for future use
+        const newProfileCache = { ...profileCache }
+        zinesData?.forEach(zine => {
+          if (zine.profiles) {
+            newProfileCache[zine.profiles.id] = zine.profiles
+          }
+        })
+        setProfileCache(newProfileCache)
 
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError)
-          return
-        }
-
-        // Join zines with their authors
-        const zinesWithAuthors = zinesData?.map(zine => ({
-          ...zine,
-          profiles: profilesData?.find(profile => profile.id === zine.user_id) || null
-        })) || []
-
-        setZines(zinesWithAuthors)
+        setZines(zinesData || [])
       } catch (error) {
         console.error('Error fetching zines:', error)
       } finally {
@@ -76,23 +147,124 @@ export default function ZinesPage() {
     }
 
     fetchZines()
-  }, [])
+  }, [currentPage, itemsPerPage, profileCache])
 
-  // Filter zines based on search query
+  // Handle search using database text search with joins
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (!debouncedSearchQuery.trim()) {
+        setFilteredZines(zines)
+        return
+      }
+
+      try {
+        setLoading(true)
+        
+        // Use database text search with joins for better performance
+        const { data: searchResults, error: searchError } = await supabase
+          .from('zines')
+          .select(`
+            *,
+            profiles!inner(id, display_name, profile_image, permalink)
+          `)
+          .eq('is_public', true)
+          .or(`title.ilike.%${debouncedSearchQuery}%,description.ilike.%${debouncedSearchQuery}%,profiles.display_name.ilike.%${debouncedSearchQuery}%`)
+          .order('created_at', { ascending: false })
+
+        if (searchError) {
+          console.error('Error fetching search results:', searchError)
+          return
+        }
+
+        // Cache any new profiles found in search
+        const newProfileCache = { ...profileCache }
+        searchResults?.forEach(zine => {
+          if (zine.profiles) {
+            newProfileCache[zine.profiles.id] = zine.profiles
+          }
+        })
+        setProfileCache(newProfileCache)
+
+        setFilteredZines(searchResults || [])
+        setCurrentPage(1) // Reset to first page when searching
+      } catch (error) {
+        console.error('Error fetching search results:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSearchResults()
+  }, [debouncedSearchQuery, profileCache])
+
+  // When not searching, use paginated results
   useEffect(() => {
     if (!debouncedSearchQuery.trim()) {
       setFilteredZines(zines)
+    }
+  }, [zines, debouncedSearchQuery])
+
+  // Handle author filtering using database joins
+  useEffect(() => {
+    if (selectedCreator === "all") {
+      if (!debouncedSearchQuery.trim()) {
+        setFilteredZines(zines)
+      }
       return
     }
 
-    const query = debouncedSearchQuery.toLowerCase()
-    const filtered = zines.filter(zine => 
-      zine.title.toLowerCase().includes(query) ||
-      zine.description?.toLowerCase().includes(query) ||
-      zine.profiles?.display_name?.toLowerCase().includes(query)
-    )
-    setFilteredZines(filtered)
-  }, [zines, debouncedSearchQuery])
+    // Fetch zines for selected author using database join
+    const fetchAuthorZines = async () => {
+      try {
+        setLoading(true)
+        
+        // Check if we already have the author's profile cached
+        let authorProfile = profileCache[selectedCreator]
+        
+        if (!authorProfile) {
+          // Fetch the author's profile if not cached
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, display_name, profile_image, permalink')
+            .eq('id', selectedCreator)
+            .single()
+
+          if (profileError) {
+            console.error('Error fetching author profile:', profileError)
+            return
+          }
+          
+          authorProfile = profileData
+          // Cache the profile
+          setProfileCache(prev => ({ ...prev, [selectedCreator]: authorProfile }))
+        }
+        
+        // Fetch all zines for the selected author with profile join
+        const { data: authorZinesData, error: zinesError } = await supabase
+          .from('zines')
+          .select(`
+            *,
+            profiles!inner(id, display_name, profile_image, permalink)
+          `)
+          .eq('is_public', true)
+          .eq('user_id', selectedCreator)
+          .order('created_at', { ascending: false })
+
+        if (zinesError) {
+          console.error('Error fetching author zines:', zinesError)
+          return
+        }
+
+        setFilteredZines(authorZinesData || [])
+      } catch (error) {
+        console.error('Error fetching author zines:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAuthorZines()
+  }, [selectedCreator, debouncedSearchQuery, profileCache])
 
 
   const formatDate = (dateString: string) => {
@@ -101,6 +273,18 @@ export default function ZinesPage() {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Clear search and creator filter when changing pages
+    if (debouncedSearchQuery.trim()) {
+      setSearchQuery("")
+    }
+    if (selectedCreator !== "all") {
+      setSelectedCreator("all")
+    }
   }
 
   if (loading) {
@@ -147,17 +331,39 @@ export default function ZinesPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Search */}
+        {/* Search and Filters */}
         <div className="mb-8">
-          <div className="max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
-              <Input
-                placeholder="Search zines, authors, or descriptions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white border-stone-300 focus:border-purple-300 focus:ring-purple-200"
-              />
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search zines, authors, or descriptions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white border-stone-300 focus:border-purple-300 focus:ring-purple-200"
+                  />
+                </div>
+              </div>
+              
+              {/* Author Filter */}
+              <div className="sm:w-64">
+                <Select value={selectedCreator} onValueChange={setSelectedCreator} disabled={loadingAuthors}>
+                  <SelectTrigger className="bg-white border-stone-300 focus:border-purple-300 focus:ring-purple-200">
+                    <SelectValue placeholder={loadingAuthors ? "Loading authors..." : "All authors"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All authors</SelectItem>
+                    {creators.map((creator) => (
+                      <SelectItem key={creator.id} value={creator.id}>
+                        {creator.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
@@ -342,14 +548,63 @@ export default function ZinesPage() {
           )}
         </div>
 
-        {/* Results Count */}
-        {filteredZines.length > 0 && (
-          <div className="mt-8 text-center">
-            <p className="text-stone-600">
-              Showing {filteredZines.length} of {zines.length} zines
-            </p>
+        {/* Pagination Controls */}
+        {!debouncedSearchQuery.trim() && selectedCreator === "all" && totalPages > 1 && (
+          <div className="mt-8 flex justify-center">
+            <div className="flex items-center gap-2">
+              {/* Previous Button */}
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-md hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-purple-600 text-white'
+                          : 'text-stone-700 bg-white border border-stone-300 hover:bg-stone-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-md hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
+
       </div>
 
       {/* Zine Description Modal */}
