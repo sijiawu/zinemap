@@ -186,7 +186,7 @@ export interface HomePin {
   state?: string
   country?: string
   created_at: string
-  updated_at: string
+  // Pins are immutable - no updated_at field
   user?: {
     id: string
     display_name: string | null

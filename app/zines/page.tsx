@@ -47,16 +47,34 @@ export default function ZinesPage() {
       try {
         setLoadingAuthors(true)
         
-        // Single query with join to get all authors who have published zines
+        // Get all unique user IDs who have published zines
+        const { data: zineAuthors, error: zineError } = await supabase
+          .from('zines')
+          .select('user_id')
+          .eq('is_public', true)
+
+        if (zineError) {
+          console.error('Error fetching zine authors:', zineError)
+          return
+        }
+
+        const uniqueUserIds = [...new Set(zineAuthors?.map(zine => zine.user_id) || [])]
+
+        if (uniqueUserIds.length === 0) {
+          setCreatorsLoaded(true)
+          setLoadingAuthors(false)
+          return
+        }
+
+        // Fetch author names for dropdown
         const { data: authorsData, error: authorsError } = await supabase
           .from('profiles')
           .select(`
             id, 
             display_name, 
-            permalink,
-            zines!inner(id)
+            permalink
           `)
-          .eq('zines.is_public', true)
+          .in('id', uniqueUserIds)
           .order('display_name', { ascending: true })
 
         if (authorsError) {
@@ -113,13 +131,10 @@ export default function ZinesPage() {
         // Calculate offset for pagination
         const offset = (currentPage - 1) * itemsPerPage
 
-        // Single query with join to get zines with author profiles
+        // Fetch paginated zines
         const { data: zinesData, error: zinesError } = await supabase
           .from('zines')
-          .select(`
-            *,
-            profiles!inner(id, display_name, profile_image, permalink)
-          `)
+          .select('*')
           .eq('is_public', true)
           .order('created_at', { ascending: false })
           .range(offset, offset + itemsPerPage - 1)
@@ -129,16 +144,32 @@ export default function ZinesPage() {
           return
         }
 
+        // Fetch profiles for the zine authors
+        const userIds = [...new Set(zinesData?.map(zine => zine.user_id) || [])]
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, profile_image, permalink')
+          .in('id', userIds)
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError)
+          return
+        }
+
+        // Join zines with their authors
+        const zinesWithAuthors = zinesData?.map(zine => ({
+          ...zine,
+          profiles: profilesData?.find(profile => profile.id === zine.user_id) || null
+        })) || []
+
         // Cache profiles for future use
         const newProfileCache = { ...profileCache }
-        zinesData?.forEach(zine => {
-          if (zine.profiles) {
-            newProfileCache[zine.profiles.id] = zine.profiles
-          }
+        profilesData?.forEach(profile => {
+          newProfileCache[profile.id] = profile
         })
         setProfileCache(newProfileCache)
 
-        setZines(zinesData || [])
+        setZines(zinesWithAuthors)
       } catch (error) {
         console.error('Error fetching zines:', error)
       } finally {
@@ -147,7 +178,7 @@ export default function ZinesPage() {
     }
 
     fetchZines()
-  }, [currentPage, itemsPerPage, profileCache])
+  }, [currentPage, itemsPerPage])
 
   // Handle search using database text search with joins
   useEffect(() => {
@@ -160,32 +191,52 @@ export default function ZinesPage() {
       try {
         setLoading(true)
         
-        // Use database text search with joins for better performance
-        const { data: searchResults, error: searchError } = await supabase
+        // Fetch all zines for search
+        const { data: allZinesData, error: zinesError } = await supabase
           .from('zines')
-          .select(`
-            *,
-            profiles!inner(id, display_name, profile_image, permalink)
-          `)
+          .select('*')
           .eq('is_public', true)
-          .or(`title.ilike.%${debouncedSearchQuery}%,description.ilike.%${debouncedSearchQuery}%,profiles.display_name.ilike.%${debouncedSearchQuery}%`)
           .order('created_at', { ascending: false })
 
-        if (searchError) {
-          console.error('Error fetching search results:', searchError)
+        if (zinesError) {
+          console.error('Error fetching zines for search:', zinesError)
           return
         }
 
+        // Fetch all profiles for the zine authors
+        const userIds = [...new Set(allZinesData?.map(zine => zine.user_id) || [])]
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, profile_image, permalink')
+          .in('id', userIds)
+
+        if (profilesError) {
+          console.error('Error fetching profiles for search:', profilesError)
+          return
+        }
+
+        // Join zines with their authors
+        const allZinesWithAuthors = allZinesData?.map(zine => ({
+          ...zine,
+          profiles: profilesData?.find(profile => profile.id === zine.user_id) || null
+        })) || []
+
+        // Filter based on search query
+        const query = debouncedSearchQuery.toLowerCase()
+        const filtered = allZinesWithAuthors.filter(zine => 
+          zine.title.toLowerCase().includes(query) ||
+          zine.description?.toLowerCase().includes(query) ||
+          zine.profiles?.display_name?.toLowerCase().includes(query)
+        )
+
         // Cache any new profiles found in search
         const newProfileCache = { ...profileCache }
-        searchResults?.forEach(zine => {
-          if (zine.profiles) {
-            newProfileCache[zine.profiles.id] = zine.profiles
-          }
+        profilesData?.forEach(profile => {
+          newProfileCache[profile.id] = profile
         })
         setProfileCache(newProfileCache)
 
-        setFilteredZines(searchResults || [])
+        setFilteredZines(filtered)
         setCurrentPage(1) // Reset to first page when searching
       } catch (error) {
         console.error('Error fetching search results:', error)
@@ -195,7 +246,7 @@ export default function ZinesPage() {
     }
 
     fetchSearchResults()
-  }, [debouncedSearchQuery, profileCache])
+  }, [debouncedSearchQuery])
 
   // When not searching, use paginated results
   useEffect(() => {
@@ -239,13 +290,10 @@ export default function ZinesPage() {
           setProfileCache(prev => ({ ...prev, [selectedCreator]: authorProfile }))
         }
         
-        // Fetch all zines for the selected author with profile join
+        // Fetch all zines for the selected author
         const { data: authorZinesData, error: zinesError } = await supabase
           .from('zines')
-          .select(`
-            *,
-            profiles!inner(id, display_name, profile_image, permalink)
-          `)
+          .select('*')
           .eq('is_public', true)
           .eq('user_id', selectedCreator)
           .order('created_at', { ascending: false })
@@ -255,7 +303,13 @@ export default function ZinesPage() {
           return
         }
 
-        setFilteredZines(authorZinesData || [])
+        // Join zines with author profile
+        const authorZinesWithProfile = authorZinesData?.map(zine => ({
+          ...zine,
+          profiles: authorProfile
+        })) || []
+
+        setFilteredZines(authorZinesWithProfile)
       } catch (error) {
         console.error('Error fetching author zines:', error)
       } finally {
@@ -264,7 +318,7 @@ export default function ZinesPage() {
     }
 
     fetchAuthorZines()
-  }, [selectedCreator, debouncedSearchQuery, profileCache])
+  }, [selectedCreator, debouncedSearchQuery])
 
 
   const formatDate = (dateString: string) => {

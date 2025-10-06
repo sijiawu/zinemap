@@ -221,23 +221,3 @@ export function formatSocialMedia(social: string, themeColor: string = '#009035'
   return social
 }
 
-export interface HomePin {
-  id: string
-  user_email: string
-  latitude: number
-  longitude: number
-  color?: string
-  city?: string
-  state?: string
-  country?: string
-  created_at: string
-  updated_at: string
-  user?: {
-    id: string
-    display_name: string | null
-    email: string
-    permalink: string | null
-    profile_image?: string | null
-    bio?: string | null
-  }
-}

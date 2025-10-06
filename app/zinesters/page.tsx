@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { supabase } from '@/lib/supabaseClient'
-import { HomePin } from '@/lib/utils'
+import { HomePin } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Minus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -25,6 +25,9 @@ export default function ZinestersPage() {
   const [mapReady, setMapReady] = useState(false)
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [selectedPinColor, setSelectedPinColor] = useState('#f59e0b')
+  const [pinsLoaded, setPinsLoaded] = useState(false)
+  const [profileCache, setProfileCache] = useState<Record<string, any>>({})
+  const [loadingProfile, setLoadingProfile] = useState(false)
 
   // Count pins for current user only
   const userPinCount = user ? pins.filter(pin => pin.user_email === user.email).length : 0
@@ -35,20 +38,35 @@ export default function ZinestersPage() {
       const { data, error } = await supabase
         .from('home_pins')
         .select(`
-          *,
+          id,
+          user_email,
+          latitude,
+          longitude,
+          color,
+          city,
+          state,
+          country,
+          created_at,
           user:profiles!home_pins_user_email_fkey(
             id,
             display_name,
             email,
             permalink,
-            profile_image,
-            bio
+            profile_image
           )
         `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setPins(data || [])
+      
+      // Transform data to match HomePin interface
+      const transformedData = (data || []).map(pin => ({
+        ...pin,
+        user: Array.isArray(pin.user) ? pin.user[0] : pin.user
+      }))
+      
+      setPins(transformedData)
+      setPinsLoaded(true)
     } catch (error) {
       console.error('Error fetching pins:', error)
       toast({
@@ -133,14 +151,21 @@ export default function ZinestersPage() {
           country: country
         })
         .select(`
-          *,
+          id,
+          user_email,
+          latitude,
+          longitude,
+          color,
+          city,
+          state,
+          country,
+          created_at,
           user:profiles!home_pins_user_email_fkey(
             id,
             display_name,
             email,
             permalink,
-            profile_image,
-            bio
+            profile_image
           )
         `)
         .single()
@@ -150,7 +175,13 @@ export default function ZinestersPage() {
         throw error
       }
 
-      setPins(prev => [data, ...prev])
+      // Transform data to match HomePin interface
+      const transformedData = {
+        ...data,
+        user: Array.isArray(data.user) ? data.user[0] : data.user
+      }
+
+      setPins(prev => [transformedData, ...prev])
       setIsAddingPin(false)
       toast({
         title: "Success",
@@ -207,9 +238,45 @@ export default function ZinestersPage() {
   }
 
 
+  // Fetch full profile data when pin is clicked
+  const fetchFullProfile = async (userEmail: string) => {
+    if (profileCache[userEmail]) {
+      return profileCache[userEmail]
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, email, permalink, profile_image, bio')
+        .eq('email', userEmail)
+        .single()
+
+      if (error) throw error
+      
+      // Cache the profile
+      setProfileCache(prev => ({ ...prev, [userEmail]: data }))
+      return data
+    } catch (error) {
+      console.error('Error fetching full profile:', error)
+      return null
+    }
+  }
+
   // Handle pin click
-  const handlePinClick = (pin: HomePin) => {
-    setSelectedPin(pin)
+  const handlePinClick = async (pin: HomePin) => {
+    setLoadingProfile(true)
+    
+    try {
+      // Fetch full profile data if not cached
+      const fullProfile = await fetchFullProfile(pin.user_email)
+      
+      setSelectedPin({
+        ...pin,
+        user: fullProfile || pin.user
+      })
+    } finally {
+      setLoadingProfile(false)
+    }
   }
 
   // Zoom functions
@@ -545,11 +612,15 @@ export default function ZinestersPage() {
               )}
 
               {/* Bio - full text */}
-              {selectedPin.user?.bio && (
+              {loadingProfile ? (
+                <div className="text-gray-500 mb-3 text-sm">
+                  Loading profile...
+                </div>
+              ) : selectedPin.user?.bio ? (
                 <p className="text-gray-700 mb-3 text-sm">
                   {selectedPin.user.bio}
                 </p>
-              )}
+              ) : null}
 
               {/* Action buttons */}
               <div className="flex space-x-2">
