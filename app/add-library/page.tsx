@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { nanoid } from "nanoid"
 
 import { Tag, Library } from "@/lib/types"
+import { normalizeUSState } from "@/lib/utils"
 
 export default function AddLibraryPage() {
   const { user, loading } = useSupabaseUser()
@@ -139,7 +140,7 @@ export default function AddLibraryPage() {
           id: id,
           name: formData.libraryName,
           city: formData.city,
-          state: formData.state,
+          state: normalizeUSState(formData.state, formData.country),
           country: formData.country,
           address: formData.address,
           email: formData.email || null,

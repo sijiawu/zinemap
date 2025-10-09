@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon } from "lucide-react"
 import { nanoid } from "nanoid"
+import { normalizeUSState } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -326,7 +327,7 @@ export default function AddEventPage() {
           name: formData.name.trim(),
           venue_name: formData.venue_name?.trim() || null,
           city: formData.city.trim(),
-          state: formData.state.trim() || null,
+          state: normalizeUSState(formData.state.trim(), formData.country.trim()) || null,
           country: formData.country.trim(),
           address: formData.address.trim(),
           email: formData.email?.trim() || null,

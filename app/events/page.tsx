@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
+import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
@@ -20,33 +21,26 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState("all")
-  const [selectedState, setSelectedState] = useState("all")
-  const [selectedCity, setSelectedCity] = useState("all")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [timeFilter, setTimeFilter] = useState<"upcoming" | "past" | "all">("upcoming")
   const [applicationsOpen, setApplicationsOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
-  // Get unique countries, states, and cities for filters
-  const countries = Array.from(new Set(events.map(e => e.country))).sort()
-  
-  // Filter states and cities based on selected country
-  const filteredEventsForLocation = selectedCountry === "all" 
-    ? events 
-    : events.filter(e => e.country === selectedCountry)
-  
-  const states = Array.from(new Set(filteredEventsForLocation.filter(e => e.state).map(e => e.state!))).sort()
-  const cities = Array.from(new Set(filteredEventsForLocation.map(e => e.city))).sort()
-  const categories = ['festival', 'swap', 'workshop']
+  // Use location filters hook
+  const {
+    selectedCountry,
+    selectedState,
+    selectedCity,
+    setSelectedCountry,
+    setSelectedState,
+    setSelectedCity,
+    countries,
+    states,
+    cities,
+    clearLocationFilters
+  } = useLocationFilters({ items: events })
 
-  // Reset state and city when country changes
-  useEffect(() => {
-    if (selectedCountry === "all") {
-      setSelectedState("all")
-      setSelectedCity("all")
-    }
-  }, [selectedCountry])
+  const categories = ['festival', 'swap', 'workshop']
 
   // Debounce search query
   useEffect(() => {
@@ -188,9 +182,7 @@ export default function EventsPage() {
 
   const clearFilters = () => {
     setSearchQuery("")
-    setSelectedCountry("all")
-    setSelectedState("all")
-    setSelectedCity("all")
+    clearLocationFilters()
     setSelectedCategory("all")
     setTimeFilter("upcoming")
   }

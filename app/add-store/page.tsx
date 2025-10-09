@@ -17,6 +17,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 
 import { Tag, Store } from "@/lib/types"
+import { normalizeUSState } from "@/lib/utils"
 
 export default function AddStorePage() {
   const { user, loading } = useSupabaseUser()
@@ -318,7 +319,7 @@ export default function AddStorePage() {
           id: id,
           name: formData.storeName,
           city: formData.city,
-          state: formData.state,
+          state: normalizeUSState(formData.state, formData.country),
           country: formData.country,
           address: formData.address,
           email: formData.email || null,

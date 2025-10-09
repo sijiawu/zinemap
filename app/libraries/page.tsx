@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia } from "@/lib/utils"
+import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function LibrariesPage() {
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -21,30 +22,22 @@ export default function LibrariesPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState("all")
-  const [selectedState, setSelectedState] = useState("all")
-  const [selectedCity, setSelectedCity] = useState("all")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
-  // Get unique countries, states, and cities for filters
-  const countries = Array.from(new Set(libraries.map(l => l.country))).sort()
-  
-  // Filter states and cities based on selected country
-  const filteredLibrariesForLocation = selectedCountry === "all" 
-    ? libraries 
-    : libraries.filter(l => l.country === selectedCountry)
-  
-  const states = Array.from(new Set(filteredLibrariesForLocation.filter(l => l.state).map(l => l.state))).sort()
-  const cities = Array.from(new Set(filteredLibrariesForLocation.map(l => l.city))).sort()
-
-  // Reset state and city when country changes
-  useEffect(() => {
-    if (selectedCountry === "all") {
-      setSelectedState("all")
-      setSelectedCity("all")
-    }
-  }, [selectedCountry])
+  // Use location filters hook
+  const {
+    selectedCountry,
+    selectedState,
+    selectedCity,
+    setSelectedCountry,
+    setSelectedState,
+    setSelectedCity,
+    countries,
+    states,
+    cities,
+    clearLocationFilters
+  } = useLocationFilters({ items: libraries })
 
   // Debounce search query
   useEffect(() => {
@@ -205,9 +198,7 @@ export default function LibrariesPage() {
 
   const clearFilters = () => {
     setSearchQuery("")
-    setSelectedCountry("all")
-    setSelectedState("all")
-    setSelectedCity("all")
+    clearLocationFilters()
     setSelectedTags([])
   }
 

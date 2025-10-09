@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia } from "@/lib/utils"
+import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -21,31 +22,23 @@ export default function StoresPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState("all")
-  const [selectedState, setSelectedState] = useState("all")
-  const [selectedCity, setSelectedCity] = useState("all")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [noMaxPrice, setNoMaxPrice] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
-  // Get unique countries, states, and cities for filters
-  const countries = Array.from(new Set(stores.map(s => s.country))).sort()
-  
-  // Filter states and cities based on selected country
-  const filteredStoresForLocation = selectedCountry === "all" 
-    ? stores 
-    : stores.filter(s => s.country === selectedCountry)
-  
-  const states = Array.from(new Set(filteredStoresForLocation.filter(s => s.state).map(s => s.state))).sort()
-  const cities = Array.from(new Set(filteredStoresForLocation.map(s => s.city))).sort()
-
-  // Reset state and city when country changes
-  useEffect(() => {
-    if (selectedCountry === "all") {
-      setSelectedState("all")
-      setSelectedCity("all")
-    }
-  }, [selectedCountry])
+  // Use location filters hook
+  const {
+    selectedCountry,
+    selectedState,
+    selectedCity,
+    setSelectedCountry,
+    setSelectedState,
+    setSelectedCity,
+    countries,
+    states,
+    cities,
+    clearLocationFilters
+  } = useLocationFilters({ items: stores })
 
   // Debounce search query
   useEffect(() => {
@@ -215,9 +208,7 @@ export default function StoresPage() {
 
   const clearFilters = () => {
     setSearchQuery("")
-    setSelectedCountry("all")
-    setSelectedState("all")
-    setSelectedCity("all")
+    clearLocationFilters()
     setSelectedTags([])
     setNoMaxPrice(false)
   }
