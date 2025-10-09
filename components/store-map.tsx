@@ -30,7 +30,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
   // Function to create pin-shaped marker element
   const createPinMarker = (color: string, isActive: boolean = false) => {
-    const size = isActive ? '32px' : '24px'
+    const size = isActive ? '31px' : '24px' // 30% larger: 24 * 1.3 = 31.2px
     const iconSize = isActive ? '20px' : '16px'
     
     return `
@@ -194,7 +194,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       libraries: validLibraries.map(l => ({ id: l.id, lat: l.latitude, lng: l.longitude })),
       events: validEvents.map(e => ({ id: e.id, lat: e.latitude, lng: e.longitude })),
       mapView,
-      searchQuery
+      searchQuery,
+      selectedLocation: selectedLocation?.id,
+      locationType
     })
 
     // Only update markers if data has actually changed

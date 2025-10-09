@@ -17,8 +17,8 @@ interface HomePinProps {
 export function HomePin({ pin, isActive = false, onClick, onClose, showProfileCard = false }: HomePinProps) {
   const [imageError, setImageError] = useState(false)
   
-  const size = isActive ? 40 : 32
-  const avatarSize = isActive ? 24 : 20
+  const size = isActive ? 42 : 32 // 30% larger: 32 * 1.3 = 41.6px
+  const avatarSize = isActive ? 26 : 20 // 30% larger: 20 * 1.3 = 26px
   
   const handleImageError = () => {
     setImageError(true)

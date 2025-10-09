@@ -359,19 +359,24 @@ export default function ZinestersPage() {
       el.setAttribute('data-pin-id', pin.id)
       
       // Create pin-shaped marker with user avatar
+      const isActive = selectedPin?.id === pin.id
+      const pinSize = isActive ? '39px' : '30px' // 30% larger: 30 * 1.3 = 39px
+      const avatarSize = isActive ? '26px' : '20px' // 30% larger: 20 * 1.3 = 26px
+      const zIndex = isActive ? '10' : '1'
+      
       el.innerHTML = `
         <div style="
-          width: 30px;
-          height: 30px;
+          width: ${pinSize};
+          height: ${pinSize};
           position: relative;
           cursor: pointer;
           transform: translate(calc(-50% + 6px), calc(-100% + 6px));
-          z-index: 1;
+          z-index: ${zIndex};
         ">
           <!-- Pin body with avatar -->
           <div style="
-            width: 30px;
-            height: 30px;
+            width: ${pinSize};
+            height: ${pinSize};
             background: ${pin.color || '#f59e0b'};
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
@@ -390,8 +395,8 @@ export default function ZinestersPage() {
               display: flex;
               align-items: center;
               justify-content: center;
-              width: 20px;
-              height: 20px;
+              width: ${avatarSize};
+              height: ${avatarSize};
               border-radius: 50%;
               overflow: hidden;
               background-image: url('${pin.user?.profile_image || '/placeholder-user.jpg'}');
@@ -440,7 +445,7 @@ export default function ZinestersPage() {
       
       return () => clearTimeout(timer)
     }
-  }, [mapReady, pins, createMarkers])
+  }, [mapReady, pins, createMarkers, selectedPin])
 
   // Handle ESC key to cancel pin drop
   useEffect(() => {
