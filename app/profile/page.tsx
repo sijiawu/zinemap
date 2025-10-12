@@ -803,7 +803,7 @@ export default function ProfilePage() {
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                 <CardTitle className="flex items-center gap-2 font-gloria">
                   <BookOpen className="h-5 w-5" />
-                  Your Zines
+                  My Zines
                 </CardTitle>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button

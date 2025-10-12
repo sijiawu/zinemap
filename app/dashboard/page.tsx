@@ -282,7 +282,7 @@ export default function DashboardPage() {
           {/* Zines Grid */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-stone-800">Your Zines</h3>
+              <h3 className="text-xl font-semibold text-stone-800">My Zines</h3>
               <span className="text-sm text-stone-500">{filteredZines.length} total</span>
             </div>
 
