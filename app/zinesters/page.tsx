@@ -93,11 +93,11 @@ export default function ZinestersPage() {
       return
     }
 
-    // Check if user already has 5 pins
-    if (userPinCount >= 5) {
+    // Check if user already has 3 pins
+    if (userPinCount >= 3) {
       toast({
         title: "Pin Limit Reached",
-        description: "You can only have up to 5 pins. Delete an existing pin to add a new one.",
+        description: "You can only have up to 3 pins. Delete an existing pin to add a new one.",
         variant: "destructive",
       })
       setIsAddingPin(false)
@@ -535,9 +535,7 @@ export default function ZinestersPage() {
 
           </h1>
           <p className="text-lg text-amber-700 max-w-4xl mx-auto">
-            Like the world map in every hostel, this one's for all the zinesters and indie creators out there.<br />
-            Think of it as a zinester directory in map form.<br />
-            Drop up to five pins to mark places you call home or feel connected to.<br />
+
             ZineMap's mapping the global zine scene, and it wouldn't be complete without you!
           </p>
         </div>
@@ -713,17 +711,17 @@ export default function ZinestersPage() {
                 {/* Add Pin Button */}
                 <button
                   onClick={() => setIsAddingPin(!isAddingPin)}
-                  disabled={isAddingPinLoading || userPinCount >= 5}
+                  disabled={isAddingPinLoading || userPinCount >= 3}
                   className={`px-4 py-2 rounded-lg font-gloria text-sm transition-all ${
-                    isAddingPinLoading || userPinCount >= 5
+                    isAddingPinLoading || userPinCount >= 3
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : isAddingPin 
                       ? 'bg-red-500 text-white hover:bg-red-600' 
                       : 'bg-amber-500 text-white hover:bg-amber-600'
                   }`}
-                  title={userPinCount >= 5 ? 'Pin limit reached (5/5)' : ''}
+                  title={userPinCount >= 3 ? 'Pin limit reached (3/3)' : ''}
                 >
-                  {isAddingPinLoading ? 'Adding...' : isAddingPin ? 'Cancel' : userPinCount >= 5 ? 'Pin Limit (5/5)' : `Add Pin (${userPinCount}/5)`}
+                  {isAddingPinLoading ? 'Adding...' : isAddingPin ? 'Cancel' : userPinCount >= 3 ? 'Pin Limit (3/3)' : `Add Pin (${userPinCount}/3)`}
                 </button>
               </>
             ) : (
@@ -766,11 +764,20 @@ export default function ZinestersPage() {
             </div>
           )}
 
+          </div>
+
+          {/* Description text below the map */}
+          <div className="text-center mt-6">
+            <p className="text-sm sm:text-lg text-amber-700 max-w-4xl mx-auto">
+              Like the world map in every hostel, this one's for all the zinesters and indie creators out there.<br />
+              Think of it as a zinester directory in map form.<br />
+              Drop up to 3 pins to mark places you call home or have shaped you.<br />
+              Maybe it can help a few of us find each other!
+            </p>
+          </div>
+ 
+       </div>
         </div>
-
-
-      </div>
-      </div>
-    </>
-  )
-}
+      </>
+    )
+  }
