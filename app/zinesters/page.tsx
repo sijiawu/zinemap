@@ -262,6 +262,20 @@ export default function ZinestersPage() {
     }
   }
 
+  // Function to get responsive offset for flyTo based on screen size
+  const getResponsiveOffset = () => {
+    if (typeof window === 'undefined') return [0, 0] // Default for SSR
+    
+    const isMobile = window.innerWidth < 640 // sm breakpoint
+    if (isMobile) {
+      // On mobile: move pin down to avoid modal coverage
+      return [0, 160] // Move pin down
+    } else {
+      // On desktop: center the pin
+      return [0, 0] // Center the pin
+    }
+  }
+
   // Handle pin click
   const handlePinClick = async (pin: HomePin) => {
     setLoadingProfile(true)
@@ -274,6 +288,16 @@ export default function ZinestersPage() {
         ...pin,
         user: fullProfile || pin.user
       })
+
+      // Fly to the pin location with zoom level 4 and responsive offset
+      if (map.current) {
+        map.current.flyTo({
+          center: [pin.longitude, pin.latitude],
+          zoom: 4,
+          duration: 1500,
+          offset: getResponsiveOffset() // Responsive offset based on screen size
+        })
+      }
     } finally {
       setLoadingProfile(false)
     }
@@ -310,8 +334,8 @@ export default function ZinestersPage() {
           container: mapContainer.current!,
           accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
           style: "mapbox://styles/mapbox/light-v11",
-          center: [0, 20],
-          zoom: 2,
+          center: [-53.5, 48.5], // Newfoundland, Canada
+          zoom: window.innerWidth < 640 ? 1 : 2, // Zoom level 1 on mobile, 2 on desktop
         })
 
         map.current.on('load', () => {
@@ -518,7 +542,7 @@ export default function ZinestersPage() {
           </p>
         </div>
 
-        <div className={`h-[600px] relative rounded-lg overflow-hidden border border-gray-200 shadow-lg map-container ${initialLoadComplete ? 'ready' : ''}`}>
+        <div className={`h-[75vh] sm:h-[600px] relative rounded-lg overflow-hidden border border-gray-200 shadow-lg map-container ${initialLoadComplete ? 'ready' : ''}`}>
           <div 
             ref={mapContainer}
             className={`w-full h-full ${isAddingPin ? 'cursor-crosshair' : 'cursor-default'}`}
@@ -563,10 +587,7 @@ export default function ZinestersPage() {
           {/* Floating Profile Card - positioned relative to map */}
           {selectedPin && (
             <div
-              className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 left-4 right-4 sm:left-5 sm:w-80 sm:right-auto max-h-96 overflow-y-auto"
-              style={{
-                top: '20px',
-              }}
+              className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 left-4 right-4 sm:left-5 sm:w-80 sm:right-auto max-h-[37.5vh] sm:max-h-[28rem] overflow-y-auto top-16 sm:top-5"
             >
               {/* Close button */}
               <button
@@ -651,7 +672,7 @@ export default function ZinestersPage() {
           )}
           
           {/* Add Pin Button */}
-          <div className="absolute top-4 right-16 flex flex-col gap-2 z-50">
+          <div className="absolute top-4 right-4 sm:right-16 flex flex-col gap-2 z-50">
             {user ? (
               <>
                 {/* Color Picker */}
@@ -716,8 +737,8 @@ export default function ZinestersPage() {
             )}
           </div>
 
-          {/* Zoom Controls */}
-          <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+          {/* Zoom Controls - Hidden on mobile */}
+          <div className="hidden sm:block absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
             <div className="flex flex-col">
               <button
                 onClick={zoomIn}
