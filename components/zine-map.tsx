@@ -186,7 +186,7 @@ export default function ZineMap({ stores }: ZineMapProps) {
       
       {/* Selected Store Info */}
       {selectedStore && (
-        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm z-10">
+        <div className="absolute top-4 left-4 right-4 sm:right-4 sm:max-w-sm bg-white rounded-lg shadow-lg p-4 z-10">
           <div className="flex items-start gap-3">
             {selectedStore.zine_cover && (
               <img

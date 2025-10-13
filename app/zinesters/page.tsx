@@ -563,9 +563,8 @@ export default function ZinestersPage() {
           {/* Floating Profile Card - positioned relative to map */}
           {selectedPin && (
             <div
-              className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-80 max-h-96 overflow-y-auto"
+              className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 left-4 right-4 sm:left-5 sm:w-80 sm:right-auto max-h-96 overflow-y-auto"
               style={{
-                left: '20px',
                 top: '20px',
               }}
             >

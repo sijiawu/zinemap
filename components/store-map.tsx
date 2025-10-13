@@ -28,6 +28,20 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
 
+  // Function to get responsive offset for flyTo based on screen size
+  const getResponsiveOffset = () => {
+    if (typeof window === 'undefined') return [-100, 100] // Default for SSR
+    
+    const isMobile = window.innerWidth < 640 // sm breakpoint
+    if (isMobile) {
+      // On mobile: smaller offset to keep pin visible, modal spans full width
+      return [-50, 50] // Less aggressive offset
+    } else {
+      // On desktop: original offset to avoid modal blocking
+      return [-100, 100] // Original offset
+    }
+  }
+
   // Function to create pin-shaped marker element
   const createPinMarker = (color: string, isActive: boolean = false) => {
     const size = isActive ? '31px' : '24px' // 30% larger: 24 * 1.3 = 31.2px
@@ -77,13 +91,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     setLocationType(type)
     
     // Pan to the location if it has coordinates
-    // Position pin in bottom left to avoid map card coverage
+    // Position pin to avoid map card coverage with responsive offset
     if (location.latitude && location.longitude && map.current) {
       map.current.flyTo({
         center: [location.longitude, location.latitude],
-        zoom: 10,
+        zoom: 12, // Consistent zoom level for all interactions
         duration: 2000,
-        offset: [-100, 100] // Move pin to bottom left (left, down)
+        offset: getResponsiveOffset() // Responsive offset based on screen size
       })
     }
   }
@@ -270,13 +284,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           onLocationSelect?.(store, 'store')
           
           // Fly to the clicked location with reduced zoom and longer duration
-          // Position pin in bottom left to avoid map card coverage
+          // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
             map.current.flyTo({
               center: [store.longitude, store.latitude],
               zoom: 12, // Reduced zoom level to be less dizzying
               duration: 1500, // Longer duration for smoother animation
-              offset: [-100, 100] // Move pin to bottom left (left, down)
+              offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
         })
@@ -311,13 +325,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           onLocationSelect?.(library, 'library')
           
           // Fly to the clicked location with reduced zoom and longer duration
-          // Position pin in bottom left to avoid map card coverage
+          // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
             map.current.flyTo({
               center: [library.longitude, library.latitude],
               zoom: 12, // Reduced zoom level to be less dizzying
               duration: 1500, // Longer duration for smoother animation
-              offset: [-100, 100] // Move pin to bottom left (left, down)
+              offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
         })
@@ -352,13 +366,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           onLocationSelect?.(event, 'event')
           
           // Fly to the clicked location with reduced zoom and longer duration
-          // Position pin in bottom left to avoid map card coverage
+          // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
             map.current.flyTo({
               center: [event.longitude, event.latitude],
               zoom: 12, // Reduced zoom level to be less dizzying
               duration: 1500, // Longer duration for smoother animation
-              offset: [-100, 100] // Move pin to bottom left (left, down)
+              offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
         })
@@ -470,7 +484,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
       {/* Location Popup */}
       {selectedLocation && (
-        <div className="absolute top-4 right-20 bg-white rounded-lg shadow-lg border border-stone-200 p-4 w-80 z-20">
+        <div className="absolute top-4 left-4 right-4 sm:right-20 sm:w-80 bg-white rounded-lg shadow-lg border border-stone-200 p-4 z-20">
           <button
             onClick={() => setSelectedLocation(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
