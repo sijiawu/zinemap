@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import ProfileOnboardingModal from '@/components/ProfileOnboardingModal'
 import { supabase } from '@/lib/supabaseClient'
 import NavBar from '@/components/NavBar'
+import SupportBanner from '@/components/SupportBanner'
 
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabaseUser();
@@ -75,6 +76,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   return (
     <>
       <NavBar />
+      <SupportBanner />
       <ProfileOnboardingModal user={user} show={showModal && profileChecked} onComplete={handleOnboardingComplete} />
       <div>{children}</div>
     </>
