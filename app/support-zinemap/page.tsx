@@ -36,7 +36,7 @@ export default function SupportZineMapPage() {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-muted-foreground mb-6">
-              Your support helps cover hosting and the ongoing work that keeps the map running smoothly.              </p>
+              Your support helps cover hosting and the ongoing work that keeps the map running smoothly as it grows.              </p>
               <Button asChild size="lg" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
                 <a href="https://ko-fi.com/cjwu" target="_blank" rel="noopener">
                   Support via Ko-fi
