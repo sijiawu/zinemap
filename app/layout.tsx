@@ -4,10 +4,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: "ZineMap - Drop Your Zines, Find Your People",
-  description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+  description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
   openGraph: {
     title: "ZineMap - Drop Your Zines, Find Your People",
-    description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+    description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
     url: "https://zinemap.com",
     siteName: "ZineMap",
     images: [
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ZineMap - Drop Your Zines, Find Your People",
-    description: "Explore a global map of zine-friendly stores, track your zines, and discover new places to share your work.",
+    description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
     images: ["/preview-image.png"], // Update this path to your actual image
   },
   generator: 'v0.dev',
@@ -44,6 +44,20 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.js"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(h,o,t,j,a,r){
+                h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+                h._hjSettings={hjid:6547562,hjsv:6};
+                a=o.getElementsByTagName('head')[0];
+                r=o.createElement('script');r.async=1;
+                r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+                a.appendChild(r);
+              })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+            `,
+          }}
+        />
       </head>
       <body>
         <ClientRoot>{children}</ClientRoot>
