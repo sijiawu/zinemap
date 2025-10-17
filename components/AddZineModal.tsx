@@ -217,7 +217,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
             description: description.trim() || null,
             cover_image: coverImageUrl,
             permalink: generatePermalink(title.trim(), userName),
-            is_public: false // Default to private
+            is_public: true // Default to public
           })
 
         if (insertError) {
