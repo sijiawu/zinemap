@@ -9,6 +9,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Force redeploy
+  generateBuildId: async () => {
+    return `rollback-${Date.now()}`
+  },
 }
 
 export default nextConfig
