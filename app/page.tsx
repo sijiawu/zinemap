@@ -249,7 +249,7 @@ export default function HomePage() {
     }, 100)
 
     return () => clearTimeout(timer)
-  }, [phase1Complete, stores, libraries, events])
+  }, [phase1Complete])
 
   // Debounce search query to improve performance
   useEffect(() => {
