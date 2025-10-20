@@ -909,7 +909,6 @@ export default function EventDetailPage() {
                     
                     {!user ? (
                       <div className="space-y-3">
-                        <p className="text-stone-600 text-sm">Sign in to share your experience and add a community note</p>
                         <Link href="/login">
                           <Button
                             size="sm"
