@@ -258,8 +258,12 @@ export default function ProfilePage() {
       router.push('/login')
       return
     }
-    fetchProfileData()
-  }, [user, userLoading, router, fetchProfileData])
+    
+    // Only fetch if we don't already have profile data
+    if (!profile) {
+      fetchProfileData()
+    }
+  }, [user?.id, userLoading, router])
 
   const handleSave = async () => {
     if (!user || !profile) return
@@ -525,10 +529,16 @@ export default function ProfilePage() {
                             <img
                               src={profile.profile_image}
                               alt="Profile"
-                              className="w-20 h-20 object-cover rounded-full border-2 border-stone-200"
+                              className="w-20 h-20 object-cover rounded-full border-2 border-stone-200 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => setIsEditing(true)}
+                              title="Click to edit profile"
                             />
                           ) : (
-                            <div className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-200 flex items-center justify-center">
+                            <div 
+                              className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-200 flex items-center justify-center cursor-pointer hover:bg-stone-200 transition-colors"
+                              onClick={() => setIsEditing(true)}
+                              title="Click to edit profile"
+                            >
                               <User className="h-10 w-10 text-stone-400" />
                             </div>
                           )}
