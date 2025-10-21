@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { EventFormData } from "@/lib/types"
@@ -23,6 +24,7 @@ export default function AddEventPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isGoingToEvent, setIsGoingToEvent] = useState(false)
 
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
@@ -248,6 +250,17 @@ export default function AddEventPage() {
     }))
   }
 
+  // Handle start date change
+  const handleStartDateChange = (value: string) => {
+    handleInputChange("start_date", value)
+    
+    // Automatically set end date to start date if end date is empty or before start date
+    if (!formData.end_date || new Date(formData.end_date) < new Date(value)) {
+      handleInputChange("end_date", value)
+    }
+  }
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -290,21 +303,6 @@ export default function AddEventPage() {
       return
     }
 
-    // Check if dates are in the future
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    if (new Date(formData.start_date) < today) {
-      setError("Start date must be in the future")
-      setIsSubmitting(false)
-      return
-    }
-
-    if (new Date(formData.end_date) < today) {
-      setError("End date must be in the future")
-      setIsSubmitting(false)
-      return
-    }
 
     if (new Date(formData.end_date) < new Date(formData.start_date)) {
       setError("End date must be after start date")
@@ -369,6 +367,21 @@ export default function AddEventPage() {
           }
         }
 
+        // Insert attendance if user checked "I am going to this event!"
+        if (isGoingToEvent) {
+          const { error: attendanceError } = await supabase
+            .from('event_attendees')
+            .insert({
+              event_id: id,
+              user_id: user!.id
+            })
+
+          if (attendanceError) {
+            console.error('Event attendance insert error:', attendanceError)
+            // Don't throw here, event was created successfully
+          }
+        }
+
       setIsSubmitted(true)
     } catch (error) {
       console.error('Submission error:', error)
@@ -391,7 +404,7 @@ export default function AddEventPage() {
               </div>
               <h1 className="font-gloria text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
               <p className="text-stone-600 mb-6 leading-relaxed">
-                Your event submission has been received! Our team will review it shortly and add it to the map once approved. Thanks for
+                Your event submission has been received and is pending a quick human review before appearing on the map. Thanks for
                 helping fellow zinesters discover new events to attend and share their work!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -460,7 +473,7 @@ export default function AddEventPage() {
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add an Event to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-          Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and we will add it to our community map!
+          Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
           </p>
         </div>
 
@@ -542,17 +555,15 @@ export default function AddEventPage() {
                     id="start_date"
                     type="date"
                     value={formData.start_date}
-                    onChange={(e) => {
-                      const startDate = e.target.value;
-                      handleInputChange("start_date", startDate);
-                      // Automatically set end date to start date if end date is empty or before start date
-                      if (!formData.end_date || new Date(formData.end_date) < new Date(startDate)) {
-                        handleInputChange("end_date", startDate);
-                      }
-                    }}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
                     className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
                     required
                   />
+                  {formData.start_date && new Date(formData.start_date) < new Date() && (
+                    <p className="text-amber-600 text-sm font-medium">
+                     📅 Past event detected - thanks for contributing to the archive!
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -575,7 +586,7 @@ export default function AddEventPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="application_open" className="text-stone-700 font-serif font-medium">
-                      Application Opens
+                      Application Opens (feel free to skip if already open)
                     </Label>
                     <Input
                       id="application_open"
@@ -598,7 +609,7 @@ export default function AddEventPage() {
                     />
                     {formData.application_deadline && new Date(formData.application_deadline) < new Date() && (
                       <p className="text-amber-600 text-sm font-medium">
-                        ⚠️ This deadline has already passed
+                        This event will show up with a "submission closed" tag.
                       </p>
                     )}
                   </div>
@@ -820,6 +831,17 @@ export default function AddEventPage() {
                   placeholder="Tell us more about this event... What makes it special? Any important details attendees should know?"
                   rows={5}
                 />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isGoingToEvent"
+                  checked={isGoingToEvent}
+                  onCheckedChange={(checked) => setIsGoingToEvent(checked as boolean)}
+                />
+                <Label htmlFor="isGoingToEvent" className="text-sm text-stone-600">
+                  I am going to this event!
+                </Label>
               </div>
             </CardContent>
           </Card>
