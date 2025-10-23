@@ -287,7 +287,7 @@ export default function SuggestStoreEditPage() {
           <div className="text-green-600 text-6xl mb-4">✓</div>
           <h1 className="text-2xl font-bold text-stone-800 mb-2">Edit Suggestion Submitted!</h1>
           <p className="text-stone-600 mb-4">
-            Thank you for your suggestion. It will be reviewed by our team and implemented if approved.
+           Your edits have been received! A human (me) will review the changes shortly before they are reflected on the page. Thank you for helping keep the information accurate and up-to-date!
           </p>
           <p className="text-stone-500 text-sm">Redirecting back to store page...</p>
         </div>

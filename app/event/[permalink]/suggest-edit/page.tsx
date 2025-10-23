@@ -220,7 +220,7 @@ export default function SuggestEventEditPage() {
               </div>
               <h2 className="font-gloria text-2xl font-semibold text-stone-800 mb-2">Edit Suggestion Submitted!</h2>
               <p className="text-stone-600 mb-6">
-                Thank you for helping improve this event page. Our team will review your suggestions and update the information accordingly.
+              Your edits have been received! A human (me) will review the changes shortly before they are reflected on the page. Thank you for helping keep the information accurate and up-to-date!
               </p>
               <div className="space-y-3">
                 <Link href={`/event/${event.permalink || event.id}`}>
