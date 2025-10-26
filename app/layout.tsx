@@ -1,5 +1,6 @@
 import './globals.css'
 import ClientRoot from '@/components/ClientRoot'
+import FilloutButton from '@/components/FilloutButton'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ export default function RootLayout({
       </head>
       <body>
         <ClientRoot>{children}</ClientRoot>
+        <FilloutButton />
       </body>
     </html>
   )
