@@ -282,10 +282,10 @@ export default function LibrariesPage() {
                   <div className="space-y-2">
                     <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
                       <SelectTrigger className="bg-stone-50 border-stone-300">
-                        <SelectValue placeholder="All states" />
+                        <SelectValue placeholder="All states/regions" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All states</SelectItem>
+                        <SelectItem value="all">All states/regions</SelectItem>
                         {states.map(state => (
                           <SelectItem key={state} value={state}>{state}</SelectItem>
                         ))}
