@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -31,6 +32,22 @@ export default function HomePage() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("stores")
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+
+  // Location filters (combined across all types)
+  const allItemsForFilters: Array<Store | Library | Event> = [...stores, ...libraries, ...events]
+  const {
+    selectedCountry,
+    selectedState,
+    selectedCity,
+    setSelectedCountry,
+    setSelectedState,
+    setSelectedCity,
+    countries,
+    states,
+    cities,
+    clearLocationFilters
+  } = useLocationFilters({ items: allItemsForFilters })
 
   // Handle location selection from list view
   const handleLocationSelect = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
@@ -251,16 +268,21 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [phase1Complete])
 
-  // Debounce search query to improve performance
+  // Debounce search query to improve performance (realtime search)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery)
+      setDebouncedSearchQuery(searchQuery.trim())
     }, 300)
-
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Filter stores, libraries, and events based on debounced search query
+  const handleClearSearchAndFilters = () => {
+    setSearchQuery("")
+    setDebouncedSearchQuery("")
+    clearLocationFilters()
+  }
+
+  // Filter stores, libraries, and events based on debounced search query and location filters
   useEffect(() => {
     if (!stores || !libraries || !events) return
 
@@ -268,40 +290,43 @@ export default function HomePage() {
     let filteredLibraries = libraries
     let filteredEvents = events
 
+    // Apply location filters first
+    const matchesLocation = (item: Store | Library | Event) => {
+      if (selectedCountry !== "all" && item.country !== selectedCountry) return false
+      if (selectedState !== "all" && (item.state || "") !== selectedState) return false
+      if (selectedCity !== "all" && item.city !== selectedCity) return false
+      return true
+    }
+
+    filteredStores = filteredStores.filter(matchesLocation)
+    filteredLibraries = filteredLibraries.filter(matchesLocation)
+    filteredEvents = filteredEvents.filter(matchesLocation)
+
     // Apply search filter
     if (debouncedSearchQuery.trim()) {
       const query = debouncedSearchQuery.toLowerCase().trim()
       
       filteredStores = stores.filter(store => 
+        matchesLocation(store) && (
         store.name.toLowerCase().includes(query) ||
-        store.city.toLowerCase().includes(query) ||
-        (store.state && store.state.toLowerCase().includes(query)) ||
-        store.country.toLowerCase().includes(query) ||
-        store.address.toLowerCase().includes(query)
+        (!!store.notes && store.notes.toLowerCase().includes(query)))
       )
 
       filteredLibraries = libraries.filter(library => 
-        library.name.toLowerCase().includes(query) ||
-        library.city.toLowerCase().includes(query) ||
-        (library.state && library.state.toLowerCase().includes(query)) ||
-        library.country.toLowerCase().includes(query) ||
-        library.address.toLowerCase().includes(query)
+        matchesLocation(library) && (
+        !!library.notes && library.notes.toLowerCase().includes(query))
       )
 
       filteredEvents = events.filter(event => 
-        event.name.toLowerCase().includes(query) ||
-        event.city.toLowerCase().includes(query) ||
-        (event.state && event.state.toLowerCase().includes(query)) ||
-        event.country.toLowerCase().includes(query) ||
-        event.address.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query)
+        matchesLocation(event) && (
+        !!event.notes && event.notes.toLowerCase().includes(query))
       )
     }
 
     setFilteredStores(filteredStores)
     setFilteredLibraries(filteredLibraries)
     setFilteredEvents(filteredEvents)
-  }, [stores, libraries, events, debouncedSearchQuery])
+  }, [stores, libraries, events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity])
 
   // Show loading only if we don't have basic data yet
   if (!phase1Complete) {
@@ -335,24 +360,160 @@ export default function HomePage() {
 
       {/* Main Content - Mobile Stack / Desktop Grid Layout */}
       <div className="order-3 max-w-7xl mx-auto px-4 py-6">
+        {/* Search and Filters - Mobile dropdown */}
+        <div className="block lg:hidden mb-3">
+          <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowMobileFilters(prev => !prev)}
+              className="w-full justify-between border-stone-300 text-stone-700 hover:bg-stone-50"
+            >
+              <span className="flex items-center gap-2"><Filter className="h-4 w-4" /> Search by name/location</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+            </Button>
+
+            {showMobileFilters && (
+              <div className="mt-4 space-y-3">
+                {/* Search */}
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search by name or description"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
+                  />
+                </div>
+
+                {/* Country */}
+                <div className="w-full">
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                    <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200">
+                      <SelectValue placeholder="Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All countries</SelectItem>
+                      {countries.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* State */}
+                <div className="w-full">
+                  <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
+                    <SelectTrigger className={`${selectedCountry === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                      <SelectValue placeholder="State/Province" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All states</SelectItem>
+                      {states.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* City */}
+                <div className="w-full">
+                  <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all"}>
+                    <SelectTrigger className={`${selectedState === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                      <SelectValue placeholder="City" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All cities</SelectItem>
+                      {cities.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="pt-1">
+                  <Button 
+                    variant="outline"
+                    onClick={handleClearSearchAndFilters}
+                    className="w-full border-stone-300 text-stone-700 hover:bg-stone-50"
+                  >
+                    Clear search
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Search and Filters - Desktop only, appears above grid */}
         <div className="hidden lg:block mb-3 lg:mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Bar */}
-              <div className="flex-1 relative">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
                                   <Input
-                    placeholder="Search by city, state, or name..."
+                placeholder="Search by name or description"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
                   />
               </div>
 
               {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {/* Add more filters here in the future */}
+              <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                {/* Country */}
+                <div className="min-w-[160px] flex-1">
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                    <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200">
+                      <SelectValue placeholder="Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All countries</SelectItem>
+                      {countries.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* State */}
+                <div className="min-w-[160px] flex-1">
+                  <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
+                    <SelectTrigger className={`${selectedCountry === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                      <SelectValue placeholder="State/Province" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All states</SelectItem>
+                      {states.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* City */}
+                <div className="min-w-[160px] flex-1">
+                  <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all"}>
+                    <SelectTrigger className={`${selectedState === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                      <SelectValue placeholder="City" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All cities</SelectItem>
+                      {cities.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Clear search (also clears filters) */}
+                <Button 
+                  variant="outline"
+                  onClick={handleClearSearchAndFilters}
+                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
+                >
+                  Clear search
+                </Button>
               </div>
             </div>
           </div>
@@ -370,9 +531,9 @@ export default function HomePage() {
                 ) : (
                   <div className="w-full h-96 lg:h-full relative">
                     <StoreMap 
-                      stores={stores}
-                      libraries={libraries}
-                      events={events}
+                      stores={filteredStores}
+                      libraries={filteredLibraries}
+                      events={filteredEvents}
                       searchQuery={debouncedSearchQuery}
                       onLocationSelect={handleLocationSelect}
                       onMapReady={handleMapReady}

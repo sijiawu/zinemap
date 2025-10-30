@@ -48,19 +48,17 @@ export function useLocationFilters<T extends LocationItem>({
   
   const cities = Array.from(new Set(filteredItemsForCitiesByState.map(item => item.city))).sort()
 
-  // Reset state and city when country changes
+  // Reset state and city whenever country changes (to ensure clean lower selections)
   useEffect(() => {
-    if (selectedCountry === "all") {
-      setSelectedState("all")
-      setSelectedCity("all")
-    }
+    setSelectedState("all")
+    setSelectedCity("all")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCountry])
 
-  // Reset city when state changes
+  // Reset city when state changes (always revert city to all on change)
   useEffect(() => {
-    if (selectedState === "all") {
-      setSelectedCity("all")
-    }
+    setSelectedCity("all")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedState])
 
   const clearLocationFilters = () => {
