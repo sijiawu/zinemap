@@ -17,7 +17,7 @@ export default function SupportZineMapPage() {
               ZineMap started as a personal project while I was attending the <a href="https://www.recurse.com/" target="_blank" rel="noopener" className="text-blue-600 hover:text-blue-800 underline">Recurse Center</a> in July 2025 (which happened to be International Zine Month). I built it to find and keep track of places that might stock my comic zines - and then I thought, maybe other indie creators would find it useful too!
             </p>
             <p>
-            It’s since grown into a full-scale map connecting zinesters, shops, libraries, and events around the world. These days it’s a full-time one-person operation: I code, design, plan features, schedule releases, and keep the data healthy as the site scales. There are a lot of moving parts and quiet fixes behind the scenes, but I care about every piece. ZineMap is built on that care, and sustained by the belief that independent publishing deserves to be visible, and by the joy of seeing zine worlds connect across distance. </p>
+            It’s since grown into a full-scale map connecting zinesters, shops, libraries, and events around the world. These days it’s a highly involved one-person operation: I code, design, plan features, schedule releases, and keep the data healthy as the site scales. There are a lot of moving parts and quiet fixes behind the scenes, but I care about every piece. ZineMap is built on that care, and sustained by the belief that independent publishing deserves to be visible, and by the joy of seeing zine worlds connect across distance. </p>
             <p>
             If you’d like to help keep ZineMap running (and growing), here are a few ways to do that:
             </p>
