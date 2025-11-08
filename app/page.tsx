@@ -407,7 +407,7 @@ export default function HomePage() {
                       <SelectValue placeholder="State/Province" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All states</SelectItem>
+                      <SelectItem value="all">All states/regions</SelectItem>
                       {states.map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
@@ -483,7 +483,7 @@ export default function HomePage() {
                       <SelectValue placeholder="State/Province" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All states</SelectItem>
+                      <SelectItem value="all">All states/regions</SelectItem>
                       {states.map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
