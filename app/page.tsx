@@ -333,11 +333,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!stores || !libraries || !events) return
 
-    let filteredStores = stores
-    let filteredLibraries = libraries
-    let filteredEvents = events
-
-    // Apply location filters first
+    // Helper: Check if item matches location filters
     const matchesLocation = (item: Store | Library | Event) => {
       if (selectedCountry !== "all" && item.country !== selectedCountry) return false
       if (selectedState !== "all" && (item.state || "") !== selectedState) return false
@@ -345,34 +341,33 @@ export default function HomePage() {
       return true
     }
 
-    filteredStores = filteredStores.filter(matchesLocation)
-    filteredLibraries = filteredLibraries.filter(matchesLocation)
-    filteredEvents = filteredEvents.filter(matchesLocation)
-
-    // Apply search filter
-    if (debouncedSearchQuery.trim()) {
-      const query = debouncedSearchQuery.toLowerCase().trim()
-      
-      filteredStores = stores.filter(store => 
-        matchesLocation(store) && (
-        store.name.toLowerCase().includes(query) ||
-        (!!store.notes && store.notes.toLowerCase().includes(query)))
-      )
-
-      filteredLibraries = libraries.filter(library => 
-        matchesLocation(library) && (
-        !!library.notes && library.notes.toLowerCase().includes(query))
-      )
-
-      filteredEvents = events.filter(event => 
-        matchesLocation(event) && (
-        !!event.notes && event.notes.toLowerCase().includes(query))
+    // Helper: Check if item matches search query (name, notes, country, state, city)
+    const matchesSearch = (item: Store | Library | Event, query: string) => {
+      if (!query) return true
+      const lowerQuery = query.toLowerCase()
+      return (
+        item.name.toLowerCase().includes(lowerQuery) ||
+        (!!item.notes && item.notes.toLowerCase().includes(lowerQuery)) ||
+        item.country.toLowerCase().includes(lowerQuery) ||
+        (!!item.state && item.state.toLowerCase().includes(lowerQuery)) ||
+        item.city.toLowerCase().includes(lowerQuery)
       )
     }
 
-    setFilteredStores(filteredStores)
-    setFilteredLibraries(filteredLibraries)
-    setFilteredEvents(filteredEvents)
+    // Helper: Filter items by location and search
+    const filterItems = <T extends Store | Library | Event>(items: T[]) => {
+      return items.filter(item => {
+        if (!matchesLocation(item)) return false
+        if (debouncedSearchQuery.trim()) {
+          return matchesSearch(item, debouncedSearchQuery.trim())
+        }
+        return true
+      })
+    }
+
+    setFilteredStores(filterItems(stores))
+    setFilteredLibraries(filterItems(libraries))
+    setFilteredEvents(filterItems(events))
   }, [stores, libraries, events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity])
 
   // Show loading only if we don't have basic data yet
