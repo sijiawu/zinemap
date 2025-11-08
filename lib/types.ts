@@ -28,6 +28,8 @@ export interface Store {
   store_tags?: StoreTag[]
   user_name?: string
   user_permalink?: string
+  last_edit_user_name?: string
+  last_edit_user_permalink?: string
 }
 
 export interface Library {
@@ -51,6 +53,8 @@ export interface Library {
   library_tags?: LibraryTag[]
   user_name?: string
   user_permalink?: string
+  last_edit_user_name?: string
+  last_edit_user_permalink?: string
 }
 
 export interface Event {
@@ -82,6 +86,8 @@ export interface Event {
   user_email?: string
   attendees_count?: number
   user_is_attending?: boolean
+  last_edit_user_name?: string
+  last_edit_user_permalink?: string
 }
 
 export interface StoreTag {

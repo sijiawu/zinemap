@@ -142,22 +142,19 @@ export default function HomePage() {
         }
 
         // Fetch all enhanced data in parallel
+        // Note: locale_edits is a very small table (~5 rows), so we fetch all at once
         const [
           storeTagsResult,
           storeUserProfilesResult,
           libraryTagsResult,
           libraryUserProfilesResult,
-          eventUserProfilesResult
+          eventUserProfilesResult,
+          allEditsResult
         ] = await Promise.all([
           // Store tags
           currentStores.length > 0 ? supabase
             .from('store_tags')
-            .select(`
-              id,
-              store_id,
-              tag_id,
-              tags!inner(id, label, category)
-            `)
+            .select(`id, store_id, tag_id, tags!inner(id, label, category)`)
             .in('store_id', currentStores.map(s => s.id)) : Promise.resolve({ data: [] }),
           
           // Store user profiles
@@ -169,12 +166,7 @@ export default function HomePage() {
           // Library tags
           currentLibraries.length > 0 ? supabase
             .from('library_tags')
-            .select(`
-              id,
-              library_id,
-              tag_id,
-              tags!inner(id, label, category)
-            `)
+            .select(`id, library_id, tag_id, tags!inner(id, label, category)`)
             .in('library_id', currentLibraries.map(l => l.id)) : Promise.resolve({ data: [] }),
           
           // Library user profiles
@@ -187,13 +179,75 @@ export default function HomePage() {
           currentEvents.length > 0 ? supabase
             .from('profiles')
             .select('id, display_name, permalink')
-            .in('id', currentEvents.map(e => e.submitted_by)) : Promise.resolve({ data: [] })
+            .in('id', currentEvents.map(e => e.submitted_by)) : Promise.resolve({ data: [] }),
+          
+          // All locale_edits (small table, fetch all at once)
+          supabase
+            .from('locale_edits')
+            .select('store_id, library_id, event_id, user_id, created_at')
+            .order('created_at', { ascending: false })
         ])
+
+        // Process all edits in memory to get most recent per store/library/event
+        const storeLastEditsMap = new Map<string, { user_id: string }>()
+        const libraryLastEditsMap = new Map<string, { user_id: string }>()
+        const eventLastEditsMap = new Map<string, { user_id: string }>()
+        
+        const allEdits = allEditsResult.data || []
+        for (const edit of allEdits) {
+          if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) {
+            storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id })
+          }
+          if (edit.library_id && !libraryLastEditsMap.has(edit.library_id)) {
+            libraryLastEditsMap.set(edit.library_id, { user_id: edit.user_id })
+          }
+          if (edit.event_id && !eventLastEditsMap.has(edit.event_id)) {
+            eventLastEditsMap.set(edit.event_id, { user_id: edit.user_id })
+          }
+        }
+        
+        // Batch fetch ALL editor profiles in one query
+        const allEditorIds = Array.from(new Set([
+          ...Array.from(storeLastEditsMap.values()).map(e => e.user_id),
+          ...Array.from(libraryLastEditsMap.values()).map(e => e.user_id),
+          ...Array.from(eventLastEditsMap.values()).map(e => e.user_id)
+        ]))
+        const allEditorProfilesResult = allEditorIds.length > 0 ? await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', allEditorIds) : { data: [] }
+        
+        const editorMap = new Map(
+          (allEditorProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+        )
+
+        // Helper: Enrich item with user and edit info
+        const enrichItem = <T extends { id: string; submitted_by: string }>(
+          item: T,
+          userMap: Map<string, { display_name: string; permalink: string | null }>,
+          lastEditsMap: Map<string, { user_id: string }>
+        ) => {
+          const userData = userMap.get(item.submitted_by) || { display_name: 'Unknown user', permalink: null }
+          const lastEdit = lastEditsMap.get(item.id)
+          let lastEditUserData = null
+          if (lastEdit) {
+            lastEditUserData = editorMap.get(lastEdit.user_id) || { display_name: 'Unknown user', permalink: null }
+          }
+          
+          return {
+            ...item,
+            user_name: userData.display_name,
+            user_permalink: userData.permalink,
+            last_edit_user_name: lastEditUserData?.display_name,
+            last_edit_user_permalink: lastEditUserData?.permalink
+          }
+        }
 
         // Process stores with enhanced data
         const storeUserMap = new Map(
           (storeUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
+        
         const storesWithTags = currentStores.map((store) => {
           const storeTags = (storeTagsResult.data || [])
             .filter(tag => tag.store_id === store.id)
@@ -204,19 +258,18 @@ export default function HomePage() {
               tag: tag.tags
             }))
 
-          const userData = storeUserMap.get(store.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          return {
-            ...store,
-            store_tags: storeTags,
-            user_name: userData.display_name,
-            user_permalink: userData.permalink
-          }
+          return enrichItem(
+            { ...store, store_tags: storeTags },
+            storeUserMap,
+            storeLastEditsMap
+          )
         })
 
         // Process libraries with enhanced data
         const libraryUserMap = new Map(
           (libraryUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
+        
         const librariesWithTags = currentLibraries.map((library) => {
           const libraryTags = (libraryTagsResult.data || [])
             .filter(tag => tag.library_id === library.id)
@@ -227,27 +280,21 @@ export default function HomePage() {
               tag: tag.tags
             }))
 
-          const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          return {
-            ...library,
-            library_tags: libraryTags,
-            user_name: userData.display_name,
-            user_permalink: userData.permalink
-          }
+          return enrichItem(
+            { ...library, library_tags: libraryTags },
+            libraryUserMap,
+            libraryLastEditsMap
+          )
         })
 
         // Process events with enhanced data
         const eventUserMap = new Map(
           (eventUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
         )
-        const eventsWithUser = currentEvents.map((event) => {
-          const userData = eventUserMap.get(event.submitted_by) || { display_name: 'Unknown user', permalink: null }
-          return {
-            ...event,
-            user_name: userData.display_name,
-            user_permalink: userData.permalink
-          }
-        })
+        
+        const eventsWithUser = currentEvents.map((event) => 
+          enrichItem(event, eventUserMap, eventLastEditsMap)
+        )
 
         // Update with enhanced data
         setStores(storesWithTags)
@@ -685,18 +732,38 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {store.notes}
                           </p>
-                          {store.user_name && (
+                          {(store.user_name || store.last_edit_user_name) && (
                             <p className="text-xs text-gray-500 mb-3">
-                              Added by{' '}
-                              {store.user_permalink ? (
-                                <Link 
-                                  href={`/profile/${store.user_permalink}`}
-                                  className="text-stone-800 hover:underline transition-colors"
-                                >
-                                  {store.user_name}
-                                </Link>
-                              ) : (
-                                store.user_name
+                              {store.user_name && (
+                                <>
+                                  Added by{' '}
+                                  {store.user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${store.user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {store.user_name}
+                                    </Link>
+                                  ) : (
+                                    store.user_name
+                                  )}
+                                </>
+                              )}
+                              {store.user_name && store.last_edit_user_name && ' • '}
+                              {store.last_edit_user_name && (
+                                <>
+                                  Last edit by{' '}
+                                  {store.last_edit_user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${store.last_edit_user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {store.last_edit_user_name}
+                                    </Link>
+                                  ) : (
+                                    store.last_edit_user_name
+                                  )}
+                                </>
                               )}
                             </p>
                           )}
@@ -795,18 +862,38 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {library.notes}
                           </p>
-                          {library.user_name && (
+                          {(library.user_name || library.last_edit_user_name) && (
                             <p className="text-xs text-gray-500 mb-3">
-                              Added by{' '}
-                              {library.user_permalink ? (
-                                <Link 
-                                  href={`/profile/${library.user_permalink}`}
-                                  className="text-stone-800 hover:underline transition-colors"
-                                >
-                                  {library.user_name}
-                                </Link>
-                              ) : (
-                                library.user_name
+                              {library.user_name && (
+                                <>
+                                  Added by{' '}
+                                  {library.user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${library.user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {library.user_name}
+                                    </Link>
+                                  ) : (
+                                    library.user_name
+                                  )}
+                                </>
+                              )}
+                              {library.user_name && library.last_edit_user_name && ' • '}
+                              {library.last_edit_user_name && (
+                                <>
+                                  Last edit by{' '}
+                                  {library.last_edit_user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${library.last_edit_user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {library.last_edit_user_name}
+                                    </Link>
+                                  ) : (
+                                    library.last_edit_user_name
+                                  )}
+                                </>
                               )}
                             </p>
                           )}
@@ -922,18 +1009,38 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {event.notes}
                           </p>
-                          {event.user_name && (
+                          {(event.user_name || event.last_edit_user_name) && (
                             <p className="text-xs text-gray-500 mb-3">
-                              Added by{' '}
-                              {event.user_permalink ? (
-                                <Link 
-                                  href={`/profile/${event.user_permalink}`}
-                                  className="text-stone-800 hover:underline transition-colors"
-                                >
-                                  {event.user_name}
-                                </Link>
-                              ) : (
-                                event.user_name
+                              {event.user_name && (
+                                <>
+                                  Added by{' '}
+                                  {event.user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${event.user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {event.user_name}
+                                    </Link>
+                                  ) : (
+                                    event.user_name
+                                  )}
+                                </>
+                              )}
+                              {event.user_name && event.last_edit_user_name && ' • '}
+                              {event.last_edit_user_name && (
+                                <>
+                                  Last edit by{' '}
+                                  {event.last_edit_user_permalink ? (
+                                    <Link 
+                                      href={`/profile/${event.last_edit_user_permalink}`}
+                                      className="text-stone-800 hover:underline transition-colors"
+                                    >
+                                      {event.last_edit_user_name}
+                                    </Link>
+                                  ) : (
+                                    event.last_edit_user_name
+                                  )}
+                                </>
                               )}
                             </p>
                           )}
