@@ -4,6 +4,7 @@ import FilloutButton from '@/components/FilloutButton'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://zinemap.com'),
   title: "ZineMap - Drop Your Zines, Find Your People",
   description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
   openGraph: {
