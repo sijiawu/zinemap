@@ -35,7 +35,6 @@ const generatePermalink = (title: string, userName: string): string => {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
-    .substring(0, 30) // Limit title length
 
   return `${cleanUserName}-${cleanTitle}`
 }
