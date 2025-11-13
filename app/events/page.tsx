@@ -154,14 +154,29 @@ export default function EventsPage() {
     // Apply applications open filter
     if (applicationsOpen) {
       const now = new Date()
+      now.setHours(0, 0, 0, 0) // Set to start of day for accurate date comparison
+      
       filtered = filtered.filter(event => {
-        if (!event.application_open || !event.application_deadline) return false
+        // If no application_deadline, applications can't be open
+        if (!event.application_deadline) return false
         
-        const applicationOpenDate = new Date(event.application_open)
         const applicationDeadline = new Date(event.application_deadline)
+        applicationDeadline.setHours(0, 0, 0, 0)
         
-        // Check if applications are currently open (between open date and deadline)
-        return now >= applicationOpenDate && now <= applicationDeadline
+        // If deadline has passed, applications are closed
+        if (now > applicationDeadline) return false
+        
+        // If application_open exists, check if we're past the open date
+        if (event.application_open) {
+          const applicationOpenDate = new Date(event.application_open)
+          applicationOpenDate.setHours(0, 0, 0, 0)
+          
+          // Applications are open if we're between open date and deadline
+          return now >= applicationOpenDate && now <= applicationDeadline
+        }
+        
+        // If no application_open date but deadline is in the future, applications are open
+        return now <= applicationDeadline
       })
     }
 
@@ -315,10 +330,10 @@ export default function EventsPage() {
                   <div className="space-y-2">
                     <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
                       <SelectTrigger className="bg-stone-50 border-stone-300">
-                        <SelectValue placeholder="All states" />
+                        <SelectValue placeholder="All states/regions" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All states</SelectItem>
+                        <SelectItem value="all">All states/regions</SelectItem>
                         {states.map(state => (
                           <SelectItem key={state} value={state}>{state}</SelectItem>
                         ))}
