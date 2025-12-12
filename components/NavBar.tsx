@@ -46,7 +46,7 @@ export default function NavBar() {
     <nav className="fixed top-0 left-0 right-0 w-full bg-white border-b border-stone-200 shadow-sm font-serif z-50">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Desktop Layout */}
-        <div className="hidden md:flex items-center justify-between">
+        <div className="hidden lg:flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria">
               <Image 
@@ -150,7 +150,7 @@ export default function NavBar() {
         </div>
 
         {/* Mobile Layout - Hamburger Menu */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           {/* Top row: Logo + Active Page + Hamburger */}
           <div className="flex items-center justify-between">
             <Link 
