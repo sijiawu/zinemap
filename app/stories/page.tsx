@@ -131,7 +131,7 @@ export default async function StoriesPage({
                               href={`/profile/${story.author_permalink}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-rose-600 hover:text-rose-800 no-underline transition-colors duration-200"
+                              className="text-stone-900 hover:text-rose-600 no-underline transition-colors duration-200"
                             >
                               {story.author}
                             </Link>
