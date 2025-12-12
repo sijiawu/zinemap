@@ -607,7 +607,7 @@ export default function HomePage() {
                       <Link href="/add-store" onClick={() => setIsAddMenuOpen(false)}>
                         <div className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-rose-50 transition-colors cursor-pointer w-full">
                           <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
-                          <span className="text-stone-800 font-medium font-gloria">Add a store</span>
+                          <span className="text-stone-800 font-medium font-gloria">Add a shop</span>
                         </div>
                       </Link>
                       <Link href="/add-library" onClick={() => setIsAddMenuOpen(false)}>
@@ -637,7 +637,7 @@ export default function HomePage() {
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="stores" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  Stores ({filteredStores.length})
+                  Shops ({filteredStores.length})
                 </TabsTrigger>
                 <TabsTrigger value="libraries" className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
@@ -657,18 +657,18 @@ export default function HomePage() {
                       <CardContent className="p-6 text-center">
                         <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
                         <h3 className="text-lg font-semibold text-stone-800 mb-2">
-                          {stores.length === 0 ? "No stores yet" : "No stores match your filters"}
+                          {stores.length === 0 ? "No shops yet" : "No shops match your filters"}
                         </h3>
                         <p className="text-stone-600 mb-4">
                           {stores.length === 0 
-                            ? "Be the first to add a zine-friendly store to the map!"
+                            ? "Be the first to add a zine-friendly shop to the map!"
                             : "Try adjusting your search or filter criteria."
                           }
                         </p>
                         {stores.length === 0 ? (
                           <Link href="/add-store">
                             <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
-                              add first store
+                              add first shop
                             </Button>
                           </Link>
                         ) : (

@@ -226,7 +226,7 @@ export default function StoresPage() {
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Stores</h3>
+          <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Shops</h3>
           <div className="flex justify-center items-center mb-3">
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-rose-400 to-transparent"></div>
             <div className="mx-3 text-rose-500">
@@ -265,7 +265,7 @@ export default function StoresPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
                     <Input
-                      placeholder="Search stores..."
+                      placeholder="Search shops..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
@@ -397,7 +397,7 @@ export default function StoresPage() {
               <div className="mt-6 flex justify-center">
                 <Link href="/add-store">
                   <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors">
-                    Add a store
+                    Add a shop
                   </Button>
                 </Link>
               </div>
@@ -407,7 +407,7 @@ export default function StoresPage() {
             <div className="space-y-4 order-2 lg:order-1">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-stone-800">
-                  Stores ({filteredStores.length})
+                  Shops ({filteredStores.length})
                 </h2>
               </div>
               
@@ -417,18 +417,18 @@ export default function StoresPage() {
                     <CardContent className="p-6 text-center">
                       <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
                       <h3 className="text-lg font-semibold text-stone-800 mb-2">
-                        {stores.length === 0 ? "No stores yet" : "No stores match your filters"}
-                      </h3>
-                      <p className="text-stone-600 mb-4">
-                        {stores.length === 0 
-                          ? "Be the first to add a zine-friendly store to the map!"
-                          : "Try adjusting your search or filter criteria."
-                        }
-                      </p>
-                      {stores.length === 0 ? (
-                        <Link href="/add-store">
-                          <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
-                            Add first store
+                        {stores.length === 0 ? "No shops yet" : "No shops match your filters"}
+                        </h3>
+                        <p className="text-stone-600 mb-4">
+                          {stores.length === 0 
+                            ? "Be the first to add a zine-friendly shop to the map!"
+                            : "Try adjusting your search or filter criteria."
+                          }
+                        </p>
+                        {stores.length === 0 ? (
+                          <Link href="/add-store">
+                            <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
+                              Add first shop
                           </Button>
                         </Link>
                       ) : (

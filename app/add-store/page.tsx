@@ -284,7 +284,7 @@ export default function AddStorePage() {
 
     // Validate required fields
     if (!formData.storeName.trim()) {
-      setError('Store name is required')
+      setError('Shop name is required')
       setIsSubmitting(false)
       return
     }
@@ -337,7 +337,7 @@ export default function AddStorePage() {
 
       if (storeError) {
         console.error('Store insert error:', storeError)
-        throw new Error('Failed to create store')
+        throw new Error('Failed to create shop')
       }
 
       // Insert store tags if any were selected
@@ -401,14 +401,14 @@ export default function AddStorePage() {
               </div>
               <h1 className="font-gloria text-3xl font-bold text-stone-800 mb-4">Thank you!</h1>
               <p className="text-stone-600 mb-6 leading-relaxed">
-              Your store submission has been received and is pending a quick human review before appearing on the map. Thanks for
+              Your shop submission has been received and is pending a quick human review before appearing on the map. Thanks for
                 helping fellow zinesters discover new places to share their work and find new zines to read!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/">
                   <Button className="bg-rose-500 hover:bg-rose-600 text-white font-gloria">
                     <MapPin className="h-4 w-4 mr-2" />
-                    browse stores
+                    browse shops
                   </Button>
                 </Link>
                                   <Button
@@ -433,7 +433,7 @@ export default function AddStorePage() {
                     className="border-stone-300 text-stone-700 hover:bg-stone-50 font-gloria"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    add another store
+                    add another shop
                   </Button>
               </div>
             </CardContent>
@@ -463,9 +463,9 @@ export default function AddStorePage() {
           <div className="w-16 h-16 bg-gradient-to-br from-rose-200 to-orange-200 rounded-full flex items-center justify-center mx-auto mb-4">
                             <StoreIcon className="h-8 w-8 text-rose-600" />
           </div>
-          <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Store to ZineMap</h1>
+          <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Shop to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know a great indie store that stocks zines? Help fellow zinesters discover it! Share the details and we'll
+            Know a great indie shop that stocks zines? Help fellow zinesters discover it! Share the details and we'll
             add it to our community map.
           </p>
         </div>
@@ -485,7 +485,7 @@ export default function AddStorePage() {
                 {/* Store Name */}
                 <div className="space-y-2">
                   <Label htmlFor="storeName" className="text-stone-700 font-serif font-medium">
-                    Store Name *
+                    Shop Name *
                   </Label>
                   <Input
                     id="storeName"
@@ -805,7 +805,7 @@ export default function AddStorePage() {
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hasStockedBefore: !!checked }))}
                   />
                   <Label htmlFor="hasStockedBefore" className="text-sm text-stone-700">
-                    I have stocked zines at this store before
+                    I have stocked zines at this shop before
                   </Label>
                 </div>
               </div>

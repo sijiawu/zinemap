@@ -1,18 +1,22 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { useRouter, usePathname } from "next/navigation"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 
 export default function NavBar() {
   const { user, loading } = useSupabaseUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     router.refresh();
+    setMobileMenuOpen(false);
   }, [router]);
 
   const isActive = (path: string) => {
@@ -25,13 +29,35 @@ export default function NavBar() {
     }
     return pathname.startsWith(path);
   };
+
+  // Get the current active page name
+  const getActivePageName = () => {
+    if (isActive('/stores')) return 'Shops';
+    if (isActive('/libraries')) return 'Libraries';
+    if (isActive('/events')) return 'Events';
+    if (isActive('/zines')) return 'Zines';
+    if (isActive('/zinesters')) return 'Zinesters';
+    if (isActive('/stories')) return 'Stories';
+    return null;
+  };
+
+  const activePageName = getActivePageName();
   return (
-    <nav className="w-full bg-white border-b border-stone-200 shadow-sm font-serif">
+    <nav className="fixed top-0 left-0 right-0 w-full bg-white border-b border-stone-200 shadow-sm font-serif z-50">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Desktop Layout */}
         <div className="hidden md:flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-2xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria">ZineMap</Link>
+            <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria">
+              <Image 
+                src="/favicon.svg" 
+                alt="ZineMap Logo" 
+                width={32} 
+                height={32}
+                className="w-8 h-8"
+              />
+              ZineMap
+            </Link>
             <div className="flex items-center gap-6">
               <Link 
                 href="/stores" 
@@ -41,7 +67,7 @@ export default function NavBar() {
                     : 'text-stone-700 hover:text-rose-600'
                 }`}
               >
-                Stores
+                Shops
               </Link>
               <Link 
                 href="/libraries" 
@@ -83,6 +109,19 @@ export default function NavBar() {
               >
                 Zinesters
               </Link>
+              <Link 
+                href="/stories" 
+                className={`font-gloria text-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 ${
+                  isActive('/stories') 
+                    ? 'text-stone-800 font-bold' 
+                    : 'text-stone-700 hover:text-stone-800'
+                }`}
+              >
+                Stories
+                <span className="text-xs bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold font-sans">
+                  NEW
+                </span>
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -110,89 +149,165 @@ export default function NavBar() {
           </div>
         </div>
 
-        {/* Mobile Layout - Sandwich */}
-        <div className="md:hidden flex flex-col gap-3">
-          {/* Top row: Logo + Profile */}
+        {/* Mobile Layout - Hamburger Menu */}
+        <div className="md:hidden">
+          {/* Top row: Logo + Active Page + Hamburger */}
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria">ZineMap</Link>
-            <div className="flex items-center gap-2">
-              {!loading && user && (
-                <>
-                  {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
-                    <Link href="/admin" className="text-stone-700 hover:text-rose-600 font-gloria text-base transition-all duration-200 hover:scale-105">Admin</Link>
-                  )}
-                  <Link href="/profile" className="text-stone-700 hover:text-rose-600 font-gloria text-base transition-all duration-200 hover:scale-105">Profile</Link>
-                </>
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-xl font-bold text-stone-800 hover:text-rose-600 transition-colors font-gloria"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Image 
+                src="/favicon.svg" 
+                alt="ZineMap Logo" 
+                width={24} 
+                height={24}
+                className="w-6 h-6"
+              />
+              ZineMap
+            </Link>
+            
+            <div className="flex items-center gap-3">
+              {/* Show current active page name */}
+              {activePageName && (
+                <span className="text-sm font-gloria text-stone-600 font-semibold">
+                  {activePageName}
+                </span>
               )}
-              {!loading && !user && (
-                <Link href="/login">
-                  <button className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-900 text-white font-gloria text-sm transition-colors">Log In</button>
-                </Link>
-              )}
-              {!loading && user && (
-                <button
-                  onClick={handleLogout}
-                  className="px-2 py-1.5 rounded bg-stone-300 text-stone-800 font-gloria text-sm hover:bg-stone-400 transition-colors"
-                >
-                  Log out
-                </button>
-              )}
+              
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="flex flex-col gap-1.5 p-2 rounded-md hover:bg-stone-100 transition-colors"
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <span className={`w-6 h-0.5 bg-stone-700 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                <span className={`w-6 h-0.5 bg-stone-700 transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+                <span className={`w-6 h-0.5 bg-stone-700 transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+              </button>
             </div>
           </div>
-          
-          {/* Bottom row: Subpages */}
-          <div className="flex items-center justify-center gap-3">
-            <Link 
-              href="/stores" 
-              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
-                isActive('/stores') 
-                  ? 'text-rose-600 font-bold' 
-                  : 'text-stone-700 hover:text-rose-600'
-              }`}
-            >
-              Stores
-            </Link>
-            <Link 
-              href="/libraries" 
-              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
-                isActive('/libraries') 
-                  ? 'text-blue-600 font-bold' 
-                  : 'text-stone-700 hover:text-blue-600'
-              }`}
-            >
-              Libraries
-            </Link>
-            <Link 
-              href="/events" 
-              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
-                isActive('/events') 
-                  ? 'text-[#009035] font-bold' 
-                  : 'text-stone-700 hover:text-[#009035]'
-              }`}
-            >
-              Events
-            </Link>
-            <Link 
-              href="/zines" 
-              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
-                isActive('/zines') 
-                  ? 'text-purple-600 font-bold' 
-                  : 'text-stone-700 hover:text-purple-600'
-              }`}
-            >
-              Zines
-            </Link>
-            <Link 
-              href="/zinesters" 
-              className={`font-gloria text-base transition-all duration-200 hover:scale-105 ${
-                isActive('/zinesters') 
-                  ? 'text-amber-600 font-bold' 
-                  : 'text-stone-700 hover:text-amber-600'
-              }`}
-            >
-              Zinesters
-            </Link>
-          </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="mt-4 pb-4 border-t border-stone-200 pt-4 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex flex-col gap-1">
+                {/* Navigation Links */}
+                <Link 
+                  href="/stores" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/stores') 
+                      ? 'text-rose-600 font-bold bg-rose-50' 
+                      : 'text-stone-700 hover:text-rose-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Shops
+                </Link>
+                <Link 
+                  href="/libraries" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/libraries') 
+                      ? 'text-blue-600 font-bold bg-blue-50' 
+                      : 'text-stone-700 hover:text-blue-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Libraries
+                </Link>
+                <Link 
+                  href="/events" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/events') 
+                      ? 'text-[#009035] font-bold bg-green-50' 
+                      : 'text-stone-700 hover:text-[#009035] hover:bg-stone-50'
+                  }`}
+                >
+                  Events
+                </Link>
+                <Link 
+                  href="/zines" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/zines') 
+                      ? 'text-purple-600 font-bold bg-purple-50' 
+                      : 'text-stone-700 hover:text-purple-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Zines
+                </Link>
+                <Link 
+                  href="/zinesters" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/zinesters') 
+                      ? 'text-amber-600 font-bold bg-amber-50' 
+                      : 'text-stone-700 hover:text-amber-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Zinesters
+                </Link>
+                <Link 
+                  href="/stories" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all flex items-center gap-2 ${
+                    isActive('/stories') 
+                      ? 'text-stone-800 font-bold bg-stone-100' 
+                      : 'text-stone-700 hover:text-stone-800 hover:bg-stone-50'
+                  }`}
+                >
+                  Stories
+                  <span className="text-xs bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold font-sans">
+                    NEW
+                  </span>
+                </Link>
+                
+                {/* Divider */}
+                <div className="h-px bg-stone-200 my-2"></div>
+                
+                {/* User Actions */}
+                {!loading && user && (
+                  <>
+                    {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                      <Link 
+                        href="/admin" 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="font-gloria text-base py-2.5 px-3 rounded-md text-stone-700 hover:text-rose-600 hover:bg-stone-50 transition-all"
+                      >
+                        Admin
+                      </Link>
+                    )}
+                    <Link 
+                      href="/profile" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-gloria text-base py-2.5 px-3 rounded-md text-stone-700 hover:text-rose-600 hover:bg-stone-50 transition-all"
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="font-gloria text-base py-2.5 px-3 rounded-md text-left text-stone-700 hover:text-stone-900 hover:bg-stone-50 transition-all"
+                    >
+                      Log out
+                    </button>
+                  </>
+                )}
+                {!loading && !user && (
+                  <Link 
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <button className="w-full px-4 py-2.5 rounded-md bg-stone-800 hover:bg-stone-900 text-white font-gloria text-base transition-colors">
+                      Log In
+                    </button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </nav>

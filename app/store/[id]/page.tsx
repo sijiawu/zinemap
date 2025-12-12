@@ -7,7 +7,9 @@ import StoreDetailClient from './StoreDetailClient'
 // Cache the store fetch to avoid duplicate queries
 const getStore = cache(async (id: string) => {
   const { data, error } = await supabase
-    .from('stores')
+
+
+  .from('stores')
     .select('*')
     .or(`permalink.eq.${id},id.eq.${id}`)
     .eq('approved', true)
@@ -26,8 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!store) {
     return {
-      title: 'Store Not Found - ZineMap',
-      description: 'The requested store could not be found.',
+      title: 'Shop Not Found - ZineMap',
+      description: 'The requested shop could not be found.',
     }
   }
 

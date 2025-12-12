@@ -1,0 +1,24 @@
+
+=== Recommended Commit Strategy ===
+
+Option 1: Single comprehensive commit
+  git add app/ components/ lib/ public/ package.json pnpm-lock.json
+  git commit -m Add stories feature, improve navigation, and rename store- in UI
+
+Option 2: Separate commits (recommended)
+  # Stories feature
+  git add app/stories/ components/ArticleLayout.tsx components/Callout.tsx components/ImageWithCaption.tsx lib/getStories.ts lib/storyParser.tsx public/*.jpg public/*.png package.json pnpm-lock.yaml
+  git commit -m Add stories/blog feature with markdown support
+  
+  # Navigation improvements
+  git add components/NavBar.tsx components/ClientRoot.tsx components/SupportBanner.tsx
+  git commit -m Improve navigation: fixed navbar, hamburger menu, logo, and NEW badge
+  
+  # Store->Shop renaming
+  git add app/add-store/ app/stores/ app/store/ lib/seo.ts app/page.tsx
+  git commit -m Rename user-facing store to shop for clarity
+  
+  # CSS improvements
+  git add app/globals.css
+  git commit -m Improve article typography and link styling
+

@@ -15,7 +15,7 @@ export default function SupportBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="sticky top-0 z-50 w-full bg-amber-50 border-b border-amber-200">
+    <div className="sticky top-[64px] md:top-[72px] z-40 w-full bg-amber-50 border-b border-amber-200">
       <div className="relative flex items-center justify-center px-4 py-2">
         <p className="text-sm text-amber-900 text-center">
           Love ZineMap? You can help{' '}

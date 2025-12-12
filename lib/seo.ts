@@ -18,7 +18,7 @@ export function generateStoreMetadata(store: {
   const location = [store.city, store.state, store.country].filter(Boolean).join(', ')
   const description = store.notes 
     ? `${store.notes.substring(0, 150)}${store.notes.length > 150 ? '...' : ''} Located in ${location}.`
-    : `${store.name} - A zine-friendly store in ${location}.`
+    : `${store.name} - A zine-friendly shop in ${location}.`
   
   const url = `${BASE_URL}/store/${store.permalink || store.id}`
   
@@ -214,7 +214,7 @@ export function generateStoreStructuredData(store: {
       "addressRegion": store.state || undefined,
       "addressCountry": store.country
     },
-    "description": store.notes || `${store.name} - A zine-friendly store in ${store.city}, ${store.country}.`,
+    "description": store.notes || `${store.name} - A zine-friendly shop in ${store.city}, ${store.country}.`,
     "url": `${BASE_URL}/store/${store.permalink || store.id}`
   }
 }

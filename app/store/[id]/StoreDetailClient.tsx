@@ -75,7 +75,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
             .single()
 
           if (storeByIdError) {
-            throw new Error('Store not found')
+            throw new Error('Shop not found')
           }
           storeData = storeById
         }
@@ -195,7 +195,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
         }
       } catch (error) {
         console.error('Error fetching store:', error)
-        setError('Store not found')
+        setError('Shop not found')
       } finally {
         setLoading(false)
       }
@@ -475,8 +475,8 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 mx-auto mb-4 text-stone-400" />
-            <h1 className="font-gloria text-2xl font-bold text-stone-800 mb-2">Store Not Found</h1>
-            <p className="text-stone-600 mb-6">The store you're looking for doesn't exist or has been removed.</p>
+            <h1 className="font-gloria text-2xl font-bold text-stone-800 mb-2">Shop Not Found</h1>
+            <p className="text-stone-600 mb-6">The shop you're looking for doesn't exist or has been removed.</p>
             <Link href="/">
               <Button className="bg-rose-500 hover:bg-rose-600 text-white">
                 <ArrowLeft className="h-4 w-4 mr-2" />

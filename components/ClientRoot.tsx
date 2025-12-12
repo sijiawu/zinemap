@@ -78,7 +78,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
       <NavBar />
       <SupportBanner />
       <ProfileOnboardingModal user={user} show={showModal && profileChecked} onComplete={handleOnboardingComplete} />
-      <div>{children}</div>
+      <div className="pt-16 md:pt-20">{children}</div>
     </>
   );
 } 
