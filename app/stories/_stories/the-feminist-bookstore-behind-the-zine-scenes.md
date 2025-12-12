@@ -1,5 +1,5 @@
 ---
-title: "Behind the Zine Scenes: The Feminist Bookstore"
+title: "Behind the Zine Scenes #1: The Feminist Bookstore"
 date: 2025-12-11
 tags:
   - Behind the Zine Scenes
