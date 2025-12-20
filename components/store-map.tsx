@@ -541,12 +541,25 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           {/* Event-specific info */}
           {locationType === 'event' && 'category' in selectedLocation && selectedLocation.category && (
             <div className="mb-4">
-              <Badge 
-                variant="outline"
-                className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 mb-2"
-              >
-                {getEventCategoryDisplay(selectedLocation.category)}
-              </Badge>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Badge 
+                  variant="outline"
+                  className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                >
+                  {getEventCategoryDisplay(selectedLocation.category)}
+                </Badge>
+                {'end_date' in selectedLocation && selectedLocation.end_date && (() => {
+                  const today = new Date().toISOString().split('T')[0]
+                  return selectedLocation.end_date < today
+                })() && (
+                  <Badge 
+                    variant="outline"
+                    className="text-xs bg-stone-100 text-stone-500 border-stone-300"
+                  >
+                    Past Event
+                  </Badge>
+                )}
+              </div>
               {'start_date' in selectedLocation && selectedLocation.start_date && (
                 <p className="text-xs text-gray-500">
                   <Calendar className="h-3 w-3 inline mr-1" />{formatDateReadable(selectedLocation.start_date)}

@@ -31,6 +31,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("stores")
+  const [eventTimeFilter, setEventTimeFilter] = useState<"all" | "upcoming" | "past">("all")
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
@@ -103,7 +104,6 @@ export default function HomePage() {
             .from('events')
             .select('*')
             .eq('approved', true)
-            .gte('end_date', new Date().toISOString().split('T')[0])
             .order('created_at', { ascending: false })
         ])
 
@@ -329,6 +329,55 @@ export default function HomePage() {
     clearLocationFilters()
   }
 
+  // Helper: Check if event is past
+  const isPastEvent = (event: Event) => {
+    const today = new Date().toISOString().split('T')[0]
+    return event.end_date < today
+  }
+
+  // Calculate event counts for subtabs (based on search and location filters only, not time filter)
+  const getEventCounts = () => {
+    if (!events) return { all: 0, upcoming: 0, past: 0 }
+    
+    // Helper: Check if item matches location filters
+    const matchesLocation = (item: Event) => {
+      if (selectedCountry !== "all" && item.country !== selectedCountry) return false
+      if (selectedState !== "all" && (item.state || "") !== selectedState) return false
+      if (selectedCity !== "all" && item.city !== selectedCity) return false
+      return true
+    }
+
+    // Helper: Check if item matches search query
+    const matchesSearch = (item: Event, query: string) => {
+      if (!query) return true
+      const lowerQuery = query.toLowerCase()
+      return (
+        item.name.toLowerCase().includes(lowerQuery) ||
+        (!!item.notes && item.notes.toLowerCase().includes(lowerQuery)) ||
+        item.country.toLowerCase().includes(lowerQuery) ||
+        (!!item.state && item.state.toLowerCase().includes(lowerQuery)) ||
+        item.city.toLowerCase().includes(lowerQuery)
+      )
+    }
+
+    // Filter by location and search only
+    const filtered = events.filter(event => {
+      if (!matchesLocation(event)) return false
+      if (debouncedSearchQuery.trim()) {
+        return matchesSearch(event, debouncedSearchQuery.trim())
+      }
+      return true
+    })
+
+    return {
+      all: filtered.length,
+      upcoming: filtered.filter(event => !isPastEvent(event)).length,
+      past: filtered.filter(event => isPastEvent(event)).length
+    }
+  }
+
+  const eventCounts = getEventCounts()
+
   // Filter stores, libraries, and events based on debounced search query and location filters
   useEffect(() => {
     if (!stores || !libraries || !events) return
@@ -365,10 +414,25 @@ export default function HomePage() {
       })
     }
 
+    // Filter events with time filter
+    const filterEvents = (items: Event[]) => {
+      let filtered = filterItems(items)
+      
+      // Apply time filter
+      if (eventTimeFilter === "upcoming") {
+        filtered = filtered.filter(event => !isPastEvent(event))
+      } else if (eventTimeFilter === "past") {
+        filtered = filtered.filter(event => isPastEvent(event))
+      }
+      // "all" shows everything, no additional filtering needed
+      
+      return filtered
+    }
+
     setFilteredStores(filterItems(stores))
     setFilteredLibraries(filterItems(libraries))
-    setFilteredEvents(filterItems(events))
-  }, [stores, libraries, events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity])
+    setFilteredEvents(filterEvents(events))
+  }, [stores, libraries, events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, eventTimeFilter])
 
   // Show loading only if we don't have basic data yet
   if (!phase1Complete) {
@@ -645,7 +709,7 @@ export default function HomePage() {
                 </TabsTrigger>
                 <TabsTrigger value="events" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  Events ({filteredEvents.length})
+                  Events ({eventCounts.all})
                 </TabsTrigger>
               </TabsList>
 
@@ -911,6 +975,29 @@ export default function HomePage() {
 
               {/* Events Tab */}
               <TabsContent value="events" className="space-y-4">
+                {/* Event Time Filter Sub-tabs */}
+                <div className="flex gap-4 justify-end">
+                  <button
+                    onClick={() => setEventTimeFilter("all")}
+                    className={`px-2 py-1 text-sm transition-colors ${
+                      eventTimeFilter === "all"
+                        ? 'text-stone-700 border-b-2 border-stone-400 pb-1 -mb-0.5'
+                        : 'text-stone-500 hover:text-stone-700'
+                    }`}
+                  >
+                    All Events
+                  </button>
+                  <button
+                    onClick={() => setEventTimeFilter("upcoming")}
+                    className={`px-2 py-1 text-sm transition-colors ${
+                      eventTimeFilter === "upcoming"
+                        ? 'text-stone-700 border-b-2 border-stone-400 pb-1 -mb-0.5'
+                        : 'text-stone-500 hover:text-stone-700'
+                    }`}
+                  >
+                    Upcoming Events
+                  </button>
+                </div>
                 <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
                   {filteredEvents.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
@@ -973,13 +1060,21 @@ export default function HomePage() {
                           </div>
                           
                           {/* Event Category and Dates */}
-                          <div className="flex items-center gap-2 mt-3">
+                          <div className="flex items-center gap-2 mt-3 flex-wrap">
                             <Badge 
                               variant="outline"
                               className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
                             >
                               {getEventCategoryDisplay(event.category)}
                             </Badge>
+                            {isPastEvent(event) && (
+                              <Badge 
+                                variant="outline"
+                                className="text-xs bg-stone-100 text-stone-500 border-stone-300"
+                              >
+                                Past Event
+                              </Badge>
+                            )}
                             <div className="flex items-center text-xs text-stone-500">
                               <Calendar className="h-3 w-3 mr-1" />
                               {formatDateReadable(event.start_date)}
