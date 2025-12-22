@@ -3,6 +3,8 @@ import { Metadata } from 'next'
 import { ArticleLayout } from '@/components/ArticleLayout'
 import { getStoryBySlug, getAllStorySlugs } from '@/lib/getStories'
 
+const BASE_URL = 'https://zinemap.com'
+
 export async function generateStaticParams() {
   const slugs = getAllStorySlugs()
   return slugs.map((slug) => ({
@@ -20,6 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
   }
 
+  // Use story thumbnail if available, otherwise fall back to default preview image
+  const imageUrl = story.metadata.thumbnail 
+    ? `${BASE_URL}${story.metadata.thumbnail}`
+    : `${BASE_URL}/preview-image.png`
+
   return {
     title: `${story.metadata.title} - ZineMap Stories`,
     description: story.metadata.excerpt,
@@ -29,6 +36,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'article',
       publishedTime: story.metadata.date,
       tags: story.metadata.tags,
+      url: `${BASE_URL}/stories/${slug}`,
+      siteName: 'ZineMap',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: story.metadata.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${story.metadata.title} - ZineMap Stories`,
+      description: story.metadata.excerpt,
+      images: [imageUrl],
     },
   }
 }
