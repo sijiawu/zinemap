@@ -211,9 +211,9 @@ export default function LibrariesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-serif">
+    <div className="flex flex-col flex-1 bg-stone-50 font-serif min-h-0">
       {/* Header */}
-      <header className="w-full bg-white border-b border-stone-200 shadow-sm">
+      <header className="w-full bg-white border-b border-stone-200 shadow-sm flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <h3 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">Libraries</h3>
           <div className="flex justify-center items-center mb-3">
@@ -228,7 +228,7 @@ export default function LibrariesPage() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="flex-1 flex flex-col max-w-7xl mx-auto px-4 pt-6 w-full min-h-0">
         {/* Mobile Filter Toggle */}
         <div className="lg:hidden mb-4">
           <Button
@@ -244,10 +244,10 @@ export default function LibrariesPage() {
           </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
           {/* Filters Column - Hidden on mobile unless open */}
           <div className={`w-full lg:w-64 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden lg:block'}`}>
-            <Card className="bg-white border-stone-200 shadow-sm rounded-lg sticky top-6">
+            <Card className="bg-white border-stone-200 shadow-sm rounded-lg sticky top-6 h-fit">
               <CardContent className="space-y-6 pt-6">
                 {/* Search */}
                 <div className="space-y-2">
@@ -343,9 +343,9 @@ export default function LibrariesPage() {
           </div>
 
           {/* Map and List - Mobile: Map first, then List */}
-          <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-6">
+          <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch" style={{ maxHeight: '100%' }}>
             {/* Map View - Mobile: First */}
-            <div className="order-1 lg:order-2">
+            <div className="order-1 lg:order-2 lg:sticky lg:top-6 h-fit lg:h-auto lg:flex lg:flex-col">
               <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
                 <CardContent className="p-0">
                   {loading ? (
@@ -378,14 +378,14 @@ export default function LibrariesPage() {
             </div>
 
             {/* List View - Mobile: Second */}
-            <div className="space-y-4 order-2 lg:order-1">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-4 order-2 lg:order-1 flex-1 min-h-0 lg:h-full overflow-hidden">
+              <div className="flex items-center justify-between flex-shrink-0">
                 <h2 className="text-xl font-semibold text-stone-800">
                   Libraries ({filteredLibraries.length})
                 </h2>
               </div>
               
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                 {filteredLibraries.length === 0 ? (
                   <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                     <CardContent className="p-6 text-center">

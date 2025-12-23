@@ -5,6 +5,7 @@ import ProfileOnboardingModal from '@/components/ProfileOnboardingModal'
 import { supabase } from '@/lib/supabaseClient'
 import NavBar from '@/components/NavBar'
 import SupportBanner from '@/components/SupportBanner'
+import Footer from '@/components/Footer'
 
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabaseUser();
@@ -78,7 +79,10 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
       <NavBar />
       <SupportBanner />
       <ProfileOnboardingModal user={user} show={showModal && profileChecked} onComplete={handleOnboardingComplete} />
-      <div className="pt-16 md:pt-20">{children}</div>
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-grow pt-16 md:pt-20">{children}</div>
+        <Footer />
+      </div>
     </>
   );
 } 

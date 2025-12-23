@@ -61,7 +61,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      <body className="flex flex-col min-h-screen">
         <ClientRoot>{children}</ClientRoot>
         <FilloutButton />
       </body>

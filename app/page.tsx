@@ -444,9 +444,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-serif">
+    <div className="flex flex-col flex-1 bg-stone-50 font-serif min-h-0">
       {/* Header - Mobile: order-1 */}
-      <header className="order-1 w-full bg-white border-b border-stone-200 shadow-sm">
+      <header className="order-1 w-full bg-white border-b border-stone-200 shadow-sm flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <h1 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight">ZineMap</h1>
           <div className="flex justify-center items-center mb-3">
@@ -465,7 +465,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Content - Mobile Stack / Desktop Grid Layout */}
-      <div className="order-3 max-w-7xl mx-auto px-4 py-6">
+      <div className="flex-1 flex flex-col order-3 max-w-7xl mx-auto px-4 pt-6 w-full min-h-0">
         {/* Search and Filters - Mobile dropdown */}
         <div className="block lg:hidden mb-3">
           <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
@@ -625,9 +625,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
+        <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch" style={{ maxHeight: '100%' }}>
           {/* Interactive Map - Mobile: order-2, Desktop: right column */}
-          <div className="order-2 lg:order-2 lg:sticky lg:top-6">
+          <div className="order-2 lg:order-2 lg:sticky lg:top-6 h-fit lg:h-auto lg:flex lg:flex-col">
             <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
                 {!phase1Complete ? (
@@ -696,9 +696,9 @@ export default function HomePage() {
 
 
           {/* List View with Tabs - Mobile: order-5, Desktop: left column */}
-          <div className="order-5 lg:order-1 space-y-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+          <div className="order-5 lg:order-1 flex flex-col space-y-4 flex-1 min-h-0 lg:h-full overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col h-full min-h-0">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                 <TabsTrigger value="stores" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Shops ({filteredStores.length})
@@ -714,8 +714,8 @@ export default function HomePage() {
               </TabsList>
 
               {/* Stores Tab */}
-              <TabsContent value="stores" className="space-y-4">
-                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
+              <TabsContent value="stores" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
+                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                   {filteredStores.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -844,8 +844,8 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Libraries Tab */}
-              <TabsContent value="libraries" className="space-y-4">
-                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
+              <TabsContent value="libraries" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
+                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                   {filteredLibraries.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -974,9 +974,9 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Events Tab */}
-              <TabsContent value="events" className="space-y-4">
+              <TabsContent value="events" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
                 {/* Event Time Filter Sub-tabs */}
-                <div className="flex gap-4 justify-end">
+                <div className="flex gap-4 justify-end flex-shrink-0">
                   <button
                     onClick={() => setEventTimeFilter("all")}
                     className={`px-2 py-1 text-sm transition-colors ${
@@ -998,7 +998,7 @@ export default function HomePage() {
                     Upcoming Events
                   </button>
                 </div>
-                <div className="space-y-4 max-h-[400px] lg:max-h-[800px] overflow-y-auto pr-2">
+                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                   {filteredEvents.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -1154,15 +1154,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-stone-200">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-          <p className="text-stone-600 text-sm">
-            © 2025 zinemap. created by <a href="https://cjwucomics.com" target="_blank" className="text-rose-500 hover:text-rose-600">@cjmakescomics</a> with love to fellow indie publishers and the shops and libraries that carry our work!
-          </p>
-        </div>
-      </footer>
     </div>
   )
 } 
