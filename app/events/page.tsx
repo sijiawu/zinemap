@@ -22,7 +22,7 @@ export default function EventsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [timeFilter, setTimeFilter] = useState<"upcoming" | "past" | "all">("upcoming")
+  const [timeFilter, setTimeFilter] = useState<"upcoming" | "past" | "all">("all")
   const [applicationsOpen, setApplicationsOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
@@ -199,7 +199,7 @@ export default function EventsPage() {
     setSearchQuery("")
     clearLocationFilters()
     setSelectedCategory("all")
-    setTimeFilter("upcoming")
+    setTimeFilter("all")
   }
 
   if (loading) {
