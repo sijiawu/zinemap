@@ -714,7 +714,7 @@ export default function HomePage() {
               </TabsList>
 
               {/* Stores Tab */}
-              <TabsContent value="stores" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
+              <TabsContent value="stores" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
                 <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                   {filteredStores.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
@@ -844,7 +844,7 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Libraries Tab */}
-              <TabsContent value="libraries" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
+              <TabsContent value="libraries" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
                 <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
                   {filteredLibraries.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
@@ -974,9 +974,9 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Events Tab */}
-              <TabsContent value="events" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full">
+              <TabsContent value="events" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
                 {/* Event Time Filter Sub-tabs */}
-                <div className="flex gap-4 justify-end flex-shrink-0">
+                <div className="flex gap-4 justify-end flex-shrink-0 h-8">
                   <button
                     onClick={() => setEventTimeFilter("all")}
                     className={`px-2 py-1 text-sm transition-colors ${
