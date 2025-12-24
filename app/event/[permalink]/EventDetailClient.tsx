@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
-import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
+import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent } from "@/lib/utils"
 import Link from "next/link"
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
@@ -712,7 +712,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-2" />
-                  {attendeeCount} going
+                  {event && isPastEvent(event) ? `${attendeeCount} went` : `${attendeeCount} going`}
                 </div>
               </div>
             </div>
@@ -723,7 +723,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                   <Button
                     className="w-full bg-[#009035] hover:bg-[#007a2a] text-white"
                   >
-                    Sign in to RSVP
+                    {event && isPastEvent(event) ? "Sign in to mark attendance" : "Sign in to RSVP"}
                   </Button>
                 </Link>
               </div>
@@ -739,7 +739,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                   }`}
                   disabled={isAttendanceLoading}
                 >
-                  {isAttendanceLoading ? "loading..." : isAttending ? "Not going" : "I'm going!"}
+                  {isAttendanceLoading 
+                    ? "loading..." 
+                    : isAttending 
+                      ? (event && isPastEvent(event) ? "I wasn't there" : "Not going")
+                      : (event && isPastEvent(event) ? "I was there!" : "I'm going!")
+                  }
                 </Button>
                 
                 {attendanceError && (
@@ -1228,10 +1233,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               </CardContent>
             </Card>
 
-            {/* Who's Going */}
+            {/* Who's Going / Who Went */}
             <Card id="whos-going" className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-stone-800">Who's Going</CardTitle>
+                <CardTitle className="text-lg font-semibold text-stone-800">
+                  {event && isPastEvent(event) ? "Who Went" : "Who's Going"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1254,7 +1261,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                     </div>
                   ) : (
                     <p className="text-sm text-stone-500 text-center py-4">
-                      No one has RSVP'd yet
+                      {event && isPastEvent(event) ? "No one has marked themselves as attended" : "No one has RSVP'd yet"}
                     </p>
                   )}
                 </div>

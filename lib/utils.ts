@@ -132,6 +132,16 @@ export function getEventCategoryDisplay(category: string): string {
 }
 
 /**
+ * Check if an event is in the past based on its end_date
+ * @param event - Event object with end_date property
+ * @returns true if the event's end_date is before today
+ */
+export function isPastEvent(event: { end_date: string }): boolean {
+  const today = new Date().toISOString().split('T')[0]
+  return event.end_date < today
+}
+
+/**
  * Auto-link URLs in text by converting them to clickable links
  * @param text - The text containing potential URLs
  * @returns React elements with URLs converted to links

@@ -17,7 +17,7 @@ import { generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 import AddZineModal from '@/components/AddZineModal'
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable } from "@/lib/utils"
+import { formatDateReadable, isPastEvent } from "@/lib/utils"
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useSupabaseUser()
@@ -912,74 +912,119 @@ export default function ProfilePage() {
         </div>
 
         {/* Events Section - Full Width */}
-        <div className="mb-6 sm:mb-8">
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 font-gloria">
-                  <Calendar className="h-5 w-5" />
-                  Events I'm Going To
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {attendingEvents.length === 0 ? (
+        <div className="mb-6 sm:mb-8 space-y-6">
+          {/* Upcoming Events */}
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events I'm Going To
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const upcomingEvents = attendingEvents.filter(event => !isPastEvent(event))
+                return upcomingEvents.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No events yet</h3>
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No upcoming events</h3>
                     <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
                     <Link href="/events">
-                    <Button>Explore events</Button>
+                      <Button>Explore events</Button>
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-3 sm:space-y-4">
-                    {attendingEvents.map((event) => (
-                      <div
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {upcomingEvents.map((event) => (
+                      <Link
                         key={event.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                        href={`/event/${event.permalink || event.id}`}
+                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
                       >
-                        {/* Event Icon */}
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-20 rounded border border-stone-200 bg-green-100 flex items-center justify-center">
-                            <Calendar className="h-8 w-8 text-[#009035]" />
-                          </div>
-                        </div>
-                        
-                        {/* Event Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800">{event.name}</h3>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                        <div className="flex items-start gap-2">
+                          <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
+                              {event.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
                               <Badge 
-                                className="text-xs bg-green-50 text-[#009035] border-green-200 w-fit"
+                                className="text-xs bg-green-50 text-[#009035] border-green-200"
                               >
                                 {getEventCategoryDisplay(event.category)}
                               </Badge>
-                              <span className="text-sm text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString()}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                              <span className="text-xs text-stone-500">
+                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                               </span>
                             </div>
+                            <p className="text-xs text-stone-600 line-clamp-1">
+                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            </p>
                           </div>
-                          <p className="text-sm text-stone-600">
-                            📍 {event.city}{event.state && `, ${event.state}`}, {event.country}
-                          </p>
                         </div>
-                        
-                        {/* Actions */}
-                      <div className="w-full sm:w-auto">
-                          <Link href={`/event/${event.permalink || event.id}`} className="w-full sm:w-auto">
-                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View Event
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                )
+              })()}
+            </CardContent>
+          </Card>
+
+          {/* Past Events */}
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events I Went To
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const pastEvents = attendingEvents.filter(event => isPastEvent(event))
+                return pastEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No past events</h3>
+                    <p className="text-stone-600">Events you've attended will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {pastEvents.map((event) => (
+                      <Link
+                        key={event.id}
+                        href={`/event/${event.permalink || event.id}`}
+                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
+                      >
+                        <div className="flex items-start gap-2">
+                          <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
+                              {event.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                              <Badge 
+                                className="text-xs bg-stone-50 text-stone-600 border-stone-200"
+                              >
+                                {getEventCategoryDisplay(event.category)}
+                              </Badge>
+                              <span className="text-xs text-stone-500">
+                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                              </span>
+                            </div>
+                            <p className="text-xs text-stone-600 line-clamp-1">
+                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              })()}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

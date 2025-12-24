@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
-import { autoLinkText } from '@/lib/utils'
+import { autoLinkText, isPastEvent, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function ProfileDetailClient({ profileId }: { profileId: string }) {
@@ -23,6 +23,17 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedZine, setSelectedZine] = useState<Zine | null>(null)
+  const [attendingEvents, setAttendingEvents] = useState<{
+    id: string
+    name: string
+    category: string
+    start_date: string
+    end_date: string
+    city: string
+    state?: string
+    country: string
+    permalink?: string
+  }[]>([])
 
   useEffect(() => {
     if (profileId) {
@@ -114,7 +125,40 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
       // Fetch user's contributions (stores, libraries, community notes)
       await fetchContributions(profileData.id)
 
+      // Fetch events the user is attending
+      const { data: attendingEventsData } = await supabase
+        .from('event_attendees')
+        .select(`
+          event_id,
+          events!inner(
+            id,
+            name,
+            category,
+            start_date,
+            end_date,
+            city,
+            state,
+            country,
+            permalink
+          )
+        `)
+        .eq('user_id', profileData.id)
+        .order('created_at', { ascending: false })
 
+      if (attendingEventsData) {
+        const events = attendingEventsData.map((item: any) => ({
+          id: item.events.id,
+          name: item.events.name,
+          category: item.events.category,
+          start_date: item.events.start_date,
+          end_date: item.events.end_date,
+          city: item.events.city,
+          state: item.events.state,
+          country: item.events.country,
+          permalink: item.events.permalink
+        }))
+        setAttendingEvents(events)
+      }
 
     } catch (err) {
       console.error('Error fetching profile data:', err)
@@ -341,6 +385,119 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Events Section - Full Width */}
+        <div className="mb-6 sm:mb-8 space-y-6">
+          {/* Upcoming Events */}
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events they're going to
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const upcomingEvents = attendingEvents.filter(event => !isPastEvent(event))
+                return upcomingEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No upcoming events</h3>
+                    <p className="text-stone-600">This user hasn't marked any upcoming events yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {upcomingEvents.map((event) => (
+                      <Link
+                        key={event.id}
+                        href={`/event/${event.permalink || event.id}`}
+                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
+                      >
+                        <div className="flex items-start gap-2">
+                          <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
+                              {event.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                              <Badge 
+                                className="text-xs bg-green-50 text-[#009035] border-green-200"
+                              >
+                                {getEventCategoryDisplay(event.category)}
+                              </Badge>
+                              <span className="text-xs text-stone-500">
+                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                              </span>
+                            </div>
+                            <p className="text-xs text-stone-600 line-clamp-1">
+                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              })()}
+            </CardContent>
+          </Card>
+
+          {/* Past Events */}
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 font-gloria">
+                <Calendar className="h-5 w-5" />
+                Events they went to
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const pastEvents = attendingEvents.filter(event => isPastEvent(event))
+                return pastEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No past events</h3>
+                    <p className="text-stone-600">This user hasn't marked any past events yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {pastEvents.map((event) => (
+                      <Link
+                        key={event.id}
+                        href={`/event/${event.permalink || event.id}`}
+                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
+                      >
+                        <div className="flex items-start gap-2">
+                          <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
+                              {event.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                              <Badge 
+                                className="text-xs bg-stone-50 text-stone-600 border-stone-200"
+                              >
+                                {getEventCategoryDisplay(event.category)}
+                              </Badge>
+                              <span className="text-xs text-stone-500">
+                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                              </span>
+                            </div>
+                            <p className="text-xs text-stone-600 line-clamp-1">
+                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              })()}
             </CardContent>
           </Card>
         </div>
