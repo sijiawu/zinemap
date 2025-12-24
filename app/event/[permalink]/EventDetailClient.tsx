@@ -653,8 +653,18 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                   {getCategoryIcon(event.category)} {getEventCategoryDisplay(event.category)}
                 </Badge>
                 
-                {/* Application Status - Show only one badge based on current state */}
-                {event.application_deadline && (() => {
+                {/* Past Event Badge */}
+                {event && isPastEvent(event) && (
+                  <Badge 
+                    variant="outline"
+                    className="text-xs bg-stone-100 text-stone-500 border-stone-300"
+                  >
+                    Past Event
+                  </Badge>
+                )}
+                
+                {/* Application Status - Show only one badge based on current state (not for past events) */}
+                {event.application_deadline && !isPastEvent(event) && (() => {
                   const today = new Date();
                   const deadlineDate = new Date(event.application_deadline);
                   const openDate = event.application_open ? new Date(event.application_open) : null;
@@ -682,7 +692,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                         </Badge>
                       )}
                       
-                      {/* State 3: Application closed - show "Submission closed" */}
+                      {/* State 3: Application closed - show "Submission closed" (only if event is not past) */}
                       {deadlineDate < today && (
                         <Badge variant="outline" className="text-xs border-green-300 text-green-700 bg-green-50">
                           <Clock className="h-3 w-3 mr-1" />
