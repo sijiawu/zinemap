@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
@@ -34,6 +34,10 @@ export default function HomePage() {
   const [eventTimeFilter, setEventTimeFilter] = useState<"all" | "upcoming" | "past">("all")
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  
+  // Map height tracking for list view min-height
+  const mapCardRef = useRef<HTMLDivElement>(null)
+  const [mapHeight, setMapHeight] = useState(0)
 
   // Location filters (combined across all types)
   const allItemsForFilters: Array<Store | Library | Event> = [...stores, ...libraries, ...events]
@@ -322,6 +326,51 @@ export default function HomePage() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Track map height for list view min-height
+  useEffect(() => {
+    if (!mapCardRef.current) return
+    
+    let timeoutId: NodeJS.Timeout | null = null
+    
+    const updateMapHeight = () => {
+      if (mapCardRef.current) {
+        const height = mapCardRef.current.offsetHeight
+        // Only update if height actually changed to prevent unnecessary re-renders
+        setMapHeight(prev => {
+          // Use a small threshold to avoid micro-updates
+          if (Math.abs(prev - height) < 2) return prev
+          return height
+        })
+      }
+    }
+    
+    // Debounced update function to prevent rapid-fire updates
+    const debouncedUpdate = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateMapHeight, 100)
+    }
+    
+    // Initial measurement after a short delay to ensure map is rendered
+    const initialTimeout = setTimeout(updateMapHeight, 200)
+    
+    // Update on window resize (debounced)
+    window.addEventListener('resize', debouncedUpdate)
+    
+    // Use ResizeObserver for more accurate tracking (debounced)
+    const resizeObserver = new ResizeObserver(() => {
+      debouncedUpdate()
+    })
+    
+    resizeObserver.observe(mapCardRef.current)
+    
+    return () => {
+      clearTimeout(initialTimeout)
+      if (timeoutId) clearTimeout(timeoutId)
+      window.removeEventListener('resize', debouncedUpdate)
+      resizeObserver.disconnect()
+    }
+  }, [phase1Complete, phase2Complete])
 
   const handleClearSearchAndFilters = () => {
     setSearchQuery("")
@@ -628,7 +677,7 @@ export default function HomePage() {
         <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch" style={{ maxHeight: '100%' }}>
           {/* Interactive Map - Mobile: order-2, Desktop: right column */}
           <div className="order-2 lg:order-2 lg:sticky lg:top-6 h-fit lg:h-auto lg:flex lg:flex-col">
-            <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
+            <Card ref={mapCardRef} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
                 {!phase1Complete ? (
                   <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
@@ -655,7 +704,7 @@ export default function HomePage() {
             </Card>
 
             {/* Add Store, Library, and Event buttons under the map - Mobile: order-3 */}
-            <div className="mt-6 lg:mt-8 flex justify-center order-3">
+            <div className="mt-6 lg:mt-8 flex justify-center order-3 mb-16">
               <div className="relative add-menu-container">
                 <Button 
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
@@ -696,9 +745,9 @@ export default function HomePage() {
 
 
           {/* List View with Tabs - Mobile: order-5, Desktop: left column */}
-          <div className="order-5 lg:order-1 flex flex-col space-y-4 flex-1 min-h-0 lg:h-full overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col h-full min-h-0">
-              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+          <div className="order-5 lg:order-1 flex flex-col flex-1 min-h-0 lg:h-full overflow-hidden mb-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col h-full min-h-0 gap-0">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0 mb-0 pb-0">
                 <TabsTrigger value="stores" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Shops ({filteredStores.length})
@@ -714,8 +763,16 @@ export default function HomePage() {
               </TabsList>
 
               {/* Stores Tab */}
-              <TabsContent value="stores" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
-                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
+              <TabsContent value="stores" className="flex flex-col flex-grow min-h-0 overflow-hidden max-h-full !mt-0">
+                <div 
+                  className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8"
+                  style={{
+                    maxHeight: mapHeight > 0 
+                      ? `max(${mapHeight}px, calc(100vh - 350px))`
+                      : 'calc(100vh - 350px)',
+                    minHeight: '900px'
+                  }}
+                >
                   {filteredStores.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -844,8 +901,16 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Libraries Tab */}
-              <TabsContent value="libraries" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
-                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
+              <TabsContent value="libraries" className="flex flex-col flex-grow min-h-0 overflow-hidden max-h-full !mt-0">
+                <div 
+                  className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8"
+                  style={{
+                    maxHeight: mapHeight > 0 
+                      ? `max(${mapHeight}px, calc(100vh - 350px))`
+                      : 'calc(100vh - 350px)',
+                    minHeight: '900px'
+                  }}
+                >
                   {filteredLibraries.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
@@ -974,9 +1039,9 @@ export default function HomePage() {
               </TabsContent>
 
               {/* Events Tab */}
-              <TabsContent value="events" className="flex flex-col flex-grow space-y-4 min-h-0 overflow-hidden max-h-full mt-1">
+              <TabsContent value="events" className="flex flex-col flex-grow min-h-0 overflow-hidden max-h-full !mt-0" style={{ marginTop: 0 }}>
                 {/* Event Time Filter Sub-tabs */}
-                <div className="flex gap-4 justify-end flex-shrink-0 h-8">
+                <div className="flex gap-4 justify-end flex-shrink-0 mb-1" style={{ marginTop: 0 }}>
                   <button
                     onClick={() => setEventTimeFilter("all")}
                     className={`px-2 py-1 text-sm transition-colors ${
@@ -998,7 +1063,15 @@ export default function HomePage() {
                     Upcoming Events
                   </button>
                 </div>
-                <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
+                <div 
+                  className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8"
+                  style={{
+                    maxHeight: mapHeight > 0 
+                      ? `max(${mapHeight}px, calc(100vh - 350px))`
+                      : 'calc(100vh - 350px)',
+                    minHeight: '900px'
+                  }}
+                >
                   {filteredEvents.length === 0 ? (
                     <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                       <CardContent className="p-6 text-center">
