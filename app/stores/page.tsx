@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia } from "@/lib/utils"
@@ -25,6 +25,10 @@ export default function StoresPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [noMaxPrice, setNoMaxPrice] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  
+  // Map height tracking for list view min-height
+  const mapCardRef = useRef<HTMLDivElement>(null)
+  const [mapHeight, setMapHeight] = useState(0)
 
   // Use location filters hook
   const {
@@ -213,6 +217,45 @@ export default function StoresPage() {
     setNoMaxPrice(false)
   }
 
+  // Track map height for list view min-height
+  useEffect(() => {
+    if (!mapCardRef.current) return
+    
+    let timeoutId: NodeJS.Timeout | null = null
+    
+    const updateMapHeight = () => {
+      if (mapCardRef.current) {
+        const height = mapCardRef.current.offsetHeight
+        setMapHeight(prev => {
+          if (Math.abs(prev - height) < 2) return prev
+          return height
+        })
+      }
+    }
+    
+    const debouncedUpdate = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateMapHeight, 100)
+    }
+    
+    const initialTimeout = setTimeout(updateMapHeight, 200)
+    
+    window.addEventListener('resize', debouncedUpdate)
+    
+    const resizeObserver = new ResizeObserver(() => {
+      debouncedUpdate()
+    })
+    
+    resizeObserver.observe(mapCardRef.current)
+    
+    return () => {
+      clearTimeout(initialTimeout)
+      if (timeoutId) clearTimeout(timeoutId)
+      window.removeEventListener('resize', debouncedUpdate)
+      resizeObserver.disconnect()
+    }
+  }, [loading])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
@@ -372,7 +415,7 @@ export default function StoresPage() {
           <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch" style={{ maxHeight: '100%' }}>
             {/* Map View - Mobile: First */}
             <div className="order-1 lg:order-2 lg:sticky lg:top-6 h-fit lg:h-auto lg:flex lg:flex-col">
-              <Card className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
+              <Card ref={mapCardRef} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
                 <CardContent className="p-0">
                   {loading ? (
                     <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
@@ -404,14 +447,21 @@ export default function StoresPage() {
             </div>
 
             {/* List View - Mobile: Second */}
-            <div className="flex flex-col space-y-4 order-2 lg:order-1 flex-1 min-h-0 lg:h-full overflow-hidden">
+            <div className="flex flex-col space-y-4 order-2 lg:order-1 flex-1 min-h-0 lg:h-full overflow-hidden mb-8">
               <div className="flex items-center justify-between flex-shrink-0">
                 <h2 className="text-xl font-semibold text-stone-800">
                   Shops ({filteredStores.length})
                 </h2>
               </div>
               
-              <div className="flex-1 min-h-0 max-h-[600px] lg:h-full lg:max-h-[800px] xl:max-h-[calc(100vh-300px)] space-y-4 overflow-y-auto pr-2">
+              <div 
+                className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8 lg:min-h-[900px]"
+                style={{
+                  maxHeight: mapHeight > 0 
+                    ? `max(${mapHeight}px, calc(100vh - 350px))`
+                    : 'calc(100vh - 350px)'
+                }}
+              >
                 {filteredStores.length === 0 ? (
                   <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                     <CardContent className="p-6 text-center">
