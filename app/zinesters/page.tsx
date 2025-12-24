@@ -7,6 +7,12 @@ import { HomePin } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Minus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export default function ZinestersPage() {
   const { user } = useSupabaseUser()
@@ -28,6 +34,15 @@ export default function ZinestersPage() {
   const [pinsLoaded, setPinsLoaded] = useState(false)
   const [profileCache, setProfileCache] = useState<Record<string, any>>({})
   const [loadingProfile, setLoadingProfile] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingPinLocation, setPendingPinLocation] = useState<{
+    lat: number
+    lng: number
+    city: string
+    state: string
+    country: string
+  } | null>(null)
+  const [isGeocoding, setIsGeocoding] = useState(false)
 
   // Count pins for current user only
   const userPinCount = user ? pins.filter(pin => pin.user_email === user.email).length : 0
@@ -77,124 +92,47 @@ export default function ZinestersPage() {
     }
   }
 
-  // Add a new pin
-  const handleAddPin = async (lat: number, lng: number, clickX: number, clickY: number) => {
-    if (!user) return
+  // Handle map click - show confirmation modal
+  const handleMapClick = async (lat: number, lng: number) => {
+    if (!user || !isAddingPin || isGeocoding || userPinCount >= 3) return
+    if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return
 
-    // Validate coordinates - check if they're within valid earth bounds
-    if (!lat || !lng || isNaN(lat) || isNaN(lng) || 
-        lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      toast({
-        title: "Invalid Location",
-        description: "Please click on a valid location on the map to add your pin.",
-        variant: "destructive",
-      })
-      setIsAddingPin(false)
-      return
-    }
-
-    // Check if user already has 3 pins
-    if (userPinCount >= 3) {
-      toast({
-        title: "Pin Limit Reached",
-        description: "You can only have up to 3 pins. Delete an existing pin to add a new one.",
-        variant: "destructive",
-      })
-      setIsAddingPin(false)
-      return
-    }
-
-    setIsAddingPinLoading(true)
-
+    setIsGeocoding(true)
     try {
-      // Reverse geocode to get city, state, country
-      const geocodingResponse = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=place,region,country`
-      )
-      const geocodingData = await geocodingResponse.json()
-      
-      let city = ''
-      let state = ''
-      let country = ''
-      
-      if (geocodingData.features && geocodingData.features.length > 0) {
-        const features = geocodingData.features
-        
-        // Find city (place)
-        const cityFeature = features.find((f: any) => f.place_type.includes('place'))
-        if (cityFeature) {
-          city = cityFeature.text
-        }
-        
-        // Find state/region
-        const stateFeature = features.find((f: any) => f.place_type.includes('region'))
-        if (stateFeature) {
-          state = stateFeature.text
-        }
-        
-        // Find country
-        const countryFeature = features.find((f: any) => f.place_type.includes('country'))
-        if (countryFeature) {
-          country = countryFeature.text
-        }
-      }
-
-      const { data, error } = await supabase
-        .from('home_pins')
-        .insert({
-          user_email: user.email,
-          latitude: lat,
-          longitude: lng,
-          color: selectedPinColor,
-          city: city,
-          state: state,
-          country: country
-        })
-        .select(`
-          id,
-          user_email,
-          latitude,
-          longitude,
-          color,
-          city,
-          state,
-          country,
-          created_at,
-          user:profiles!home_pins_user_email_fkey(
-            id,
-            display_name,
-            email,
-            permalink,
-            profile_image
-          )
-        `)
-        .single()
-
-      if (error) {
-        console.error('Database error:', error)
-        throw error
-      }
-
-      // Transform data to match HomePin interface
-      const transformedData = {
-        ...data,
-        user: Array.isArray(data.user) ? data.user[0] : data.user
-      }
-
-      setPins(prev => [transformedData, ...prev])
-      setIsAddingPin(false)
-      toast({
-        title: "Success",
-        description: "Pin added successfully!",
+      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=place,region,country`)
+      const data = await res.json()
+      const features = data.features || []
+      setPendingPinLocation({
+        lat, lng,
+        city: features.find((f: any) => f.place_type.includes('place'))?.text || '',
+        state: features.find((f: any) => f.place_type.includes('region'))?.text || '',
+        country: features.find((f: any) => f.place_type.includes('country'))?.text || ''
       })
+      setShowConfirmModal(true)
     } catch (error) {
-      console.error('Error adding pin:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      toast({
-        title: "Error",
-        description: `Failed to add pin: ${errorMessage}`,
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to get location", variant: "destructive" })
+    } finally {
+      setIsGeocoding(false)
+    }
+  }
+
+  // Add pin after confirmation
+  const confirmAddPin = async () => {
+    if (!user || !pendingPinLocation) return
+    setIsAddingPinLoading(true)
+    setShowConfirmModal(false)
+    try {
+      const { data, error } = await supabase.from('home_pins').insert({
+        user_email: user.email, latitude: pendingPinLocation.lat, longitude: pendingPinLocation.lng,
+        color: selectedPinColor, city: pendingPinLocation.city, state: pendingPinLocation.state, country: pendingPinLocation.country
+      }).select(`id, user_email, latitude, longitude, color, city, state, country, created_at, user:profiles!home_pins_user_email_fkey(id, display_name, email, permalink, profile_image)`).single()
+      if (error) throw error
+      setPins(prev => [{ ...data, user: Array.isArray(data.user) ? data.user[0] : data.user }, ...prev])
+      setIsAddingPin(false)
+      setPendingPinLocation(null)
+      toast({ title: "Success", description: "Pin added!" })
+    } catch (error) {
+      toast({ title: "Error", description: `Failed to add pin: ${error instanceof Error ? error.message : 'Unknown error'}`, variant: "destructive" })
     } finally {
       setIsAddingPinLoading(false)
     }
@@ -476,6 +414,8 @@ export default function ZinestersPage() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isAddingPin) {
         setIsAddingPin(false)
+        setShowConfirmModal(false)
+        setPendingPinLocation(null)
       }
     }
 
@@ -555,7 +495,7 @@ export default function ZinestersPage() {
                 pointerEvents: 'all'
               }}
               onClick={(e) => {
-                if (!user || isAddingPinLoading) return
+                if (!user || isAddingPinLoading || isGeocoding) return
                 
                 // Get click coordinates relative to the map container
                 const rect = mapContainer.current?.getBoundingClientRect()
@@ -567,7 +507,7 @@ export default function ZinestersPage() {
                 // Convert screen coordinates to map coordinates
                 if (map.current) {
                   const lngLat = map.current.unproject([clickX, clickY])
-                  handleAddPin(lngLat.lat, lngLat.lng, clickX, clickY)
+                  handleMapClick(lngLat.lat, lngLat.lng)
                 }
               }}
             />
@@ -710,7 +650,16 @@ export default function ZinestersPage() {
                 
                 {/* Add Pin Button */}
                 <button
-                  onClick={() => setIsAddingPin(!isAddingPin)}
+                  onClick={() => {
+                    if (isAddingPin) {
+                      // Cancel adding pin - close modal if open
+                      setIsAddingPin(false)
+                      setShowConfirmModal(false)
+                      setPendingPinLocation(null)
+                    } else {
+                      setIsAddingPin(true)
+                    }
+                  }}
                   disabled={isAddingPinLoading || userPinCount >= 3}
                   className={`px-4 py-2 rounded-lg font-gloria text-sm transition-all ${
                     isAddingPinLoading || userPinCount >= 3
@@ -757,9 +706,9 @@ export default function ZinestersPage() {
 
           {/* Instructions */}
           {isAddingPin && (
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-40">
               <p className="text-sm text-gray-700 font-gloria">
-                {isAddingPinLoading ? 'Adding your pin...' : 'Click anywhere on the map to drop your pin!'}
+                {isGeocoding ? 'Getting location...' : isAddingPinLoading ? 'Adding your pin...' : 'Click anywhere on the map to drop your pin!'}
               </p>
             </div>
           )}
@@ -778,6 +727,32 @@ export default function ZinestersPage() {
  
        </div>
         </div>
+
+        {/* Confirmation Modal */}
+        <Dialog open={showConfirmModal} onOpenChange={(open) => {
+          if (!open) {
+            setShowConfirmModal(false)
+            setPendingPinLocation(null)
+            setIsAddingPin(false) // Exit add pin mode, return to pan & zoom
+          }
+        }}>
+          <DialogContent className="sm:max-w-[350px] [&>button]:hidden">
+            <DialogTitle className="font-gloria text-lg mb-3">Confirm your pin location:</DialogTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              {pendingPinLocation ? [pendingPinLocation.city, pendingPinLocation.state, pendingPinLocation.country].filter(Boolean).join(', ') || 'Unknown location' : ''}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => {
+                setShowConfirmModal(false)
+                setPendingPinLocation(null)
+                setIsAddingPin(false) // Exit add pin mode, return to pan & zoom
+              }} className="font-gloria text-sm">Cancel</Button>
+              <Button onClick={confirmAddPin} disabled={isAddingPinLoading} className="font-gloria text-sm" style={{ backgroundColor: selectedPinColor }}>
+                {isAddingPinLoading ? 'Adding...' : 'Confirm'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </>
     )
   }
