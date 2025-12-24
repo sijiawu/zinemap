@@ -227,11 +227,12 @@ export default function ZinestersPage() {
         user: fullProfile || pin.user
       })
 
-      // Fly to the pin location with zoom level 4 and responsive offset
+      // Pan to the pin location without changing zoom
       if (map.current) {
-        map.current.flyTo({
+        const currentZoom = map.current.getZoom()
+        map.current.easeTo({
           center: [pin.longitude, pin.latitude],
-          zoom: 4,
+          zoom: currentZoom, // Preserve current zoom level
           duration: 1500,
           offset: getResponsiveOffset() // Responsive offset based on screen size
         })
@@ -245,14 +246,120 @@ export default function ZinestersPage() {
   const zoomIn = () => {
     if (map.current) {
       const currentZoom = map.current.getZoom()
-      map.current.zoomTo(currentZoom + 1, { duration: 300 })
+      const newZoom = currentZoom + 1
+      
+      // If there's an active pin selected, zoom around that pin's current screen position
+      if (selectedPin && selectedPin.latitude != null && selectedPin.longitude != null) {
+        try {
+          const lat = Number(selectedPin.latitude)
+          const lng = Number(selectedPin.longitude)
+          
+          // Validate coordinates
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            // Get the marker's geographic position
+            const markerLngLat = [lng, lat]
+            
+            // Get current center and zoom
+            const currentCenter = map.current.getCenter()
+            const currentCenterPoint = map.current.project(currentCenter)
+            
+            // Project the marker position to screen coordinates
+            const markerPoint = map.current.project(markerLngLat)
+            
+            // Calculate offset from center to marker
+            const offsetX = markerPoint.x - currentCenterPoint.x
+            const offsetY = markerPoint.y - currentCenterPoint.y
+            
+            // Calculate scale factor for zoom change
+            const scale = Math.pow(2, newZoom - currentZoom)
+            
+            // Calculate new offset (marker should stay in same screen position)
+            const newOffsetX = offsetX / scale
+            const newOffsetY = offsetY / scale
+            
+            // Calculate new center to keep marker in same screen position
+            const newCenterPoint = {
+              x: markerPoint.x - newOffsetX,
+              y: markerPoint.y - newOffsetY
+            }
+            
+            // Unproject to get new center in geographic coordinates
+            const newCenter = map.current.unproject([newCenterPoint.x, newCenterPoint.y])
+            
+            map.current.easeTo({
+              center: newCenter,
+              zoom: newZoom,
+              duration: 600,
+              easing: (t: number) => t * (2 - t) // ease-out easing for smoother animation
+            })
+            return
+          }
+        } catch (error) {
+          console.error('Error calculating zoom around marker:', error)
+        }
+      }
+      // Fallback to center zoom if no valid pin or error occurred
+      map.current.zoomTo(newZoom, { duration: 300 })
     }
   }
 
   const zoomOut = () => {
     if (map.current) {
       const currentZoom = map.current.getZoom()
-      map.current.zoomTo(currentZoom - 1, { duration: 300 })
+      const newZoom = currentZoom - 1
+      
+      // If there's an active pin selected, zoom around that pin's current screen position
+      if (selectedPin && selectedPin.latitude != null && selectedPin.longitude != null) {
+        try {
+          const lat = Number(selectedPin.latitude)
+          const lng = Number(selectedPin.longitude)
+          
+          // Validate coordinates
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            // Get the marker's geographic position
+            const markerLngLat = [lng, lat]
+            
+            // Get current center and zoom
+            const currentCenter = map.current.getCenter()
+            const currentCenterPoint = map.current.project(currentCenter)
+            
+            // Project the marker position to screen coordinates
+            const markerPoint = map.current.project(markerLngLat)
+            
+            // Calculate offset from center to marker
+            const offsetX = markerPoint.x - currentCenterPoint.x
+            const offsetY = markerPoint.y - currentCenterPoint.y
+            
+            // Calculate scale factor for zoom change
+            const scale = Math.pow(2, newZoom - currentZoom)
+            
+            // Calculate new offset (marker should stay in same screen position)
+            const newOffsetX = offsetX / scale
+            const newOffsetY = offsetY / scale
+            
+            // Calculate new center to keep marker in same screen position
+            const newCenterPoint = {
+              x: markerPoint.x - newOffsetX,
+              y: markerPoint.y - newOffsetY
+            }
+            
+            // Unproject to get new center in geographic coordinates
+            const newCenter = map.current.unproject([newCenterPoint.x, newCenterPoint.y])
+            
+            map.current.easeTo({
+              center: newCenter,
+              zoom: newZoom,
+              duration: 600,
+              easing: (t: number) => t * (2 - t) // ease-out easing for smoother animation
+            })
+            return
+          }
+        } catch (error) {
+          console.error('Error calculating zoom around marker:', error)
+        }
+      }
+      // Fallback to center zoom if no valid pin or error occurred
+      map.current.zoomTo(newZoom, { duration: 300 })
     }
   }
 
@@ -322,8 +429,8 @@ export default function ZinestersPage() {
       
       // Create pin-shaped marker with user avatar
       const isActive = selectedPin?.id === pin.id
-      const pinSize = isActive ? '39px' : '30px' // 30% larger: 30 * 1.3 = 39px
-      const avatarSize = isActive ? '26px' : '20px' // 30% larger: 20 * 1.3 = 26px
+        const pinSize = isActive ? '47px' : '36px' // 20% bigger: 39px*1.2=47px, 30px*1.2=36px
+        const avatarSize = isActive ? '31px' : '24px' // 20% bigger: 26px*1.2=31px, 20px*1.2=24px
       const zIndex = isActive ? '10' : '1'
       
       el.innerHTML = `

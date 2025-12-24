@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark, Plus, Minus } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark, Plus, Minus, Store as StoreIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
@@ -23,6 +23,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const lastDataRef = useRef<string>('')
+  const storesRef = useRef<Store[]>(stores)
+  const librariesRef = useRef<Library[]>(libraries)
+  const eventsRef = useRef<Event[]>(events)
   const [selectedLocation, setSelectedLocation] = useState<Store | Library | Event | null>(null)
   const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
@@ -30,22 +33,58 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
   // Function to get responsive offset for flyTo based on screen size
   const getResponsiveOffset = () => {
-    if (typeof window === 'undefined') return [-100, 100] // Default for SSR
+    if (typeof window === 'undefined') return [100, 100] // Default for SSR
     
     const isMobile = window.innerWidth < 640 // sm breakpoint
     if (isMobile) {
       // On mobile: smaller offset to keep pin visible, modal spans full width
-      return [-50, 50] // Less aggressive offset
+      return [50, 50] // Offset to bottom-right
     } else {
-      // On desktop: original offset to avoid modal blocking
-      return [-100, 100] // Original offset
+      // On desktop: offset to bottom-right to avoid modal blocking
+      return [100, 100] // Offset to bottom-right
+    }
+  }
+
+  // Function to get icon SVG paths based on type (returns array of path strings for complex icons)
+  const getIconPaths = (type: 'store' | 'library' | 'event') => {
+    switch (type) {
+      case 'store':
+        // Store icon from lucide-react - exact paths matching the Store component
+        return [
+          'm2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7',
+          'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8',
+          'M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4',
+          'M2 7h20',
+          'M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'
+        ]
+      case 'library':
+        // BookOpen icon (open book with two pages)
+        return [
+          'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z',
+          'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'
+        ]
+      case 'event':
+        // Calendar icon
+        return [
+          'M8 2v4',
+          'M16 2v4',
+          'M3 10h18',
+          'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z'
+        ]
+      default:
+        return ['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z']
     }
   }
 
   // Function to create pin-shaped marker element
-  const createPinMarker = (color: string, isActive: boolean = false) => {
-    const size = isActive ? '31px' : '24px' // 30% larger: 24 * 1.3 = 31.2px
-    const iconSize = isActive ? '20px' : '16px'
+  const createPinMarker = (color: string, type: 'store' | 'library' | 'event', isActive: boolean = false) => {
+    const size = isActive ? '42px' : '29px'
+    const circleSize = isActive ? '26px' : '22px'
+    const iconSize = isActive ? '17px' : '12px'
+    const borderSize = isActive ? '3px' : '0px'
+    const groundShadowSize = isActive ? '12px' : '7px'
+    const groundShadowBlur = isActive ? '4px' : '2px'
+    const iconPaths = getIconPaths(type)
     
     return `
       <div style="
@@ -56,28 +95,48 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         transform: translate(-50%, -100%);
         z-index: ${isActive ? '5' : '1'};
       ">
+        <!-- Ground shadow (circular shadow at base) -->
+        <div style="
+          position: absolute;
+          bottom: -${groundShadowSize};
+          left: 50%;
+          transform: translateX(-50%);
+          width: ${groundShadowSize};
+          height: ${groundShadowSize};
+          background: rgba(0, 0, 0, 0.25);
+          border-radius: 50%;
+          filter: blur(${groundShadowBlur});
+          pointer-events: none;
+        "></div>
         <!-- Pin body -->
         <div style="
           width: ${size};
           height: ${size};
           background: ${color};
+          border: ${borderSize} solid white;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
           display: flex;
           align-items: center;
           justify-content: center;
+          position: relative;
         ">
-          <!-- Icon container (rotated back) -->
+          <!-- White circle container (rotated back) -->
           <div style="
             transform: rotate(45deg);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            width: ${circleSize};
+            height: ${circleSize};
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
           ">
-            <svg width="${iconSize}" height="${iconSize}" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            <!-- Icon inside circle -->
+            <svg width="${iconSize}" height="${iconSize}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              ${iconPaths.map(path => `<path d="${path}"/>`).join('')}
             </svg>
           </div>
         </div>
@@ -90,13 +149,14 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     setSelectedLocation(location)
     setLocationType(type)
     
-    // Pan to the location if it has coordinates
+    // Pan to the location if it has coordinates without changing zoom
     // Position pin to avoid map card coverage with responsive offset
     if (location.latitude && location.longitude && map.current) {
-      map.current.flyTo({
+      const currentZoom = map.current.getZoom()
+      map.current.easeTo({
         center: [location.longitude, location.latitude],
-        zoom: 12, // Consistent zoom level for all interactions
-        duration: 2000,
+        zoom: currentZoom, // Preserve current zoom level
+        duration: 1500,
         offset: getResponsiveOffset() // Responsive offset based on screen size
       })
     }
@@ -114,14 +174,120 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   const zoomIn = () => {
     if (map.current) {
       const currentZoom = map.current.getZoom()
-      map.current.zoomTo(currentZoom + 1, { duration: 300 })
+      const newZoom = currentZoom + 1
+      
+      // If there's an active pin selected, zoom around that pin's current screen position
+      if (selectedLocation && selectedLocation.latitude != null && selectedLocation.longitude != null) {
+        try {
+          const lat = Number(selectedLocation.latitude)
+          const lng = Number(selectedLocation.longitude)
+          
+          // Validate coordinates
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            // Get the marker's geographic position
+            const markerLngLat = [lng, lat]
+            
+            // Get current center and zoom
+            const currentCenter = map.current.getCenter()
+            const currentCenterPoint = map.current.project(currentCenter)
+            
+            // Project the marker position to screen coordinates
+            const markerPoint = map.current.project(markerLngLat)
+            
+            // Calculate offset from center to marker
+            const offsetX = markerPoint.x - currentCenterPoint.x
+            const offsetY = markerPoint.y - currentCenterPoint.y
+            
+            // Calculate scale factor for zoom change
+            const scale = Math.pow(2, newZoom - currentZoom)
+            
+            // Calculate new offset (marker should stay in same screen position)
+            const newOffsetX = offsetX / scale
+            const newOffsetY = offsetY / scale
+            
+            // Calculate new center to keep marker in same screen position
+            const newCenterPoint = {
+              x: markerPoint.x - newOffsetX,
+              y: markerPoint.y - newOffsetY
+            }
+            
+            // Unproject to get new center in geographic coordinates
+            const newCenter = map.current.unproject([newCenterPoint.x, newCenterPoint.y])
+            
+            map.current.easeTo({
+              center: newCenter,
+              zoom: newZoom,
+              duration: 600,
+              easing: (t: number) => t * (2 - t) // ease-out easing for smoother animation
+            })
+            return
+          }
+        } catch (error) {
+          console.error('Error calculating zoom around marker:', error)
+        }
+      }
+      // Fallback to center zoom if no valid pin or error occurred
+      map.current.zoomTo(newZoom, { duration: 300 })
     }
   }
 
   const zoomOut = () => {
     if (map.current) {
       const currentZoom = map.current.getZoom()
-      map.current.zoomTo(currentZoom - 1, { duration: 300 })
+      const newZoom = currentZoom - 1
+      
+      // If there's an active pin selected, zoom around that pin's current screen position
+      if (selectedLocation && selectedLocation.latitude != null && selectedLocation.longitude != null) {
+        try {
+          const lat = Number(selectedLocation.latitude)
+          const lng = Number(selectedLocation.longitude)
+          
+          // Validate coordinates
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            // Get the marker's geographic position
+            const markerLngLat = [lng, lat]
+            
+            // Get current center and zoom
+            const currentCenter = map.current.getCenter()
+            const currentCenterPoint = map.current.project(currentCenter)
+            
+            // Project the marker position to screen coordinates
+            const markerPoint = map.current.project(markerLngLat)
+            
+            // Calculate offset from center to marker
+            const offsetX = markerPoint.x - currentCenterPoint.x
+            const offsetY = markerPoint.y - currentCenterPoint.y
+            
+            // Calculate scale factor for zoom change
+            const scale = Math.pow(2, newZoom - currentZoom)
+            
+            // Calculate new offset (marker should stay in same screen position)
+            const newOffsetX = offsetX / scale
+            const newOffsetY = offsetY / scale
+            
+            // Calculate new center to keep marker in same screen position
+            const newCenterPoint = {
+              x: markerPoint.x - newOffsetX,
+              y: markerPoint.y - newOffsetY
+            }
+            
+            // Unproject to get new center in geographic coordinates
+            const newCenter = map.current.unproject([newCenterPoint.x, newCenterPoint.y])
+            
+            map.current.easeTo({
+              center: newCenter,
+              zoom: newZoom,
+              duration: 600,
+              easing: (t: number) => t * (2 - t) // ease-out easing for smoother animation
+            })
+            return
+          }
+        } catch (error) {
+          console.error('Error calculating zoom around marker:', error)
+        }
+      }
+      // Fallback to center zoom if no valid pin or error occurred
+      map.current.zoomTo(newZoom, { duration: 300 })
     }
   }
 
@@ -141,6 +307,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           style: "mapbox://styles/mapbox/light-v11",
           center: [-95.7129, 37.0902], // Center of US
           zoom: 3.5,
+          renderWorldCopies: false, // Prevent showing multiple copies of the world
         })
 
         // Timeout fallback - if map doesn't load within 10 seconds, remove loading state
@@ -182,7 +349,15 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
   }, [])
 
+  // Keep refs updated with latest arrays so click handlers always have current data
+  useEffect(() => {
+    storesRef.current = stores
+    librariesRef.current = libraries
+    eventsRef.current = events
+  }, [stores, libraries, events])
+
   // Update markers when stores, libraries, mapView, or searchQuery change
+  // Note: selectedLocation changes are handled separately to avoid recreating markers
   useEffect(() => {
     if (!map.current || !mapReady) return
     
@@ -208,9 +383,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       libraries: validLibraries.map(l => ({ id: l.id, lat: l.latitude, lng: l.longitude })),
       events: validEvents.map(e => ({ id: e.id, lat: e.latitude, lng: e.longitude })),
       mapView,
-      searchQuery,
-      selectedLocation: selectedLocation?.id,
-      locationType
+      searchQuery
+      // Note: selectedLocation is excluded to prevent marker recreation on selection
     })
 
     // Only update markers if data has actually changed
@@ -270,7 +444,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === store.id && locationType === 'store'
-        markerEl.innerHTML = createPinMarker('#e11d48', isActive)
+        markerEl.innerHTML = createPinMarker('#e11d48', 'store', isActive)
+        markerEl.setAttribute('data-location-id', store.id)
+        markerEl.setAttribute('data-location-type', 'store')
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
           markerEl.style.zIndex = '5'
@@ -279,17 +455,22 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         }
 
         markerEl.addEventListener("click", () => {
-          setSelectedLocation(store)
+          // Find the most up-to-date store object from the current stores array
+          // This ensures we have the latest user_name and user_permalink data
+          // Use ref to get latest data at click time, not closure time
+          const currentStore = storesRef.current.find(s => s.id === store.id) || store
+          setSelectedLocation(currentStore)
           setLocationType('store')
-          onLocationSelect?.(store, 'store')
+          onLocationSelect?.(currentStore, 'store')
           
-          // Fly to the clicked location with reduced zoom and longer duration
+          // Pan to the clicked location without changing zoom
           // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
-            map.current.flyTo({
-              center: [store.longitude, store.latitude],
-              zoom: 12, // Reduced zoom level to be less dizzying
-              duration: 1500, // Longer duration for smoother animation
+            const currentZoom = map.current.getZoom()
+            map.current.easeTo({
+              center: [currentStore.longitude, currentStore.latitude],
+              zoom: currentZoom, // Preserve current zoom level
+              duration: 1500,
               offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
@@ -311,7 +492,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === library.id && locationType === 'library'
-        markerEl.innerHTML = createPinMarker('#3b82f6', isActive)
+        markerEl.innerHTML = createPinMarker('#3b82f6', 'library', isActive)
+        markerEl.setAttribute('data-location-id', library.id)
+        markerEl.setAttribute('data-location-type', 'library')
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
           markerEl.style.zIndex = '5'
@@ -320,17 +503,22 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         }
 
         markerEl.addEventListener("click", () => {
-          setSelectedLocation(library)
+          // Find the most up-to-date library object from the current libraries array
+          // This ensures we have the latest user_name and user_permalink data
+          // Use ref to get latest data at click time, not closure time
+          const currentLibrary = librariesRef.current.find(l => l.id === library.id) || library
+          setSelectedLocation(currentLibrary)
           setLocationType('library')
-          onLocationSelect?.(library, 'library')
+          onLocationSelect?.(currentLibrary, 'library')
           
-          // Fly to the clicked location with reduced zoom and longer duration
+          // Pan to the clicked location without changing zoom
           // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
-            map.current.flyTo({
-              center: [library.longitude, library.latitude],
-              zoom: 12, // Reduced zoom level to be less dizzying
-              duration: 1500, // Longer duration for smoother animation
+            const currentZoom = map.current.getZoom()
+            map.current.easeTo({
+              center: [currentLibrary.longitude, currentLibrary.latitude],
+              zoom: currentZoom, // Preserve current zoom level
+              duration: 1200,
               offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
@@ -352,7 +540,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === event.id && locationType === 'event'
-        markerEl.innerHTML = createPinMarker('#009035', isActive)
+        markerEl.innerHTML = createPinMarker('#009035', 'event', isActive)
+        markerEl.setAttribute('data-location-id', event.id)
+        markerEl.setAttribute('data-location-type', 'event')
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
           markerEl.style.zIndex = '5'
@@ -361,17 +551,22 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         }
 
         markerEl.addEventListener("click", () => {
-          setSelectedLocation(event)
+          // Find the most up-to-date event object from the current events array
+          // This ensures we have the latest user_name and user_permalink data
+          // Use ref to get latest data at click time, not closure time
+          const currentEvent = eventsRef.current.find(e => e.id === event.id) || event
+          setSelectedLocation(currentEvent)
           setLocationType('event')
-          onLocationSelect?.(event, 'event')
+          onLocationSelect?.(currentEvent, 'event')
           
-          // Fly to the clicked location with reduced zoom and longer duration
+          // Pan to the clicked location without changing zoom
           // Position pin to avoid map card coverage with responsive offset
           if (map.current) {
-            map.current.flyTo({
-              center: [event.longitude, event.latitude],
-              zoom: 12, // Reduced zoom level to be less dizzying
-              duration: 1500, // Longer duration for smoother animation
+            const currentZoom = map.current.getZoom()
+            map.current.easeTo({
+              center: [currentEvent.longitude, currentEvent.latitude],
+              zoom: currentZoom, // Preserve current zoom level
+              duration: 1200,
               offset: getResponsiveOffset() // Responsive offset based on screen size
             })
           }
@@ -385,18 +580,39 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       })
     }
 
-  }, [stores, libraries, events, mapView, searchQuery, mapReady, selectedLocation, locationType])
+  }, [stores, libraries, events, mapView, searchQuery, mapReady])
 
-  // Separate effect to ensure active marker appears on top using CSS z-index
+  // Separate effect to update active state without recreating markers
   useEffect(() => {
     if (!map.current || !mapReady) return
 
-    // Apply z-index to all markers based on their active state
+    // Update active state for all markers without recreating them
     markersRef.current.forEach(marker => {
       const markerEl = marker.getElement()
       if (markerEl) {
-        const isActive = markerEl.getAttribute('data-active') === 'true'
-        markerEl.style.zIndex = isActive ? '5' : '1'
+        // Get the location ID and type from the marker's data attributes
+        const locationId = markerEl.getAttribute('data-location-id')
+        const markerType = markerEl.getAttribute('data-location-type') as 'store' | 'library' | 'event'
+        
+        if (!locationId || !markerType) return
+        
+        // Check if this marker should be active
+        const isActive = selectedLocation?.id === locationId && locationType === markerType
+        
+        // Get the appropriate color for this marker type
+        const color = markerType === 'store' ? '#e11d48' : markerType === 'library' ? '#3b82f6' : '#009035'
+        
+        // Update marker HTML with active/inactive state
+        markerEl.innerHTML = createPinMarker(color, markerType, isActive)
+        
+        // Update data attributes and z-index
+        if (isActive) {
+          markerEl.setAttribute('data-active', 'true')
+          markerEl.style.zIndex = '5'
+        } else {
+          markerEl.removeAttribute('data-active')
+          markerEl.style.zIndex = '1'
+        }
       }
     })
   }, [selectedLocation, locationType, mapReady])
@@ -495,11 +711,11 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           <div className="flex items-start gap-3 mb-3">
             <div className="flex-shrink-0 mt-0.5">
               {locationType === 'store' ? (
-                <MapPin className="h-5 w-5 text-[#e11d48]" />
+                <StoreIcon className="h-5 w-5 text-[#e11d48]" />
               ) : locationType === 'library' ? (
                 <BookOpen className="h-5 w-5 text-blue-500" />
               ) : (
-                <MapPin className="h-5 w-5 text-[#009035]" />
+                <Calendar className="h-5 w-5 text-[#009035]" />
               )}
             </div>
             <div className="flex-1 min-w-0">

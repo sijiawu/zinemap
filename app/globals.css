@@ -61,6 +61,60 @@
   }
 }
 
+/* Active Pin Pulse Animation */
+@keyframes activePinPulse {
+  0%, 100% { 
+    transform: translate(-50%, -100%) scale(1); 
+  }
+  50% { 
+    transform: translate(-50%, -100%) scale(1.08); 
+  }
+}
+
+/* Active Pin Ring Pulse Animation */
+@keyframes activePinRing {
+  0% { 
+    transform: translate(-50%, -50%) scale(1) rotate(-45deg); 
+    opacity: 0.6; 
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1.4) rotate(-45deg); 
+    opacity: 0; 
+  }
+}
+
+/* Alternative: Active Pin Glow Animation (subtle breathing glow) */
+@keyframes activePinGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 12px currentColor);
+    opacity: 0.9;
+  }
+  50% { 
+    filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 18px currentColor);
+    opacity: 1;
+  }
+}
+
+/* Alternative: Active Pin Gentle Bounce (one-time on selection) */
+@keyframes activePinBounce {
+  0% { 
+    transform: translate(-50%, -100%) scale(1); 
+  }
+  25% { 
+    transform: translate(-50%, -100%) scale(1.15); 
+  }
+  50% { 
+    transform: translate(-50%, -100%) scale(0.95); 
+  }
+  75% { 
+    transform: translate(-50%, -100%) scale(1.05); 
+  }
+  100% { 
+    transform: translate(-50%, -100%) scale(1); 
+  }
+}
+
+
 @layer base {
   :root {
     --background: 0 0% 100%;
