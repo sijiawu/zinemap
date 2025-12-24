@@ -632,7 +632,7 @@ export default function ZinestersPage() {
           {/* Floating Profile Card - positioned relative to map */}
           {selectedPin && (
             <div
-              className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 left-4 right-4 sm:left-5 sm:w-80 sm:right-auto max-h-[37.5vh] sm:max-h-[28rem] overflow-y-auto top-16 sm:top-5"
+              className="absolute z-30 bg-white rounded-lg shadow-xl border border-gray-200 p-4 left-4 right-4 sm:left-5 sm:w-80 sm:right-auto max-h-[37.5vh] sm:max-h-[28rem] overflow-y-auto top-16 sm:top-5"
             >
               {/* Close button */}
               <button
@@ -717,12 +717,12 @@ export default function ZinestersPage() {
           )}
           
           {/* Add Pin Button */}
-          <div className="absolute top-4 right-4 sm:right-16 flex flex-col gap-2 z-50">
+          <div className="absolute top-4 right-4 sm:right-16 flex flex-col gap-2 z-30">
             {user ? (
               <>
                 {/* Color Picker */}
                 {isAddingPin && (
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-50">
+                  <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-30">
                     <div className="text-xs text-gray-600 mb-3 font-medium">Pick a color</div>
                     <div className="grid grid-cols-4 gap-2">
                       {[
@@ -813,7 +813,7 @@ export default function ZinestersPage() {
 
           {/* Instructions */}
           {isAddingPin && (
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-40">
+            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-30">
               <p className="text-sm text-gray-700 font-gloria">
                 {isGeocoding ? 'Getting location...' : isAddingPinLoading ? 'Adding your pin...' : 'Click anywhere on the map to drop your pin!'}
               </p>

@@ -876,7 +876,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       )}
 
       {/* Map Attribution */}
-      <div className="absolute bottom-2 right-2 bg-white bg-opacity-95 px-3 py-1 rounded text-xs text-gray-600">
+      <div className="absolute bottom-2 right-2 bg-white bg-opacity-95 px-3 py-1 rounded text-xs text-gray-600 z-10">
         © Mapbox © OpenStreetMap
       </div>
     </div>
