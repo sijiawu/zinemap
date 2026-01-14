@@ -221,7 +221,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
 
         if (insertError) {
           console.error('Insert error:', insertError)
-          throw new Error('Failed to create zine')
+          throw new Error('Failed to add zine')
         }
       } else if (mode === 'edit' && zine) {
         // Update existing zine
@@ -395,7 +395,7 @@ export default function AddZineModal({ user, show, onClose, onSuccess, mode = 'c
               disabled={loading || !title.trim()}
               className="flex-1 bg-rose-500 hover:bg-rose-600 text-white"
             >
-              {loading ? 'Saving...' : mode === 'edit' ? 'Update Zine' : 'Create Zine'}
+              {loading ? 'Saving...' : mode === 'edit' ? 'Update Zine' : 'Add Zine'}
             </Button>
           </div>
         </form>
