@@ -25,6 +25,7 @@ export interface StoryMetadata {
   slug: string
   excerpt: string
   thumbnail?: string
+  password?: string
 }
 
 export interface Story {
@@ -375,6 +376,7 @@ export function parseStory(markdownContent: string, slug: string): Story {
     slug: data.slug ? String(data.slug) : slug,
     excerpt: String(data.excerpt),
     thumbnail: thumbnail,
+    password: data.password ? String(data.password) : undefined,
   }
 
   const processedContent = processMarkdown(content)

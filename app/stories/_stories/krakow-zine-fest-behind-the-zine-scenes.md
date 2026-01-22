@@ -9,6 +9,7 @@ author: CJ Wu
 author_permalink: cjmakescomics
 thumbnail: "/krakow-zine-fest-9.jpg"
 slug: krakow-zine-fest-behind-the-zine-scenes
+password: krak!
 excerpt: A conversation with Ilde, the person behind Kraków Zine Fest (KRAK!), which recently held its fifth edition in the former royal capital of Poland."
 ---
 

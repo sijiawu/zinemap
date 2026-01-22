@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { ArticleLayout } from '@/components/ArticleLayout'
+import { PasswordProtectedStory } from '@/components/PasswordProtectedStory'
 import { getStoryBySlug, getAllStorySlugs } from '@/lib/getStories'
 
 const BASE_URL = 'https://zinemap.com'
@@ -64,7 +65,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     notFound()
   }
 
-  return (
+  const content = (
     <div className="min-h-screen bg-white">
       <ArticleLayout
         title={story.metadata.title}
@@ -77,5 +78,20 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       </ArticleLayout>
     </div>
   )
+
+  // If story has a password, wrap it in password protection
+  if (story.metadata.password && story.metadata.password.trim() !== '') {
+    return (
+      <PasswordProtectedStory
+        slug={slug}
+        correctPassword={story.metadata.password}
+        title={story.metadata.title}
+      >
+        {content}
+      </PasswordProtectedStory>
+    )
+  }
+
+  return content
 }
 

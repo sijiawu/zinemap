@@ -16,6 +16,7 @@ author_permalink: username       # Optional: ZineMap profile permalink - makes a
 slug: story-slug                 # Required: URL slug (must match filename without .md)
 excerpt: "Short description"     # Required: Used in story listing page (use quotes if needed)
 thumbnail: "/path/to/image.jpg"  # Optional: Thumbnail image for listing page (if not provided, first image in content is used)
+password: "secret123"            # Optional: Password to protect the story. If set, story won't appear in listing and requires password to view
 ---
 ```
 
@@ -73,6 +74,14 @@ Your content here. Can include **bold** and other markdown.
 - Example: `slug: building-zinemap` → filename: `building-zinemap.md`
 - Place all story files in this `_stories` directory
 
+## Password Protection
+
+If you set a `password` field in the frontmatter:
+- The story will **not appear** in the stories listing page
+- Visitors to the story URL will see a password form
+- Once unlocked, the password is stored in browser localStorage (so users don't need to re-enter)
+- Leave the field empty or omit it to make the story public
+
 ## Example Structure
 
 ```markdown
@@ -86,6 +95,7 @@ author: ZineMap Team
 author_permalink: zinemap-team  # Optional: Links author name to their ZineMap profile
 slug: my-story
 excerpt: A brief description of the story.
+password: "secret123"           # Optional: Password-protect this story
 ---
 
 Your story content starts here. Use markdown for formatting.

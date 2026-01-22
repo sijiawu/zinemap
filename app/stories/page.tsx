@@ -17,15 +17,18 @@ export default async function StoriesPage({
   const selectedTag = params.tag
   const allStories = getAllStories()
   
-  // Get all unique tags
+  // Filter out password-protected stories from listing
+  const publicStories = allStories.filter((story) => !story.password || story.password === '')
+  
+  // Get all unique tags from public stories
   const allTags = Array.from(
-    new Set(allStories.flatMap((story) => story.tags || []))
+    new Set(publicStories.flatMap((story) => story.tags || []))
   ).sort()
   
   // Filter stories by tag if one is selected
   const stories = selectedTag
-    ? allStories.filter((story) => story.tags?.includes(selectedTag))
-    : allStories
+    ? publicStories.filter((story) => story.tags?.includes(selectedTag))
+    : publicStories
 
   return (
     <div className="min-h-screen bg-white">
