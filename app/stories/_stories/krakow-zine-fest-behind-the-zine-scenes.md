@@ -149,15 +149,13 @@ CJ: What’s your vision for the Kraków zine scene, beyond the festival weekend
 
 Ilde: I would like to see more zine-related events throughout the year. Lectures, workshops, etc. That kind of stuff. There’s always someone interested, even in a small place. I believe zines and all things DIY like this connect people. Place shouldn’t be a limitation. You can always do something anywhere.
 
-<Callout>The next day, the festival unfolded much like Ilde had described. The space was small and cozy. Some people sat on chairs, others on couches. There was steady foot traffic, but nothing felt rushed. I got up from my table several times to talk and trade. My Polish-learning zine nearly sold out.</Callout>
+<Callout>The next day, the festival unfolded much like Ilde had described. The space was small and cozy. Some people sat on chairs, others on couches. There was steady foot traffic, but nothing felt rushed. I got up from my table several times to talk and trade. My Polish-learning zine nearly sold out. <br><br> Watching Ilde move through the space, checking in on everyone, greeting people, answering questions, switching between languages, I was reminded of what he'd said the night before about place not being a limitation; clearly language shouldn't be either. After we'd stopped recording, I asked him what it's like to run festivals and build community in a foreign language. He said he can now manage most things in Polish, and only occasionally needs help with a word. For phone calls and logistics, like renting tables for the fest, he relies on Agnieszka. The rest, he figures out as he goes.</Callout>
 
 <ImageWithCaption
   src="/krakow-zine-fest-9.jpg"
   alt="Fest day at Spółdzielnia Ogniwo, Kraków, Dec 7, 2025. Photo by Ilde B."
   caption="Fest day at Spółdzielnia Ogniwo, Kraków, Dec 7, 2025. Photo by Ilde B."
 />
-
-<Callout>Watching Ilde move through the space, checking in on everyone, greeting people, answering questions, switching between languages, I was reminded of what he'd said the night before about place not being a limitation; clearly language shouldn't be either. After we'd stopped recording, I asked him what it's like to run festivals and build community in a foreign language. He said he can now manage most things in Polish, and only occasionally needs help with a word. For phone calls and logistics, like renting tables for the fest, he relies on Agnieszka. The rest, he figures out as he goes.</Callout>
 
 Thank you for reading! This conversation is part of Behind the Zine Scenes, an ongoing series on ZineMap documenting the people and places that make up the zine ecosystem.
 
