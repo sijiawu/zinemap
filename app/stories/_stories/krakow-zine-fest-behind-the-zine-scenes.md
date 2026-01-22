@@ -158,7 +158,8 @@ Ilde: I would like to see more zine-related events throughout the year. Lectures
   caption="Fest day at Spółdzielnia Ogniwo, Kraków, Dec 7, 2025. Photo by Ilde B."
 />
 
-<Callout>Thank you for reading! This conversation is part of Behind the Zine Scenes, an ongoing series on ZineMap documenting the people and places that make up the zine ecosystem.</Callout>
+<Callout>Thank you for reading! This conversation is part of Behind the Zine Scenes, an ongoing series on [**ZineMap**](zinemap.com) documenting the people and places that make up the zine ecosystem. Many thanks to Ilde for sharing the story behind Kraków Zine Fest! You can follow them at [**@krakowzinefest**](https://www.instagram.com/krakowzinefest/) for updates and future calls.
+</Callout>
 
 
 
