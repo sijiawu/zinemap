@@ -28,7 +28,7 @@ Ilde: Well, a little bar. He likes to tell stories about bands and old-school pu
 <ImageWithCaption
   src="/krakow-zine-fest-1.jpg"
   alt="First edition of Kraków Zine Fest, Oct 2021"
-  caption="First edition of Kraków Zine Fest, Oct 2021 · Photo by Ilde B"
+  caption="First edition of Kraków Zine Fest, Oct 2021 · Photos by Gabriel Kutz"
 />
 
 CJ: Where was this bar?
@@ -50,7 +50,7 @@ Ilde: Yes, she’s also folding zines today. You’ll meet her tomorrow. Anyways
 <ImageWithCaption
   src="/krakow-zine-fest-3.jpg"
   alt="Third edition of Kraków Zine Fest at Poczta Główna, May 2023"
-  caption="Third edition of Kraków Zine Fest at Poczta Główna, May 2023 · Photo by Ilde B"
+  caption="Third edition of Kraków Zine Fest at Poczta Główna, May 2023 · Photo by Konrad Waszkiewicz"
 />
 
 CJ: So it’s a conscious choice to keep it small.
