@@ -90,7 +90,7 @@ Ilde: They made some and also brought part of their collection I guess. They wer
 
 CJ: They had to use every little bit of space?
 
-Ilde: Yeah, they cut the text, collage, glue everything and made the copies. You have text upside down, doodles filling every space… Super cool.
+Ilde: Yeah, they cut the text, collage, glued everything and made the copies. You have text upside down, doodles filling every space… Super cool.
 
 CJ: Do you have pictures? I'm so curious.
 
@@ -122,8 +122,8 @@ Ilde: We made the zine at the end of 2023. We printed 100 copies with cassettes 
 
 <ImageWithCaption
   src="/krakow-zine-fest-7.jpg"
-  alt="Said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu"
-  caption="Said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu
+  alt="A copy of said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu"
+  caption="A copy of said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu
 "
 />
 
