@@ -9,7 +9,7 @@ author: CJ Wu
 author_permalink: cjmakescomics
 thumbnail: "/krakow-zine-fest-9.jpg"
 slug: krakow-zine-fest-behind-the-zine-scenes
-excerpt: A conversation with Ilde, the person behind Kraków Zine Fest (KRAK!), which recently held its fifth edition in the former royal capital of Poland."
+excerpt: A conversation with Ilde, who runs Kraków Zine Fest (KRAK!), about organizing a locally rooted, community-centered DIY festival in one of Poland’s key cultural cities.
 ---
 
 <Callout>Kraków was the second stop on my trip to Europe. I’d been here many times before for intensive Polish courses, but this time felt different. For the first time I wasn’t here only as a language student, but as a cartoonist and zinester tabling at [**Kraków Zine Fest**](https://zinemap.com/event/krakow-zine-fest). <br><br>
