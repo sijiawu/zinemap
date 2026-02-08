@@ -17,6 +17,7 @@ import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
 
 import { Tag, Store } from "@/lib/types"
+import { sortSplitTagsByCreatorPercentage } from "@/lib/utils"
 
 export default function SuggestStoreEditPage() {
   const { user, loading: authLoading } = useSupabaseUser()

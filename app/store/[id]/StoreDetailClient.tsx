@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 import { Store, StoreTag, CommunityNote } from "@/lib/types"
+import { sortSplitTagsByCreatorPercentage } from "@/lib/utils"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -498,6 +499,11 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
     acc[category].push(storeTag.tag)
     return acc
   }, {} as Record<string, any[]>)
+  
+  // Sort split tags by creator percentage (smallest to largest)
+  if (tagsByCategory.split) {
+    tagsByCategory.split = sortSplitTagsByCreatorPercentage(tagsByCategory.split)
+  }
 
   return (
     <div className="min-h-screen bg-stone-50 font-serif">

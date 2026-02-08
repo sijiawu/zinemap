@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia } from "@/lib/utils"
+import { formatSocialMedia, sortSplitTagsByCreatorPercentage } from "@/lib/utils"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function StoresPage() {
@@ -73,6 +73,15 @@ export default function StoresPage() {
           .select('*')
           .not('category', 'in', '(service,access)')
           .order('label')
+        
+        // Sort split tags by creator percentage (smallest to largest)
+        let sortedTags = tagsData || []
+        if (tagsData) {
+          const splitTags = tagsData.filter(tag => tag.category === 'split')
+          const otherTags = tagsData.filter(tag => tag.category !== 'split')
+          const sortedSplitTags = sortSplitTagsByCreatorPercentage(splitTags)
+          sortedTags = [...sortedSplitTags, ...otherTags]
+        }
 
         if (tagsError) {
           console.error('Error fetching tags:', tagsError)
@@ -124,7 +133,7 @@ export default function StoresPage() {
         })
 
         setStores(storesWithTags)
-        setAllTags(tagsData || [])
+        setAllTags(sortedTags)
       } catch (error) {
         console.error('Error fetching data:', error)
         setStores([])

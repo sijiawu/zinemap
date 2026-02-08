@@ -231,6 +231,27 @@ export function formatSocialMedia(social: string, themeColor: string = '#009035'
   return social
 }
 
+// Sort split category tags by creator percentage (first number in tag id)
+// Tag ids are like "50-50", "60-40", etc. where first number is creator percentage
+export function sortSplitTagsByCreatorPercentage(tags: Array<{ id: string; label: string; category: string }>): Array<{ id: string; label: string; category: string }> {
+  return [...tags].sort((a, b) => {
+    // Extract first number from tag id (e.g., "50-50" -> 50, "100-minus-tax" -> 100)
+    const getCreatorPercentage = (tagId: string): number => {
+      const match = tagId.match(/^(\d+)/)
+      if (match) {
+        return parseInt(match[1], 10)
+      }
+      // If no number found, put it at the end (e.g., "100-minus-tax")
+      return 999
+    }
+    
+    const aPercent = getCreatorPercentage(a.id)
+    const bPercent = getCreatorPercentage(b.id)
+    
+    return aPercent - bPercent
+  })
+}
+
 // Convert US state names to abbreviations
 export function normalizeUSState(state: string, country: string): string {
   // Only normalize if it's a US state

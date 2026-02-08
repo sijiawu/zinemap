@@ -17,7 +17,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 
 import { Tag, Store } from "@/lib/types"
-import { normalizeUSState } from "@/lib/utils"
+import { normalizeUSState, sortSplitTagsByCreatorPercentage } from "@/lib/utils"
 
 export default function AddStorePage() {
   const { user, loading } = useSupabaseUser()
@@ -387,7 +387,12 @@ export default function AddStorePage() {
   }
 
   const getTermsByCategory = (category: string) => {
-    return consignmentTerms.filter((term) => term.category === category)
+    const terms = consignmentTerms.filter((term) => term.category === category)
+    // Sort split tags by creator percentage (smallest to largest)
+    if (category === "split") {
+      return sortSplitTagsByCreatorPercentage(terms)
+    }
+    return terms
   }
 
   if (isSubmitted) {
