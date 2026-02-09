@@ -487,6 +487,27 @@ export default function SuggestStoreEditPage() {
                     </div>
                   </div>
 
+                  {/* Payout Methods */}
+                  <div>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payout Methods</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getTermsByCategory("method").map((term) => (
+                        <Badge
+                          key={term.id}
+                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
+                          className={`cursor-pointer transition-all ${
+                            formData.selectedTerms.includes(term.id)
+                              ? "bg-rose-500 text-white hover:bg-rose-600"
+                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                          }`}
+                          onClick={() => handleTermToggle(term.id)}
+                        >
+                          {term.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Copy Limits */}
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Copy Limits</h4>
