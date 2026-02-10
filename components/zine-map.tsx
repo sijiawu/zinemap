@@ -29,7 +29,6 @@ export default function ZineMap({ stores }: ZineMapProps) {
   const [selectedStore, setSelectedStore] = useState<ZineStore | null>(null)
   const [mapReady, setMapReady] = useState(false)
 
-  console.log("ZineMap: Rendered with stores", stores.length)
 
   useEffect(() => {
     const initMap = async () => {
@@ -49,7 +48,6 @@ export default function ZineMap({ stores }: ZineMapProps) {
         })
 
         map.current.on("load", () => {
-          console.log("ZineMap: Map loaded successfully")
           setMapReady(true)
         })
       } catch (error) {
@@ -70,12 +68,7 @@ export default function ZineMap({ stores }: ZineMapProps) {
   // Update markers when stores change
   useEffect(() => {
     const updateMarkers = async () => {
-      if (!map.current || !mapReady) {
-        console.log("ZineMap: Map not ready", { map: !!map.current, mapReady })
-        return
-      }
-
-      console.log("ZineMap: Updating markers for stores", stores.length)
+      if (!map.current || !mapReady) return
 
       // Clear existing markers
       markersRef.current.forEach(marker => marker.remove())

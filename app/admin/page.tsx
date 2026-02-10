@@ -21,10 +21,6 @@ export default function AdminPage() {
   const [unapprovedLibraries, setUnapprovedLibraries] = useState<Library[]>([])
   const [unapprovedEvents, setUnapprovedEvents] = useState<Event[]>([])
 
-  // Debug: Log when unapprovedEvents changes
-  useEffect(() => {
-    console.log('unapprovedEvents state updated:', unapprovedEvents)
-  }, [unapprovedEvents])
   const [storeEdits, setStoreEdits] = useState<any[]>([])
   const [libraryEdits, setLibraryEdits] = useState<any[]>([])
   const [eventEdits, setEventEdits] = useState<any[]>([])
@@ -123,21 +119,16 @@ export default function AdminPage() {
       setLoadingEvents(true)
       setError(null)
 
-      console.log('Fetching unapproved events...')
-      
       const { data, error } = await supabase
         .from('events')
         .select('*')
         .eq('approved', false)
         .order('created_at', { ascending: false })
 
-      console.log('Supabase response:', { data, error })
-
       if (error) {
         console.error('Error fetching unapproved events:', error)
         setError('Failed to load unapproved events')
       } else {
-        console.log('Setting unapproved events:', data)
         setUnapprovedEvents(data || [])
       }
     } catch (error) {
@@ -388,79 +379,175 @@ export default function AdminPage() {
     }
   }
 
-  const handleMarkStoreEditAddressed = async (editId: string) => {
+  const handleApproveStoreEdit = async (edit: { id: string; store_id: string; edit_payload?: Record<string, unknown> | null }) => {
     try {
-      setProcessingStoreEdit(editId)
+      setProcessingStoreEdit(edit.id)
       setError(null)
       setSuccess(null)
 
-      const { error } = await supabase
-        .from('locale_edits')
-        .update({ status: 'addressed' })
-        .eq('id', editId)
-
-      if (error) {
-        console.error('Error marking store edit as addressed:', error)
-        setError('Failed to mark store edit as addressed')
-      } else {
-        setSuccess('Store edit marked as addressed!')
-        // Remove the edit from the list
-        setStoreEdits(prev => prev.filter(edit => edit.id !== editId))
+      const payload = edit.edit_payload as { name?: string; city?: string; state?: string | null; country?: string; address?: string; email?: string | null; website?: string | null; notes?: string | null; tag_ids?: string[] } | undefined
+      if (payload && edit.store_id) {
+        const { name, city, state, country, address, email, website, notes, tag_ids } = payload
+        const { error: updateError } = await supabase
+          .from('stores')
+          .update({
+            ...(name != null && { name }),
+            ...(city != null && { city }),
+            ...(state !== undefined && { state }),
+            ...(country != null && { country }),
+            ...(address != null && { address }),
+            ...(email !== undefined && { email }),
+            ...(website !== undefined && { website }),
+            ...(notes !== undefined && { notes }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', edit.store_id)
+        if (updateError) {
+          setError('Failed to apply store changes')
+          return
+        }
+        if (Array.isArray(tag_ids)) {
+          const { error: deleteTagError } = await supabase
+            .from('store_tags')
+            .delete()
+            .eq('store_id', edit.store_id)
+          if (deleteTagError) {
+            setError('Failed to remove existing store tags')
+            return
+          }
+          if (tag_ids.length > 0) {
+            const { error: insertTagError } = await supabase
+              .from('store_tags')
+              .insert(tag_ids.map((tag_id: string) => ({ store_id: edit.store_id, tag_id })))
+            if (insertTagError) {
+              setError('Failed to add store tags')
+              return
+            }
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error marking store edit as addressed:', error)
+
+      const { error } = await supabase.from('locale_edits').update({ status: 'approved' }).eq('id', edit.id)
+      if (error) {
+        setError('Failed to approve edit')
+      } else {
+        setSuccess('Store edit approved and applied!')
+        setStoreEdits(prev => prev.filter(e => e.id !== edit.id))
+      }
+    } catch (err) {
+      console.error('Error approving store edit:', err)
+      setError('Failed to approve store edit')
     } finally {
       setProcessingStoreEdit(null)
     }
   }
 
-  const handleMarkLibraryEditAddressed = async (editId: string) => {
+  const handleApproveLibraryEdit = async (edit: { id: string; library_id: string; edit_payload?: Record<string, unknown> | null }) => {
     try {
-      setProcessingLibraryEdit(editId)
+      setProcessingLibraryEdit(edit.id)
       setError(null)
       setSuccess(null)
 
-      const { error } = await supabase
-        .from('locale_edits')
-        .update({ status: 'addressed' })
-        .eq('id', editId)
-
-      if (error) {
-        console.error('Error marking library edit as addressed:', error)
-        setError('Failed to mark library edit as addressed')
-      } else {
-        setSuccess('Library edit marked as addressed!')
-        // Remove the edit from the list
-        setLibraryEdits(prev => prev.filter(edit => edit.id !== editId))
+      const payload = edit.edit_payload as { name?: string; city?: string; state?: string | null; country?: string; address?: string; email?: string | null; website?: string | null; notes?: string | null; tag_ids?: string[] } | undefined
+      if (payload && edit.library_id) {
+        const { name, city, state, country, address, email, website, notes, tag_ids } = payload
+        const { error: updateError } = await supabase
+          .from('libraries')
+          .update({
+            ...(name != null && { name }),
+            ...(city != null && { city }),
+            ...(state !== undefined && { state }),
+            ...(country != null && { country }),
+            ...(address != null && { address }),
+            ...(email !== undefined && { email }),
+            ...(website !== undefined && { website }),
+            ...(notes !== undefined && { notes }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', edit.library_id)
+        if (updateError) {
+          setError('Failed to apply library changes')
+          return
+        }
+        if (Array.isArray(tag_ids)) {
+          const { error: deleteTagError } = await supabase
+            .from('library_tags')
+            .delete()
+            .eq('library_id', edit.library_id)
+          if (deleteTagError) {
+            setError('Failed to remove existing library tags')
+            return
+          }
+          if (tag_ids.length > 0) {
+            const { error: insertTagError } = await supabase
+              .from('library_tags')
+              .insert(tag_ids.map((tag_id: string) => ({ library_id: edit.library_id, tag_id })))
+            if (insertTagError) {
+              setError('Failed to add library tags')
+              return
+            }
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error marking library edit as addressed:', error)
+
+      const { error } = await supabase.from('locale_edits').update({ status: 'approved' }).eq('id', edit.id)
+      if (error) {
+        setError('Failed to approve edit')
+      } else {
+        setSuccess('Library edit approved and applied!')
+        setLibraryEdits(prev => prev.filter(e => e.id !== edit.id))
+      }
+    } catch (err) {
+      console.error('Error approving library edit:', err)
+      setError('Failed to approve library edit')
     } finally {
       setProcessingLibraryEdit(null)
     }
   }
 
-  const handleMarkEventEditAddressed = async (editId: string) => {
+  const handleApproveEventEdit = async (edit: { id: string; event_id: string; edit_payload?: Record<string, unknown> | null }) => {
     try {
-      setProcessingEventEdit(editId)
+      setProcessingEventEdit(edit.id)
       setError(null)
       setSuccess(null)
 
-      const { error } = await supabase
-        .from('locale_edits')
-        .update({ status: 'addressed' })
-        .eq('id', editId)
-
-      if (error) {
-        console.error('Error marking event edit as addressed:', error)
-        setError('Failed to mark event edit as addressed')
-      } else {
-        setSuccess('Event edit marked as addressed!')
-        // Remove the edit from the list
-        setEventEdits(prev => prev.filter(edit => edit.id !== editId))
+      const payload = edit.edit_payload as { name?: string; venue_name?: string | null; city?: string; state?: string | null; country?: string; address?: string; email?: string | null; website?: string | null; social?: string | null; category?: string; start_date?: string; end_date?: string; application_deadline?: string | null } | undefined
+      if (payload && edit.event_id) {
+        const { error: updateError } = await supabase
+          .from('events')
+          .update({
+            ...(payload.name != null && { name: payload.name }),
+            ...(payload.venue_name !== undefined && { venue_name: payload.venue_name }),
+            ...(payload.city != null && { city: payload.city }),
+            ...(payload.state !== undefined && { state: payload.state }),
+            ...(payload.country != null && { country: payload.country }),
+            ...(payload.address != null && { address: payload.address }),
+            ...(payload.email !== undefined && { email: payload.email }),
+            ...(payload.website !== undefined && { website: payload.website }),
+            ...(payload.social !== undefined && { social: payload.social }),
+            ...(payload.category != null && { category: payload.category }),
+            ...(payload.start_date != null && { start_date: payload.start_date }),
+            ...(payload.end_date != null && { end_date: payload.end_date }),
+            ...(payload.application_deadline !== undefined && { application_deadline: payload.application_deadline }),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', edit.event_id)
+        if (updateError) {
+          setError('Failed to apply event changes')
+          return
+        }
       }
-    } catch (error) {
-      console.error('Error marking event edit as addressed:', error)
+
+      const { error } = await supabase.from('locale_edits').update({ status: 'approved' }).eq('id', edit.id)
+      if (error) {
+        setError('Failed to approve edit')
+      } else {
+        setSuccess('Event edit approved and applied!')
+        setEventEdits(prev => prev.filter(e => e.id !== edit.id))
+      }
+    } catch (err) {
+      console.error('Error approving event edit:', err)
+      setError('Failed to approve event edit')
     } finally {
       setProcessingEventEdit(null)
     }
@@ -1027,12 +1114,12 @@ export default function AdminPage() {
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4 border-t border-stone-100">
                           <Button
-                            onClick={() => handleMarkStoreEditAddressed(edit.id)}
+                            onClick={() => handleApproveStoreEdit(edit)}
                             disabled={processingStoreEdit === edit.id}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
                           >
                             <Check className="h-4 w-4 mr-2" />
-                            {processingStoreEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
+                            {processingStoreEdit === edit.id ? 'Applying...' : 'Approve Edit'}
                           </Button>
                         </div>
                       </div>
@@ -1079,12 +1166,12 @@ export default function AdminPage() {
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4 border-t border-stone-100">
                           <Button
-                            onClick={() => handleMarkLibraryEditAddressed(edit.id)}
+                            onClick={() => handleApproveLibraryEdit(edit)}
                             disabled={processingLibraryEdit === edit.id}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
                           >
                             <Check className="h-4 w-4 mr-2" />
-                            {processingLibraryEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
+                            {processingLibraryEdit === edit.id ? 'Applying...' : 'Approve Edit'}
                           </Button>
                         </div>
                       </div>
@@ -1131,12 +1218,12 @@ export default function AdminPage() {
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4 border-t border-stone-100">
                           <Button
-                            onClick={() => handleMarkEventEditAddressed(edit.id)}
+                            onClick={() => handleApproveEventEdit(edit)}
                             disabled={processingEventEdit === edit.id}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1"
                           >
                             <Check className="h-4 w-4 mr-2" />
-                            {processingEventEdit === edit.id ? 'Marking...' : 'Mark as Addressed'}
+                            {processingEventEdit === edit.id ? 'Applying...' : 'Approve Edit'}
                           </Button>
                         </div>
                       </div>

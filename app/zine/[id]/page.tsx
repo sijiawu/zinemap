@@ -108,12 +108,6 @@ export default function PublicZinePage() {
         stores: storesData.find(store => store.id === batch.store_id) || null
       })).filter(batch => batch.stores) // Only include batches with valid stores
 
-      console.log("Zine data loaded:", {
-        zine: zineWithAuthor.title,
-        batches: batchesWithStores.length,
-        stores: batchesWithStores.map(b => b.stores?.name)
-      })
-
       setZine({
         ...zineWithAuthor,
         batches: batchesWithStores

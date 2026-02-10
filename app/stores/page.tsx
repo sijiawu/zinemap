@@ -105,6 +105,27 @@ export default function StoresPage() {
           .select('id, display_name, permalink')
           .in('id', storeUserIds)
 
+        // Fetch locale_edits for "last edited by" (addressed or approved only)
+        const { data: allStoreEdits } = await supabase
+          .from('locale_edits')
+          .select('store_id, user_id, created_at, status')
+          .not('store_id', 'is', null)
+          .order('created_at', { ascending: false })
+        const storeLastEditsMap = new Map<string, string>()
+        for (const edit of allStoreEdits || []) {
+          if ((edit.status === 'addressed' || edit.status === 'approved') && !storeLastEditsMap.has(edit.store_id)) {
+            storeLastEditsMap.set(edit.store_id, edit.user_id)
+          }
+        }
+        const editorIds = Array.from(new Set(storeLastEditsMap.values()))
+        const { data: editorProfiles } = editorIds.length > 0 ? await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', editorIds) : { data: [] }
+        const editorMap = new Map(
+          (editorProfiles || []).map(p => [p.id, { display_name: p.display_name, permalink: p.permalink }])
+        )
+
         // Create user lookup map
         const storeUserMap = new Map(
           (allStoreUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
@@ -123,12 +144,16 @@ export default function StoresPage() {
           const userData = storeUserMap.get(store.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
+          const lastEditUserId = storeLastEditsMap.get(store.id)
+          const lastEditUserData = lastEditUserId ? editorMap.get(lastEditUserId) : null
 
           return {
             ...store,
             store_tags: storeTags,
             user_name,
-            user_permalink
+            user_permalink,
+            last_edit_user_name: lastEditUserData?.display_name ?? undefined,
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
           }
         })
 
@@ -546,18 +571,38 @@ export default function StoresPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {store.notes ? formatSocialMedia(store.notes, '#e11d48', '#be123c') : store.notes}
                         </p>
-                        {store.user_name && (
+                        {(store.user_name || store.last_edit_user_name) && (
                           <p className="text-xs text-gray-500 mb-3">
-                            Added by{' '}
-                            {store.user_permalink ? (
-                              <Link 
-                                href={`/profile/${store.user_permalink}`}
-                                className="text-stone-800 hover:underline transition-colors"
-                              >
-                                {store.user_name}
-                              </Link>
-                            ) : (
-                              store.user_name
+                            {store.user_name && (
+                              <>
+                                Added by{' '}
+                                {store.user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${store.user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {store.user_name}
+                                  </Link>
+                                ) : (
+                                  store.user_name
+                                )}
+                              </>
+                            )}
+                            {store.user_name && store.last_edit_user_name && ' • '}
+                            {store.last_edit_user_name && (
+                              <>
+                                Last edit by{' '}
+                                {store.last_edit_user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${store.last_edit_user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {store.last_edit_user_name}
+                                  </Link>
+                                ) : (
+                                  store.last_edit_user_name
+                                )}
+                              </>
                             )}
                           </p>
                         )}

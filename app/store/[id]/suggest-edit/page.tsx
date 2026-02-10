@@ -130,11 +130,7 @@ export default function SuggestStoreEditPage() {
         }
 
         if (availableTagsData) {
-          console.log('Available tags loaded:', availableTagsData.length)
-          console.log('Available tag categories:', [...new Set(availableTagsData.map(tag => tag.category))])
           setConsignmentTerms(availableTagsData)
-        } else {
-          console.log('No tags data received')
         }
 
       } catch (error) {
@@ -220,6 +216,18 @@ export default function SuggestStoreEditPage() {
 
       const editSummary = changes.join('\n\n')
 
+      const editPayload = {
+        name: formData.storeName,
+        city: formData.city,
+        state: formData.state || null,
+        country: formData.country,
+        address: formData.address,
+        email: formData.email || null,
+        website: formData.website || null,
+        notes: formData.notes?.trim() || null,
+        tag_ids: formData.selectedTerms
+      }
+
       // Insert into locale_edits table
       const { error: insertError } = await supabase
         .from('locale_edits')
@@ -228,6 +236,7 @@ export default function SuggestStoreEditPage() {
             store_id: store.id,
             user_id: user.id,
             edit_summary: editSummary,
+            edit_payload: editPayload,
             status: 'pending'
           }
         ])

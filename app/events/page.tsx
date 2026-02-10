@@ -76,6 +76,27 @@ export default function EventsPage() {
           .select('id, display_name, permalink')
           .in('id', eventUserIds)
 
+        // Fetch locale_edits for "last edited by" (addressed or approved only)
+        const { data: allEventEdits } = await supabase
+          .from('locale_edits')
+          .select('event_id, user_id, created_at, status')
+          .not('event_id', 'is', null)
+          .order('created_at', { ascending: false })
+        const eventLastEditsMap = new Map<string, string>()
+        for (const edit of allEventEdits || []) {
+          if ((edit.status === 'addressed' || edit.status === 'approved') && !eventLastEditsMap.has(edit.event_id)) {
+            eventLastEditsMap.set(edit.event_id, edit.user_id)
+          }
+        }
+        const eventEditorIds = Array.from(new Set(eventLastEditsMap.values()))
+        const { data: eventEditorProfiles } = eventEditorIds.length > 0 ? await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', eventEditorIds) : { data: [] }
+        const eventEditorMap = new Map(
+          (eventEditorProfiles || []).map(p => [p.id, { display_name: p.display_name, permalink: p.permalink }])
+        )
+
         // Create event user lookup map
         const eventUserMap = new Map(
           (allEventUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
@@ -86,11 +107,15 @@ export default function EventsPage() {
           const userData = eventUserMap.get(event.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
+          const lastEditUserId = eventLastEditsMap.get(event.id)
+          const lastEditUserData = lastEditUserId ? eventEditorMap.get(lastEditUserId) : null
 
           return {
             ...event,
             user_name,
-            user_permalink
+            user_permalink,
+            last_edit_user_name: lastEditUserData?.display_name ?? undefined,
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
           }
         })
 
@@ -555,18 +580,38 @@ export default function EventsPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {event.notes ? formatSocialMedia(event.notes, '#009035', '#007a2a') : event.notes}
                         </p>
-                        {event.user_name && (
+                        {(event.user_name || event.last_edit_user_name) && (
                           <p className="text-xs text-gray-500 mb-3">
-                            Added by{' '}
-                            {event.user_permalink ? (
-                              <Link 
-                                href={`/profile/${event.user_permalink}`}
-                                className="text-stone-800 hover:underline transition-colors"
-                              >
-                                {event.user_name}
-                              </Link>
-                            ) : (
-                              event.user_name
+                            {event.user_name && (
+                              <>
+                                Added by{' '}
+                                {event.user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${event.user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {event.user_name}
+                                  </Link>
+                                ) : (
+                                  event.user_name
+                                )}
+                              </>
+                            )}
+                            {event.user_name && event.last_edit_user_name && ' • '}
+                            {event.last_edit_user_name && (
+                              <>
+                                Last edit by{' '}
+                                {event.last_edit_user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${event.last_edit_user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {event.last_edit_user_name}
+                                  </Link>
+                                ) : (
+                                  event.last_edit_user_name
+                                )}
+                              </>
                             )}
                           </p>
                         )}

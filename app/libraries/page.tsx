@@ -95,6 +95,27 @@ export default function LibrariesPage() {
           .select('id, display_name, permalink')
           .in('id', libraryUserIds)
 
+        // Fetch locale_edits for "last edited by" (addressed or approved only)
+        const { data: allLibraryEdits } = await supabase
+          .from('locale_edits')
+          .select('library_id, user_id, created_at, status')
+          .not('library_id', 'is', null)
+          .order('created_at', { ascending: false })
+        const libraryLastEditsMap = new Map<string, string>()
+        for (const edit of allLibraryEdits || []) {
+          if ((edit.status === 'addressed' || edit.status === 'approved') && !libraryLastEditsMap.has(edit.library_id)) {
+            libraryLastEditsMap.set(edit.library_id, edit.user_id)
+          }
+        }
+        const libraryEditorIds = Array.from(new Set(libraryLastEditsMap.values()))
+        const { data: libraryEditorProfiles } = libraryEditorIds.length > 0 ? await supabase
+          .from('profiles')
+          .select('id, display_name, permalink')
+          .in('id', libraryEditorIds) : { data: [] }
+        const libraryEditorMap = new Map(
+          (libraryEditorProfiles || []).map(p => [p.id, { display_name: p.display_name, permalink: p.permalink }])
+        )
+
         // Create user lookup map
         const libraryUserMap = new Map(
           (allLibraryUserProfiles || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
@@ -113,12 +134,16 @@ export default function LibrariesPage() {
           const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
+          const lastEditUserId = libraryLastEditsMap.get(library.id)
+          const lastEditUserData = lastEditUserId ? libraryEditorMap.get(lastEditUserId) : null
 
           return {
             ...library,
             library_tags: libraryTags,
             user_name,
-            user_permalink
+            user_permalink,
+            last_edit_user_name: lastEditUserData?.display_name ?? undefined,
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
           }
         })
 
@@ -511,18 +536,38 @@ export default function LibrariesPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {library.notes ? formatSocialMedia(library.notes, '#3b82f6', '#2563eb') : library.notes}
                         </p>
-                        {library.user_name && (
+                        {(library.user_name || library.last_edit_user_name) && (
                           <p className="text-xs text-gray-500 mb-3">
-                            Added by{' '}
-                            {library.user_permalink ? (
-                              <Link 
-                                href={`/profile/${library.user_permalink}`}
-                                className="text-stone-800 hover:underline transition-colors"
-                              >
-                                {library.user_name}
-                              </Link>
-                            ) : (
-                              library.user_name
+                            {library.user_name && (
+                              <>
+                                Added by{' '}
+                                {library.user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${library.user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {library.user_name}
+                                  </Link>
+                                ) : (
+                                  library.user_name
+                                )}
+                              </>
+                            )}
+                            {library.user_name && library.last_edit_user_name && ' • '}
+                            {library.last_edit_user_name && (
+                              <>
+                                Last edit by{' '}
+                                {library.last_edit_user_permalink ? (
+                                  <Link 
+                                    href={`/profile/${library.last_edit_user_permalink}`}
+                                    className="text-stone-800 hover:underline transition-colors"
+                                  >
+                                    {library.last_edit_user_name}
+                                  </Link>
+                                ) : (
+                                  library.last_edit_user_name
+                                )}
+                              </>
                             )}
                           </p>
                         )}

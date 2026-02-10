@@ -138,11 +138,7 @@ export default function SuggestLibraryEditPage() {
         }
 
         if (availableTagsData) {
-          console.log('Available tags loaded:', availableTagsData.length)
-          console.log('Available tag categories:', [...new Set(availableTagsData.map(tag => tag.category))])
           setLibraryTags(availableTagsData)
-        } else {
-          console.log('No tags data received')
         }
 
       } catch (error) {
@@ -228,6 +224,18 @@ export default function SuggestLibraryEditPage() {
 
       const editSummary = changes.join('\n\n')
 
+      const editPayload = {
+        name: formData.libraryName,
+        city: formData.city,
+        state: formData.state || null,
+        country: formData.country,
+        address: formData.address,
+        email: formData.email || null,
+        website: formData.website || null,
+        notes: formData.notes?.trim() || null,
+        tag_ids: formData.selectedTerms
+      }
+
       // Insert into locale_edits table
       const { error: insertError } = await supabase
         .from('locale_edits')
@@ -236,6 +244,7 @@ export default function SuggestLibraryEditPage() {
             library_id: library.id,
             user_id: user.id,
             edit_summary: editSummary,
+            edit_payload: editPayload,
             status: 'pending'
           }
         ])

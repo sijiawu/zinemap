@@ -149,12 +149,29 @@ export default function SuggestEventEditPage() {
         ? changes.join('\n\n')
         : 'No specific changes detected'
 
+      const editPayload = {
+        name: formData.name,
+        venue_name: formData.venue_name || null,
+        city: formData.city,
+        state: formData.state || null,
+        country: formData.country,
+        address: formData.address,
+        email: formData.email || null,
+        website: formData.website || null,
+        social: formData.social || null,
+        category: formData.category,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        application_deadline: formData.application_deadline || null
+      }
+
       const { error } = await supabase
         .from('locale_edits')
         .insert({
           event_id: event.id,
           user_id: user.id,
           edit_summary: editSummary,
+          edit_payload: editPayload,
           status: 'pending'
         })
 

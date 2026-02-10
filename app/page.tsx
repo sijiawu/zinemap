@@ -188,17 +188,20 @@ export default function HomePage() {
           // All locale_edits (small table, fetch all at once)
           supabase
             .from('locale_edits')
-            .select('store_id, library_id, event_id, user_id, created_at')
+            .select('store_id, library_id, event_id, user_id, created_at, status')
             .order('created_at', { ascending: false })
         ])
 
         // Process all edits in memory to get most recent per store/library/event
+        // Only count "addressed" or "approved" so listing shows "edited by..." for those
         const storeLastEditsMap = new Map<string, { user_id: string }>()
         const libraryLastEditsMap = new Map<string, { user_id: string }>()
         const eventLastEditsMap = new Map<string, { user_id: string }>()
+        const isEditedByStatus = (status: string) => status === 'addressed' || status === 'approved'
         
         const allEdits = allEditsResult.data || []
         for (const edit of allEdits) {
+          if (!isEditedByStatus(edit.status)) continue
           if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) {
             storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id })
           }
