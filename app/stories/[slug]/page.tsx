@@ -73,6 +73,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         tags={story.metadata.tags}
         author={story.metadata.author}
         authorPermalink={story.metadata.author_permalink}
+        contentTranslation={story.contentTranslation}
+        translationLang={story.translationLang}
+        primaryLang={story.primaryLang}
       >
         {story.content}
       </ArticleLayout>

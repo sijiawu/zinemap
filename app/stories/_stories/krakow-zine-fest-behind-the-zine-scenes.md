@@ -160,7 +160,153 @@ Ilde: I would like to see more zine-related events throughout the year. Lectures
 <Callout>Thank you for reading! This conversation is part of Behind the Zine Scenes, an ongoing series on [**ZineMap**](zinemap.com) documenting the people and places that make up the zine ecosystem. Many thanks to Ilde for sharing the story behind Kraków Zine Fest! You can follow them at [**@krakowzinefest**](https://www.instagram.com/krakowzinefest/) for updates and future calls.
 </Callout>
 
+<!-- TRANSLATION_PL -->
+<Callout>Kraków był drugim przystankiem na mojej trasie po Europie. Byłam tu już wielokrotnie na intensywnych kursach języka polskiego, ale tym razem było inaczej. Po raz pierwszy nie byłam tu tylko jako studentka języka, ale jako rysownik i twórca zine'ów przy stole na [**Kraków Zine Fest**](https://zinemap.com/event/krakow-zine-fest). <br><br>
+Kilka dni przed festiwalem skontaktowałam się z [**@krakowzinefest**](https://www.instagram.com/krakowzinefest/) w sprawie wywiadu z cyklu „Behind the Zine Scenes” dla ZineMap. Zgodzili się. Wieczorem przed festiwalem, gdy właśnie skończyłam drukować spory nakład moich nowych zinów do nauki polskiego i składałam je w Galerii Krakowskiej (wielkim centrum handlowym obok dworca głównego), dostałam od nich wiadomość. Wybierali się właśnie roznieść ulotki do kilku klubów, w których tej nocy odbywały się alternatywne koncerty. Czy chcę się przejść z nimi? <br><br>
+Godzinę później spotkałam **Ilde** przed Klubem RE. Od razu powiedział mi, że jest Hiszpanem, a nie Polakiem, i że mieszka w Krakowie od dziesięciu lat. Włączyłam nagrywanie w telefonie i zaczęliśmy rozmawiać, idąc w stronę kolejnego miejsca.</Callout>
 
+CJ: Jaka jest historia powstania **Kraków Zine Fest**?
 
+Ilde: Przez jakiś czas rysowałem własne komiksy i poznawałem ludzi, którzy robili to samo i interesowali się zinami. Ale właściwie brakowało nam *miejsca*. A był jeszcze mój znajomy, Wojtek Kozielski. Będzie jutro na festiwalu. To prawdziwa legenda. Był zaangażowany w scenę muzyczną i zinową jeszcze w latach 80/90. Miał bar, w którym zawsze się spotykaliśmy.
 
+CJ: Coś typu tajnego, małego klubu?
+
+Ilde: No, po prostu mały bar. Wojtek uwielbia opowiadać o zespołach i starych punkowych zinach. Pewnej nocy znowu się rozgadaliśmy. To było jeszcze w czasie pandemii, kiedy restrykcje zaczęły trochę odpuszczać. Rzuciłem, że może moglibyśmy zorganizować u niego małe wydarzenie zinowe. Zgodził się, więc skontaktowałem się z ludźmi, których znałem z rysowania komiksów i robienia zinów. Lokal był malutki, mieściło się tam może z 15 wystawców. Ale zrobiliśmy to. I przyszło tyle ludzi! To było szalone. W Krakowie dawno nie było niczego w tym stylu, więc zainteresowanie było ogromne.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-1.jpg"
+  alt="Pierwsza edycja Kraków Zine Fest, październik 2021"
+  caption="Pierwsza edycja Kraków Zine Fest, październik 2021 · Zdjęcia: Gabriel Kutz"
+/>
+
+CJ: Gdzie był ten bar?
+
+Ilde: Na Kazimierzu. To był bar w piwnicy i wypełnił się ludźmi, ledwo się dało ruszyć! Zrozumieliśmy, że musimy znaleźć większe miejsce. W następnym roku zrobiliśmy festiwal po drugiej stronie rzeki, w [**Składzie Solnym**](https://www.teh.net/our-members/sklad-solny), niezależnej przestrzeni kulturalnej związanej z aktywizmem. I znowu przyszło mnóstwo ludzi. Niektórzy wiedzieli, co to zine'y, niektórzy nie, ale byli ciekawi i chcieli dowiedzieć się więcej.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-2.jpg"
+  alt="Skład Solny przy Na Zjeździe 8"
+  caption="Minęliśmy Skład Solny przy Na Zjeździe 8 podczas spaceru. Ilde wskazał go jako miejsce drugiej edycji Kraków Zine Fest. Dawny magazyn solny gości dziś organizacje pozarządowe zajmujące się kulturą i ekologią, pracownie artystów, warsztaty muzyczne i konserwatorskie, studio nagraniowe i galerię. Zdjęcie: CJ Wu"
+/>
+
+Ilde: I festiwal rósł. W 2023 roku zrobiliśmy trzecią edycję w Poczcie Głównej z około 70 uczestnikami. To było dla nas ogromne! Festiwal zine'ów prowadzę ja i moja dziewczyna, z niewielką pomocą przyjaciół.
+
+CJ: Aha, więc ta druga osoba, Agnieszka, to twoja dziewczyna? Nie byłam pewna, kogo dzisiaj spotkam. Widziałam wasze oba nazwiska jako organizatorów w mailach.
+
+Ilde: Tak, ona też dziś składa zine'y. Spotkasz ją jutro. W każdym razie trzecia edycja była naprawdę duża, z wieloma salami i mnóstwem ludzi. Rosła za szybko. Nie podobało mi się to. Szła też w innym kierunku niż ten, który sobie wyobrażałem. Więc pomyślałem: okay, wróćmy do początków i spróbujmy znaleźć mniejsze miejsce, żeby skupić się na lokalnych zine'ach. Jak to miejsce, gdzie jutro zrobimy festiwal. Fajne jest to, że [**Spółdzielnia Ogniwo**](https://www.ogniwo.org) też jest prowadzona przez aktywistów. Utrzymuje się z organizowania wydarzeń i sprzedaży książek. To bardzo fajne miejsce.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-3.jpg"
+  alt="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023"
+  caption="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023 · Zdjęcie: Konrad Waszkiewicz"
+/>
+
+CJ: Więc to świadomy wybór, żeby utrzymać go w małej skali.
+
+Ilde: Lubię, gdy jest mały, przynajmniej w przypadku KRAK! Łatwiej zarządzać i utrzymać go głównie lokalnym. Myślę, że gdy rzeczy stają się za duże, trudniej zbudować więź między uczestnikami i tracisz tę fajną rzecz – przypadkowe spotykanie się po mieście, na koncertach itd. To poczucie wspólnoty.
+
+CJ: Ilu ludzi będzie jutro przy stołach?
+
+Ilde: Około 30.
+
+CJ: I czy musieliście odrzucić jakieś zgłoszenia?
+
+Ilde: Tylko kilka. Niektórzy nie mieli zine'ów, tylko druki czy merch. Nie mam z tym problemu, ale przy ograniczonej przestrzeni priorytet dajemy ludziom, którzy robią zine'y. W końcu chodzi o wspieranie twórców zine'ów!
+
+<Callout variant="highlight">
+"Miejsce nie powinno być ograniczeniem. Zawsze możesz coś zrobić wszędzie."
+</Callout>
+
+Ilde: Ostatnio zauważam, że coraz więcej młodych ludzi angażuje się w zine'y w Polsce. Na przykład największy festiwal zine'ów w Polsce to teraz [**Poznań Zinfest**](https://www.instagram.com/poznan.zinfest), i jest z nim związana ciekawa historia. Na drugiej edycji Kraków Zine Fest zinemaker z Poznania o imieniu Edmund, miał wtedy może 16–17 lat, napisał do mnie w ostatniej chwili. Już zamknęliśmy nabór i nie było miejsca. Mimo to przysłał mi zdjęcia swoich zine'ów. Od razu się w nich zakochałem. Były trochę dziwne, w bardzo fajny sposób. Powiedział, że może usiąść gdziekolwiek, nawet na podłodze. Więc nie mogliśmy odmówić. Przyszedł, świetnie się bawił i tego samego dnia, po zakończeniu Kraków Zine Fest #2, podszedł do mnie i zapytał: „Jak mogę to zrobić? Chcę zrobić festiwal zine'ów w moim mieście!” Powiedziałem mu, żeby po prostu znalazł miejsce, skontaktował się z kilkoma ludźmi w okolicy, którzy robią podobne rzeczy, i spróbował.
+
+CJ: I zrobił?
+
+Ilde: Tak! Zaczęli w małej przestrzeni. Super DIY. A teraz jest ogromny! Rósł bardzo szybko i im tak pasuje, więc jestem naprawdę zadowolony. On i reszta organizatorów mają świetną energię. Robią też prelekcje, warsztaty i takie rzeczy. To bardzo fajny festiwal.
+
+(Rozmowa zeszła później na temat tego, gdzie mieszkaliśmy, przeprowadzek między krajami, Hiszpanii i innych festiwali zine'ów.)
+
+CJ: Macie sieć ludzi, którzy organizują festiwale zine'ów?
+
+Ilde: Po prostu czasami rozmawiamy z innymi organizatorami przez media społecznościowe. Zwykle oni też rysują i robią zine'y, więc mamy wspólne tematy oprócz organizowania. To całkiem naturalne. Myślę, że byłoby bardzo dziwne, gdyby ktoś organizował festiwal zine'ów, ale nigdy nie robił zine'ów.
+
+CJ: (śmiech)
+
+Ilde: No, może ktoś jest super pasjonatem, ale myślę, że w większości przypadków to ludzie, którzy robią zine'y albo kiedyś je robili. Jak Wojtek, który pomógł mi przy pierwszej edycji. Robił i nadal czasem robi klasyczne zine'y, pełne tekstu. Właściwie przypomniałem sobie inną historię. Na pierwszej edycji byliśmy wypełnieni po brzegi, bez żadnej dodatkowej przestrzeni, i nagle tego dnia przyszli dwóch gości i powiedzieli: „O, Wojtek powiedział, że jest festiwal zine'ów, chcemy dołączyć!” A ja na to: super, ale *dosłownie* nie ma miejsca. Mimo to powiedzieli: „Nie martw się, damy radę.” (śmiech) Ustawili krzesło na schodach i otworzyli pudełko po butach. Było pełne starych zine'ów z lat 80. i 90. Szalone!
+
+CJ: O wow! Ale oni je zrobili, czy to była ich kolekcja?
+
+Ilde: Zrobili część i przywieźli też fragment kolekcji, tak myślę. To byli starzy znajomi Wojtka. Wszyscy byli w szoku: „Wow, spójrzcie na to!” Było super. Chyba Agnieszce udało się zdobyć jeden. Naprawdę podobało mi się, jak z powodu trudności z drukiem w tamtych czasach i kosztów wykorzystywali całą przestrzeń – w tych starych zine'ach nie było w ogóle pustej przestrzeni. Całe miejsce zajęte tekstem, kolażami i rysunkami. Było niesamowite.
+
+CJ: Musieli wykorzystać każdy skrawek przestrzeni?
+
+Ilde: Tak, wycinali tekst, robili kolaże, kleili wszystko i robili kopie. Masz tekst do góry nogami, bazgroły wypełniające każdą przestrzeń… Super fajne.
+
+CJ: Macie zdjęcia? Jestem tak ciekawa.
+
+Ilde: Mogę spróbować znaleźć i zrobić zdjęcia. Agnieszka ma jeden. Wojtek później pracował z przyjacielem nad zbiorem starych polskich punkowych zine'ów. Wydrukowali je ponownie w dużej książce „Antena Krzyku: Antologia 1986-1990”.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-5.jpg"
+  alt="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
+  caption="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
+/>
+
+CJ: Ciągle słyszę o tym nakładaniu się punku i społeczności zine'ów.
+
+Ilde: Chyba chodzi o DIY i wolność. Zrób to sam, rób co chcesz. Jutro mogę pokazać ci zabawny zine o kosmitach, który zrobiliśmy z Agnieszką i kilkoma znajomymi muzykami. Opiera się na popularnym polskim obserwowaniu UFO z końca lat 50. Wzięliśmy tę historię, dodaliśmy mnóstwo absurdu i złożyliśmy to w całość. Nasi znajomi z Ascending Order, którzy grają też w kilku zespołach punkowych, pomogli z historią i zrobili do niej ścieżkę dźwiękową. Wydaliśmy to na kasecie magnetofonowej razem z zine'em.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-6.jpg"
+  alt="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
+  caption="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
+/>
+
+CJ: Wow! Ludzie nadal mają odtwarzacze kaset?
+
+Ilde: Tak, niektórzy tak! Ale dla tych, którzy nie mają magnetofonu, są też inne sposoby posłuchania albumu.
+
+CJ: To takie fajne!
+
+Ilde: Zrobiliśmy zine'a pod koniec 2023 roku. Wydrukowaliśmy 100 egzemplarzy z kasetami, które szybko się rozeszły, potem zdecydowaliśmy się na dodruk zine'a. Kaseta była czysto zielona, sitodrukowana z małym rysunkiem głównego bohatera, który zrobiła Agnieszka. W każdym razie. Mówię ci to wszystko przez ten związek z muzyką. Znajomy, który wpadł na pomysł całej historii, zaproponował napisanie muzyki do zine'a, bo nie rysuje, ale lubi komiksy. Było bardzo naturalnie i fajnie robić to razem.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-7.jpg"
+  alt="Egzemplarz tego zine'a wrócił ze mną jako wymiana z Agnieszką i Ilde na Kraków Zine Festival. Zdjęcie: CJ Wu"
+  caption="Egzemplarz tego zine'a wrócił ze mną jako wymiana z Agnieszką i Ilde na Kraków Zine Festival. Zdjęcie: CJ Wu"
+/>
+
+CJ: A jak zacząłeś robić zine'y?
+
+Ilde: Zawsze rysowałem i tak dalej, ale gdy byłem młody, naprawdę chciałem robić filmy. Niestety nie miałem środków, żeby to zrobić, więc najbardziej podobną rzeczą, na jaką wpadłem, było rysowanie komiksów. Nie chciałem myśleć o tym, czy znajdę wydawcę czy nie. Więc zdecydowałem, że zrobię to wszystko sam.
+
+CJ: Więc zacząłeś drukować swoje komiksy. Co z nimi robiłeś?
+
+Ilde: Rozdawałem je, sprzedawałem część albo wymieniałem z ludźmi.
+
+CJ: Jak sprzedawałeś?
+
+Ilde: Głównie na festiwalach albo online, ludzie kontaktują się przez e-mail czy media społecznościowe.
+
+<ImageWithCaption
+  src="/krakow-zine-fest-8.jpg"
+  alt="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
+  caption="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
+/>
+
+CJ: Jaka jest twoja wizja krakowskiej sceny zine'owej poza weekendem festiwalowym?
+
+Ilde: Chciałbym widzieć więcej wydarzeń związanych z zine'ami w ciągu roku. Prelekcje, warsztaty itd. Tego typu rzeczy. Zawsze jest ktoś zainteresowany, nawet w małym miejscu. Wierzę, że zine'y i wszystkie takie rzeczy DIY łączą ludzi. Miejsce nie powinno być ograniczeniem. Zawsze możesz coś zrobić wszędzie.
+
+<Callout>Następnego dnia festiwal rozwinął się tak, jak opisał Ilde. Przestrzeń była mała i przytulna. Niektórzy siedzieli na krzesłach, inni na kanapach. Był stały ruch, ale nic nie czuło się pospiesznie. Kilka razy wstałam od stołu, żeby porozmawiać i wymienić się zine'ami. Mój zine do nauki polskiego prawie się rozszedł. <br><br>
+Patrząc, jak Ilde porusza się po przestrzeni, sprawdza u wszystkich, wita ludzi, odpowiada na pytania, przełącza się między językami, przypomniałam sobie, co powiedział poprzedniego wieczoru o tym, że miejsce nie jest ograniczeniem; wyraźnie język też nie powinien nim być. Po zatrzymaniu nagrywania zapytałam go, jak to jest prowadzić festiwale i budować wspólnotę w obcym języku. Powiedział, że teraz radzi sobie z większością spraw po polsku i tylko czasami potrzebuje pomocy ze słówkiem. Przy telefonach i logistyce, np. wynajmowaniu stołów na festiwal, polega na Agnieszce. Resztę ogarnia w biegu.</Callout>
+
+<ImageWithCaption
+  src="/krakow-zine-fest-9.jpg"
+  alt="Dzień festiwalu w Spółdzielni Ogniwo, Kraków, 7 grudnia 2025. Zdjęcie: Ilde B."
+  caption="Dzień festiwalu w Spółdzielni Ogniwo, Kraków, 7 grudnia 2025. Zdjęcie: Ilde B."
+/>
+
+<Callout>Dziękujemy za lekturę! Ta rozmowa jest częścią Behind the Zine Scenes, trwającej serii na [**ZineMap**](zinemap.com) dokumentującej ludzi i miejsca tworzące ekosystem zine'ów. Wielkie dzięki dla Ilde za podzielenie się historią Kraków Zine Fest! Możecie ich obserwować na [**@krakowzinefest**](https://www.instagram.com/krakowzinefest/) po aktualizacje i informacje o kolejnych edycjach.
+</Callout>
+<!-- /TRANSLATION_PL -->
 

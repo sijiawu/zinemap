@@ -1,5 +1,8 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
+import { TranslationToggle } from '@/components/TranslationToggle'
+
+type TranslationLang = 'pl' | 'en' | 'fr'
 
 interface ArticleLayoutProps {
   children: ReactNode
@@ -8,9 +11,12 @@ interface ArticleLayoutProps {
   tags?: string[]
   author?: string
   authorPermalink?: string
+  contentTranslation?: ReactNode
+  translationLang?: TranslationLang
+  primaryLang?: TranslationLang
 }
 
-export function ArticleLayout({ children, title, date, tags, author, authorPermalink }: ArticleLayoutProps) {
+export function ArticleLayout({ children, title, date, tags, author, authorPermalink, contentTranslation, translationLang, primaryLang = 'en' }: ArticleLayoutProps) {
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Header */}
@@ -61,11 +67,21 @@ export function ArticleLayout({ children, title, date, tags, author, authorPerma
             ))}
           </div>
         )}
+
       </header>
 
       {/* Content */}
       <div className="prose prose-stone prose-lg max-w-none">
-        {children}
+        {contentTranslation && translationLang ? (
+          <TranslationToggle
+            primaryLang={primaryLang}
+            translationLang={translationLang}
+            contentPrimary={children}
+            contentTranslation={contentTranslation}
+          />
+        ) : (
+          children
+        )}
       </div>
     </article>
   )

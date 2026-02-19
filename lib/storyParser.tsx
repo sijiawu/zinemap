@@ -16,6 +16,8 @@ type HastElement = any
 type HastText = any
 type MdastRoot = any
 
+export type TranslationLang = 'pl' | 'en' | 'fr'
+
 export interface StoryMetadata {
   title: string
   date: string
@@ -26,11 +28,15 @@ export interface StoryMetadata {
   excerpt: string
   thumbnail?: string
   password?: string
+  primary_lang?: TranslationLang  // Language of main content; defaults to 'en' if not set
 }
 
 export interface Story {
   metadata: StoryMetadata
   content: React.ReactElement
+  contentTranslation?: React.ReactElement
+  translationLang?: TranslationLang
+  primaryLang: TranslationLang
 }
 
 // Custom rehype plugin to add target="_blank" to all links
@@ -379,11 +385,28 @@ export function parseStory(markdownContent: string, slug: string): Story {
     password: data.password ? String(data.password) : undefined,
   }
 
-  const processedContent = processMarkdown(content)
+  // Check for inline translation: <!-- TRANSLATION_XX --> ... <!-- /TRANSLATION_XX --> (XX = pl, en, fr)
+  const translationMatch = content.match(/<!--\s*TRANSLATION_(PL|EN|FR)\s*-->([\s\S]*?)<!--\s*\/TRANSLATION_\1\s*-->/i)
+  let mainContent = content
+  let translationContent: string | undefined
+  let translationLang: Story['translationLang']
+  if (translationMatch) {
+    mainContent = content.slice(0, translationMatch.index).trim()
+    translationContent = translationMatch[2].trim()
+    translationLang = translationMatch[1].toLowerCase() as Story['translationLang']
+  }
+
+  const primaryLang: TranslationLang = (data.primary_lang as TranslationLang) || 'en'
+
+  const processedContent = processMarkdown(mainContent)
+  const processedTranslation = translationContent ? processMarkdown(translationContent) : undefined
 
   return {
     metadata,
     content: processedContent,
+    contentTranslation: processedTranslation,
+    translationLang,
+    primaryLang,
   }
 }
 

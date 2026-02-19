@@ -74,6 +74,19 @@ Your content here. Can include **bold** and other markdown.
 - Example: `slug: building-zinemap` → filename: `building-zinemap.md`
 - Place all story files in this `_stories` directory
 
+## Inline Translations
+
+To add a translation that appears as an in-page toggle:
+
+1. Add the translated content after your main content, wrapped in HTML comments. Use `TRANSLATION_PL`, `TRANSLATION_EN`, or `TRANSLATION_FR`:
+```
+<!-- TRANSLATION_PL -->
+Your Polish content here
+<!-- /TRANSLATION_PL -->
+```
+
+2. Optional: Add `primary_lang: "fr"` to frontmatter when the main content is not English (e.g. French-original with English translation).
+
 ## Password Protection
 
 If you set a `password` field in the frontmatter:
