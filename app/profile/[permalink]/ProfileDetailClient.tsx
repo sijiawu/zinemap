@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft, Store, Library, MessageSquare, Pencil } from "lucide-react"
+import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft, Store, Library, Pencil } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
 import { autoLinkText, isPastEvent, getEventCategoryDisplay } from '@/lib/utils'
@@ -451,14 +451,14 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
           </div>
         </div>
 
-        {/* Activities Section - Horizontal Carousel */}
+        {/* Contributions Section - Horizontal Carousel */}
         {activities.length > 0 && (
           <div className="mb-6 sm:mb-8">
             <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-gloria">
-                  <MessageSquare className="h-5 w-5" />
-                  Activities
+                  <MapPin className="h-5 w-5" />
+                  Contributions
                 </CardTitle>
               </CardHeader>
               <CardContent>

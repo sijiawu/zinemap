@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft, MessageSquare, Store, Library, Pencil } from "lucide-react"
+import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft, Store, Library, Pencil } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { UserProfile, Zine } from '@/lib/types'
@@ -920,14 +920,14 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Activities Section - Horizontal Carousel */}
+        {/* Contributions Section - Horizontal Carousel */}
         {activities.length > 0 && (
           <div className="mt-8 mb-6 sm:mb-8">
             <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-gloria">
-                  <MessageSquare className="h-5 w-5" />
-                  Activities
+                  <MapPin className="h-5 w-5" />
+                  Contributions
                 </CardTitle>
               </CardHeader>
               <CardContent>
