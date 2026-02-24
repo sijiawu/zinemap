@@ -188,9 +188,9 @@ export default function ProfilePage() {
       const entityIdsByUser = { stores: new Set<string>(), libraries: new Set<string>(), events: new Set<string>() }
 
       const [storesRes, librariesRes, eventsRes, notesRes, editsRes] = await Promise.all([
-        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).order('created_at', { ascending: false }),
-        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).order('created_at', { ascending: false }),
-        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).order('created_at', { ascending: false }),
+        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
+        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
+        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
         supabase.from('community_notes').select('id, store_id, library_id, event_id, text, submitted_at, anonymous').eq('user_id', userId).order('submitted_at', { ascending: false }),
         supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
       ])
