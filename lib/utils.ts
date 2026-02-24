@@ -90,6 +90,33 @@ export function formatDateReadable(dateString: string | Date): string {
 }
 
 /**
+ * Format a date as a subtle relative string (e.g. "2 hours ago", "3 days ago")
+ * Never uses short date; always relative. Use formatDateReadable for tooltip.
+ */
+export function formatRelativeDate(dateString: string | Date): string {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return ''
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMinutes < 1) return 'just now'
+  if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`
+  if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
+  if (diffDays === 1) return 'yesterday'
+  if (diffDays <= 6) return `${diffDays} days ago`
+  if (diffDays <= 13) return 'last week'
+  if (diffDays <= 27) return `${Math.floor(diffDays / 7)} weeks ago`
+  if (diffDays <= 60) return 'last month'
+  if (diffDays <= 365) return `${Math.floor(diffDays / 30)} months ago`
+  const years = Math.floor(diffDays / 365)
+  return `${years} ${years === 1 ? 'year' : 'years'} ago`
+}
+
+/**
  * Format a date string for display (Month Day format)
  * This ensures that dates like "2024-09-06" display as "Sept 6" regardless of timezone
  */

@@ -13,6 +13,7 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
+import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function EventsPage() {
@@ -580,8 +581,8 @@ export default function EventsPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {event.notes ? formatSocialMedia(event.notes, '#009035', '#007a2a') : event.notes}
                         </p>
-                        {(event.user_name || event.last_edit_user_name) && (
-                          <p className="text-xs text-gray-500 mb-3">
+                        {(event.user_name || event.last_edit_user_name || event.created_at) && (
+                          <div className="text-xs text-stone-500 mb-3">
                             {event.user_name && (
                               <>
                                 Added by{' '}
@@ -595,9 +596,10 @@ export default function EventsPage() {
                                 ) : (
                                   event.user_name
                                 )}
+                                {event.created_at && <RelativeDateWithTooltip dateString={event.created_at} prefix=" · " />}
                               </>
                             )}
-                            {event.user_name && event.last_edit_user_name && ' • '}
+                            {event.user_name && event.last_edit_user_name && ' · '}
                             {event.last_edit_user_name && (
                               <>
                                 Last edit by{' '}
@@ -611,9 +613,15 @@ export default function EventsPage() {
                                 ) : (
                                   event.last_edit_user_name
                                 )}
+                                {event.updated_at && event.updated_at !== event.created_at && (
+                                  <RelativeDateWithTooltip dateString={event.updated_at} prefix=" · " />
+                                )}
                               </>
                             )}
-                          </p>
+                            {!event.user_name && event.created_at && (
+                              <RelativeDateWithTooltip dateString={event.created_at} />
+                            )}
+                          </div>
                         )}
                         <Link href={`/event/${event.permalink || event.id}`}>
                           <Button

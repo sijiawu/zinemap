@@ -13,6 +13,7 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia } from "@/lib/utils"
+import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function LibrariesPage() {
@@ -536,8 +537,8 @@ export default function LibrariesPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {library.notes ? formatSocialMedia(library.notes, '#3b82f6', '#2563eb') : library.notes}
                         </p>
-                        {(library.user_name || library.last_edit_user_name) && (
-                          <p className="text-xs text-gray-500 mb-3">
+                        {(library.user_name || library.last_edit_user_name || library.created_at) && (
+                          <div className="text-xs text-stone-500 mb-3">
                             {library.user_name && (
                               <>
                                 Added by{' '}
@@ -551,9 +552,10 @@ export default function LibrariesPage() {
                                 ) : (
                                   library.user_name
                                 )}
+                                {library.created_at && <RelativeDateWithTooltip dateString={library.created_at} prefix=" · " />}
                               </>
                             )}
-                            {library.user_name && library.last_edit_user_name && ' • '}
+                            {library.user_name && library.last_edit_user_name && ' · '}
                             {library.last_edit_user_name && (
                               <>
                                 Last edit by{' '}
@@ -567,9 +569,15 @@ export default function LibrariesPage() {
                                 ) : (
                                   library.last_edit_user_name
                                 )}
+                                {library.updated_at && library.updated_at !== library.created_at && (
+                                  <RelativeDateWithTooltip dateString={library.updated_at} prefix=" · " />
+                                )}
                               </>
                             )}
-                          </p>
+                            {!library.user_name && library.created_at && (
+                              <RelativeDateWithTooltip dateString={library.created_at} />
+                            )}
+                          </div>
                         )}
                         <Link href={`/library/${library.permalink || library.id}`}>
                           <Button

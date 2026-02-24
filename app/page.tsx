@@ -13,6 +13,7 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function HomePage() {
@@ -89,6 +90,11 @@ export default function HomePage() {
 
 
   // Phase 1: Load basic data immediately (stores, libraries, events without tags/user info)
+  // Select only columns needed for list + map to reduce payload
+  const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before'
+  const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before'
+  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline'
+
   useEffect(() => {
     const fetchBasicData = async () => {
       try {
@@ -96,17 +102,17 @@ export default function HomePage() {
         const [storesResult, librariesResult, eventsResult] = await Promise.all([
           supabase
             .from('stores')
-            .select('*')
+            .select(storeColumns)
             .eq('approved', true)
             .order('created_at', { ascending: false }),
           supabase
             .from('libraries')
-            .select('*')
+            .select(libraryColumns)
             .eq('approved', true)
             .order('created_at', { ascending: false }),
           supabase
             .from('events')
-            .select('*')
+            .select(eventColumns)
             .eq('approved', true)
             .order('created_at', { ascending: false })
         ])
@@ -145,116 +151,76 @@ export default function HomePage() {
           return
         }
 
-        // Fetch all enhanced data in parallel
-        // Note: locale_edits is a very small table (~5 rows), so we fetch all at once
+        // Fetch tags + locale_edits in parallel (no profiles yet - we need edits to get editor IDs)
         const [
           storeTagsResult,
-          storeUserProfilesResult,
           libraryTagsResult,
-          libraryUserProfilesResult,
-          eventUserProfilesResult,
           allEditsResult
         ] = await Promise.all([
-          // Store tags
           currentStores.length > 0 ? supabase
             .from('store_tags')
             .select(`id, store_id, tag_id, tags!inner(id, label, category)`)
             .in('store_id', currentStores.map(s => s.id)) : Promise.resolve({ data: [] }),
-          
-          // Store user profiles
-          currentStores.length > 0 ? supabase
-            .from('profiles')
-            .select('id, display_name, permalink')
-            .in('id', currentStores.map(s => s.submitted_by)) : Promise.resolve({ data: [] }),
-          
-          // Library tags
           currentLibraries.length > 0 ? supabase
             .from('library_tags')
             .select(`id, library_id, tag_id, tags!inner(id, label, category)`)
             .in('library_id', currentLibraries.map(l => l.id)) : Promise.resolve({ data: [] }),
-          
-          // Library user profiles
-          currentLibraries.length > 0 ? supabase
-            .from('profiles')
-            .select('id, display_name, permalink')
-            .in('id', currentLibraries.map(l => l.submitted_by)) : Promise.resolve({ data: [] }),
-          
-          // Event user profiles
-          currentEvents.length > 0 ? supabase
-            .from('profiles')
-            .select('id, display_name, permalink')
-            .in('id', currentEvents.map(e => e.submitted_by)) : Promise.resolve({ data: [] }),
-          
-          // All locale_edits (small table, fetch all at once)
           supabase
             .from('locale_edits')
             .select('store_id, library_id, event_id, user_id, created_at, status')
+            .in('status', ['addressed', 'approved'])
             .order('created_at', { ascending: false })
         ])
 
-        // Process all edits in memory to get most recent per store/library/event
-        // Only count "addressed" or "approved" so listing shows "edited by..." for those
+        // Build edit maps (most recent per store/library/event)
         const storeLastEditsMap = new Map<string, { user_id: string }>()
         const libraryLastEditsMap = new Map<string, { user_id: string }>()
         const eventLastEditsMap = new Map<string, { user_id: string }>()
-        const isEditedByStatus = (status: string) => status === 'addressed' || status === 'approved'
-        
         const allEdits = allEditsResult.data || []
         for (const edit of allEdits) {
-          if (!isEditedByStatus(edit.status)) continue
-          if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) {
-            storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id })
-          }
-          if (edit.library_id && !libraryLastEditsMap.has(edit.library_id)) {
-            libraryLastEditsMap.set(edit.library_id, { user_id: edit.user_id })
-          }
-          if (edit.event_id && !eventLastEditsMap.has(edit.event_id)) {
-            eventLastEditsMap.set(edit.event_id, { user_id: edit.user_id })
-          }
+          if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id })
+          if (edit.library_id && !libraryLastEditsMap.has(edit.library_id)) libraryLastEditsMap.set(edit.library_id, { user_id: edit.user_id })
+          if (edit.event_id && !eventLastEditsMap.has(edit.event_id)) eventLastEditsMap.set(edit.event_id, { user_id: edit.user_id })
         }
-        
-        // Batch fetch ALL editor profiles in one query
-        const allEditorIds = Array.from(new Set([
+
+        // Single profiles query: all submitters + all editors (deduped)
+        const submitterIds = [
+          ...currentStores.map(s => s.submitted_by),
+          ...currentLibraries.map(l => l.submitted_by),
+          ...currentEvents.map(e => e.submitted_by)
+        ]
+        const editorIds = [
           ...Array.from(storeLastEditsMap.values()).map(e => e.user_id),
           ...Array.from(libraryLastEditsMap.values()).map(e => e.user_id),
           ...Array.from(eventLastEditsMap.values()).map(e => e.user_id)
-        ]))
-        const allEditorProfilesResult = allEditorIds.length > 0 ? await supabase
+        ]
+        const allProfileIds = Array.from(new Set([...submitterIds, ...editorIds]))
+        const profilesResult = allProfileIds.length > 0 ? await supabase
           .from('profiles')
           .select('id, display_name, permalink')
-          .in('id', allEditorIds) : { data: [] }
-        
-        const editorMap = new Map(
-          (allEditorProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
+          .in('id', allProfileIds) : { data: [] }
+        const userMap = new Map(
+          (profilesResult.data || []).map(u => [u.id, { display_name: u.display_name, permalink: u.permalink }])
         )
 
-        // Helper: Enrich item with user and edit info
+        // Helper: Enrich item with user and edit info (userMap covers both submitters and editors)
         const enrichItem = <T extends { id: string; submitted_by: string }>(
           item: T,
-          userMap: Map<string, { display_name: string; permalink: string | null }>,
           lastEditsMap: Map<string, { user_id: string }>
         ) => {
           const userData = userMap.get(item.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const lastEdit = lastEditsMap.get(item.id)
-          let lastEditUserData = null
-          if (lastEdit) {
-            lastEditUserData = editorMap.get(lastEdit.user_id) || { display_name: 'Unknown user', permalink: null }
-          }
-          
+          const lastEditUserData = lastEdit ? userMap.get(lastEdit.user_id) : null
           return {
             ...item,
             user_name: userData.display_name,
             user_permalink: userData.permalink,
-            last_edit_user_name: lastEditUserData?.display_name,
-            last_edit_user_permalink: lastEditUserData?.permalink
+            last_edit_user_name: lastEditUserData?.display_name ?? undefined,
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
           }
         }
 
         // Process stores with enhanced data
-        const storeUserMap = new Map(
-          (storeUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
-        )
-        
         const storesWithTags = currentStores.map((store) => {
           const storeTags = (storeTagsResult.data || [])
             .filter(tag => tag.store_id === store.id)
@@ -267,16 +233,11 @@ export default function HomePage() {
 
           return enrichItem(
             { ...store, store_tags: storeTags },
-            storeUserMap,
             storeLastEditsMap
           )
         })
 
         // Process libraries with enhanced data
-        const libraryUserMap = new Map(
-          (libraryUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
-        )
-        
         const librariesWithTags = currentLibraries.map((library) => {
           const libraryTags = (libraryTagsResult.data || [])
             .filter(tag => tag.library_id === library.id)
@@ -289,18 +250,13 @@ export default function HomePage() {
 
           return enrichItem(
             { ...library, library_tags: libraryTags },
-            libraryUserMap,
             libraryLastEditsMap
           )
         })
 
         // Process events with enhanced data
-        const eventUserMap = new Map(
-          (eventUserProfilesResult.data || []).map(user => [user.id, { display_name: user.display_name, permalink: user.permalink }])
-        )
-        
         const eventsWithUser = currentEvents.map((event) => 
-          enrichItem(event, eventUserMap, eventLastEditsMap)
+          enrichItem(event, eventLastEditsMap)
         )
 
         // Update with enhanced data
@@ -314,12 +270,7 @@ export default function HomePage() {
       }
     }
 
-    // Small delay to ensure list view renders first
-    const timer = setTimeout(() => {
-      fetchEnhancedData()
-    }, 100)
-
-    return () => clearTimeout(timer)
+    fetchEnhancedData()
   }, [phase1Complete])
 
   // Debounce search query to improve performance (realtime search)
@@ -851,8 +802,8 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {store.notes}
                           </p>
-                          {(store.user_name || store.last_edit_user_name) && (
-                            <p className="text-xs text-gray-500 mb-3">
+                          {(store.user_name || store.last_edit_user_name || store.created_at) && (
+                            <div className="text-xs text-stone-500 mb-3">
                               {store.user_name && (
                                 <>
                                   Added by{' '}
@@ -866,9 +817,10 @@ export default function HomePage() {
                                   ) : (
                                     store.user_name
                                   )}
+                                  {store.created_at && <RelativeDateWithTooltip dateString={store.created_at} prefix=" · " />}
                                 </>
                               )}
-                              {store.user_name && store.last_edit_user_name && ' • '}
+                              {store.user_name && store.last_edit_user_name && ' · '}
                               {store.last_edit_user_name && (
                                 <>
                                   Last edit by{' '}
@@ -882,9 +834,15 @@ export default function HomePage() {
                                   ) : (
                                     store.last_edit_user_name
                                   )}
+                                  {store.updated_at && store.updated_at !== store.created_at && (
+                                    <RelativeDateWithTooltip dateString={store.updated_at} prefix=" · " />
+                                  )}
                                 </>
                               )}
-                            </p>
+                              {!store.user_name && store.created_at && (
+                                <RelativeDateWithTooltip dateString={store.created_at} />
+                              )}
+                            </div>
                           )}
                           <Link href={`/store/${store.permalink || store.id}`}>
                             <Button
@@ -989,8 +947,8 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {library.notes}
                           </p>
-                          {(library.user_name || library.last_edit_user_name) && (
-                            <p className="text-xs text-gray-500 mb-3">
+                          {(library.user_name || library.last_edit_user_name || library.created_at) && (
+                            <div className="text-xs text-stone-500 mb-3">
                               {library.user_name && (
                                 <>
                                   Added by{' '}
@@ -1004,9 +962,10 @@ export default function HomePage() {
                                   ) : (
                                     library.user_name
                                   )}
+                                  {library.created_at && <RelativeDateWithTooltip dateString={library.created_at} prefix=" · " />}
                                 </>
                               )}
-                              {library.user_name && library.last_edit_user_name && ' • '}
+                              {library.user_name && library.last_edit_user_name && ' · '}
                               {library.last_edit_user_name && (
                                 <>
                                   Last edit by{' '}
@@ -1020,9 +979,15 @@ export default function HomePage() {
                                   ) : (
                                     library.last_edit_user_name
                                   )}
+                                  {library.updated_at && library.updated_at !== library.created_at && (
+                                    <RelativeDateWithTooltip dateString={library.updated_at} prefix=" · " />
+                                  )}
                                 </>
                               )}
-                            </p>
+                              {!library.user_name && library.created_at && (
+                                <RelativeDateWithTooltip dateString={library.created_at} />
+                              )}
+                            </div>
                           )}
                           <Link href={`/library/${library.permalink || library.id}`}>
                             <Button
@@ -1175,8 +1140,8 @@ export default function HomePage() {
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {event.notes}
                           </p>
-                          {(event.user_name || event.last_edit_user_name) && (
-                            <p className="text-xs text-gray-500 mb-3">
+                          {(event.user_name || event.last_edit_user_name || event.created_at) && (
+                            <div className="text-xs text-stone-500 mb-3">
                               {event.user_name && (
                                 <>
                                   Added by{' '}
@@ -1190,9 +1155,10 @@ export default function HomePage() {
                                   ) : (
                                     event.user_name
                                   )}
+                                  {event.created_at && <RelativeDateWithTooltip dateString={event.created_at} prefix=" · " />}
                                 </>
                               )}
-                              {event.user_name && event.last_edit_user_name && ' • '}
+                              {event.user_name && event.last_edit_user_name && ' · '}
                               {event.last_edit_user_name && (
                                 <>
                                   Last edit by{' '}
@@ -1206,9 +1172,15 @@ export default function HomePage() {
                                   ) : (
                                     event.last_edit_user_name
                                   )}
+                                  {event.updated_at && event.updated_at !== event.created_at && (
+                                    <RelativeDateWithTooltip dateString={event.updated_at} prefix=" · " />
+                                  )}
                                 </>
                               )}
-                            </p>
+                              {!event.user_name && event.created_at && (
+                                <RelativeDateWithTooltip dateString={event.created_at} />
+                              )}
+                            </div>
                           )}
                           <Link href={`/event/${event.permalink || event.id}`}>
                             <Button

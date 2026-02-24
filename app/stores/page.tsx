@@ -13,6 +13,7 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia, sortSplitTagsByCreatorPercentage } from "@/lib/utils"
+import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function StoresPage() {
@@ -571,8 +572,8 @@ export default function StoresPage() {
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {store.notes ? formatSocialMedia(store.notes, '#e11d48', '#be123c') : store.notes}
                         </p>
-                        {(store.user_name || store.last_edit_user_name) && (
-                          <p className="text-xs text-gray-500 mb-3">
+                        {(store.user_name || store.last_edit_user_name || store.created_at) && (
+                          <div className="text-xs text-stone-500 mb-3">
                             {store.user_name && (
                               <>
                                 Added by{' '}
@@ -586,9 +587,10 @@ export default function StoresPage() {
                                 ) : (
                                   store.user_name
                                 )}
+                                {store.created_at && <RelativeDateWithTooltip dateString={store.created_at} prefix=" · " />}
                               </>
                             )}
-                            {store.user_name && store.last_edit_user_name && ' • '}
+                            {store.user_name && store.last_edit_user_name && ' · '}
                             {store.last_edit_user_name && (
                               <>
                                 Last edit by{' '}
@@ -602,9 +604,15 @@ export default function StoresPage() {
                                 ) : (
                                   store.last_edit_user_name
                                 )}
+                                {store.updated_at && store.updated_at !== store.created_at && (
+                                  <RelativeDateWithTooltip dateString={store.updated_at} prefix=" · " />
+                                )}
                               </>
                             )}
-                          </p>
+                            {!store.user_name && store.created_at && (
+                              <RelativeDateWithTooltip dateString={store.created_at} />
+                            )}
+                          </div>
                         )}
                         <Link href={`/store/${store.permalink || store.id}`}>
                           <Button

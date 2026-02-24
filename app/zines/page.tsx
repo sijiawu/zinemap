@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Zine, UserProfile } from "@/lib/types"
 import { autoLinkText } from "@/lib/utils"
+import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 
 interface ZineWithAuthor extends Zine {
   profiles: UserProfile
@@ -321,14 +322,6 @@ export default function ZinesPage() {
   }, [selectedCreator, debouncedSearchQuery])
 
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -507,7 +500,7 @@ export default function ZinesPage() {
                     <div className="flex items-center justify-end text-sm text-stone-500">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Added on {formatDate(zine.created_at)}
+                        <RelativeDateWithTooltip dateString={zine.created_at} prefix="Added " />
                       </span>
                     </div>
 
@@ -593,7 +586,7 @@ export default function ZinesPage() {
 
                     <div className="flex items-center gap-1 text-xs text-stone-500">
                       <Calendar className="h-3 w-3" />
-                      Added on {formatDate(zine.created_at)}
+                      <RelativeDateWithTooltip dateString={zine.created_at} prefix="Added " />
                     </div>
                   </div>
                 </div>
@@ -735,7 +728,7 @@ export default function ZinesPage() {
                   {/* Added Date */}
                   <div className="flex items-center gap-1 text-sm text-stone-500">
                     <Calendar className="h-4 w-4" />
-                    Added on {formatDate(selectedZine.created_at)}
+                    <RelativeDateWithTooltip dateString={selectedZine.created_at} prefix="Added " />
                   </div>
                 </div>
               </div>

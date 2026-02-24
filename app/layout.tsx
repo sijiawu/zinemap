@@ -1,5 +1,6 @@
 import './globals.css'
 import ClientRoot from '@/components/ClientRoot'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import FilloutButton from '@/components/FilloutButton'
 import type { Metadata } from 'next'
 
@@ -62,7 +63,9 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
-        <ClientRoot>{children}</ClientRoot>
+        <TooltipProvider>
+          <ClientRoot>{children}</ClientRoot>
+        </TooltipProvider>
         <FilloutButton />
       </body>
     </html>
