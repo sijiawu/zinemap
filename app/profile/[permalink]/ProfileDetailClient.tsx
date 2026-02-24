@@ -268,7 +268,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
 
       const attendingEventsData = attendingRes.data
       if (attendingEventsData) {
-        const events = attendingEventsData.map((item: { events: { id: string; name: string; category: string; start_date: string; end_date: string; city: string; state?: string; country: string; permalink?: string } }) => ({
+        const events = attendingEventsData.map((item: any) => ({
           id: item.events.id,
           name: item.events.name,
           category: item.events.category,
@@ -603,27 +603,20 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
         </div>
 
         {/* Events Section - Full Width */}
-        <div className="mb-6 sm:mb-8 space-y-6">
-          {/* Upcoming Events */}
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <Calendar className="h-5 w-5" />
-                Events they're going to
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const upcomingEvents = attendingEvents.filter(event => !isPastEvent(event))
-                return upcomingEvents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No upcoming events</h3>
-                    <p className="text-stone-600">This user hasn't marked any upcoming events yet.</p>
-                  </div>
-                ) : (
+        {attendingEvents.length > 0 && (
+          <div className="mb-6 sm:mb-8 space-y-6">
+            {/* Upcoming Events */}
+            {attendingEvents.filter(event => !isPastEvent(event)).length > 0 && (
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 font-gloria">
+                    <Calendar className="h-5 w-5" />
+                    Events they're going to
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {upcomingEvents.map((event) => (
+                    {attendingEvents.filter(event => !isPastEvent(event)).map((event) => (
                       <Link
                         key={event.id}
                         href={`/event/${event.permalink || event.id}`}
@@ -654,31 +647,22 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                       </Link>
                     ))}
                   </div>
-                )
-              })()}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Past Events */}
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <Calendar className="h-5 w-5" />
-                Events they went to
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const pastEvents = attendingEvents.filter(event => isPastEvent(event))
-                return pastEvents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No past events</h3>
-                    <p className="text-stone-600">This user hasn't marked any past events yet.</p>
-                  </div>
-                ) : (
+            {/* Past Events */}
+            {attendingEvents.filter(event => isPastEvent(event)).length > 0 && (
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 font-gloria">
+                    <Calendar className="h-5 w-5" />
+                    Events they went to
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {pastEvents.map((event) => (
+                    {attendingEvents.filter(event => isPastEvent(event)).map((event) => (
                       <Link
                         key={event.id}
                         href={`/event/${event.permalink || event.id}`}
@@ -709,11 +693,11 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                       </Link>
                     ))}
                   </div>
-                )
-              })()}
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
       </div>
 
