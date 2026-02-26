@@ -473,7 +473,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                     {activities.map((activity) => (
                       <CarouselItem
                         key={activity.id}
-                        className="pl-4 basis-[85%] sm:basis-[70%] md:basis-[45%] lg:basis-[360px] h-auto"
+                        className="pl-4 basis-[90%] sm:basis-[75%] md:basis-[55%] lg:min-w-[400px] lg:basis-[400px] h-auto"
                       >
                         <div className="block pt-5 pr-5 pb-3 pl-3 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 min-h-[140px] h-full border border-stone-100/80">
                           <div className="flex items-start gap-3">
