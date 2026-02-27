@@ -111,11 +111,7 @@ export function EventsCalendarView({
     [events, selectedDate]
   )
 
-  const defaultMonth = useMemo(() => {
-    const upcoming = events.find((e) => e.end_date >= format(new Date(), "yyyy-MM-dd"))
-    if (upcoming) return parseISO(upcoming.start_date)
-    return events.length > 0 ? parseISO(events[0].start_date) : new Date()
-  }, [events])
+  const defaultMonth = useMemo(() => new Date(), [])
 
   const effectiveMonth = displayedMonth ?? defaultMonth
   const eventsForMonth = useMemo(

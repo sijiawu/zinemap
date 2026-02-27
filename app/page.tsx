@@ -844,7 +844,7 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/store/${store.permalink || store.id}`}>
+                          <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
                             <Button
                               variant="outline"
                               size="sm"
@@ -989,7 +989,7 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/library/${library.permalink || library.id}`}>
+                          <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
                             <Button
                               variant="outline"
                               size="sm"
@@ -1182,7 +1182,7 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/event/${event.permalink || event.id}`}>
+                          <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
                             <Button
                               variant="outline"
                               size="sm"

@@ -658,7 +658,7 @@ export default function EventsPage() {
                             )}
                           </div>
                         )}
-                        <Link href={`/event/${event.permalink || event.id}`}>
+                        <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
                           <Button
                             variant="outline"
                             size="sm"

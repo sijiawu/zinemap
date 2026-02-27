@@ -1034,9 +1034,14 @@ export default function ProfilePage() {
                     <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
                     <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
                     <p className="text-stone-600 mb-4">Start adding your first zine!</p>
-                    <Link href="/dashboard">
-                      <Button>Go to Dashboard</Button>
-                    </Link>
+                    <Button
+                      onClick={() => {
+                        setEditingZine(null)
+                        setShowZineModal(true)
+                      }}
+                    >
+                      Add Zine
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-3 sm:space-y-4">

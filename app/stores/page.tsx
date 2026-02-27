@@ -614,7 +614,7 @@ export default function StoresPage() {
                             )}
                           </div>
                         )}
-                        <Link href={`/store/${store.permalink || store.id}`}>
+                        <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
                           <Button
                             variant="outline"
                             size="sm"

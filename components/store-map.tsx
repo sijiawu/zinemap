@@ -854,19 +854,19 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
           {/* View Details Button */}
           {locationType === 'store' ? (
-            <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+            <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline" className="w-full border-[#e11d48] text-[#e11d48] hover:bg-rose-50">
                 View Details
               </Button>
             </Link>
           ) : locationType === 'library' ? (
-            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
                 View Details
               </Button>
             </Link>
           ) : (
-            <Link href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}>
+            <Link href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline" className="w-full border-[#009035] text-[#009035] hover:bg-green-50">
                 View Details
               </Button>

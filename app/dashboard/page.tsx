@@ -446,7 +446,7 @@ export default function DashboardPage() {
                           )}
                         </div>
 
-                        <Link href={`/dashboard/zine/${zine.permalink}`}>
+                        <Link href={`/dashboard/zine/${zine.permalink}`} target="_blank" rel="noopener noreferrer">
                           <Button
                             variant="outline"
                             size="sm"

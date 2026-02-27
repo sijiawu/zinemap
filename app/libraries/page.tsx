@@ -579,7 +579,7 @@ export default function LibrariesPage() {
                             )}
                           </div>
                         )}
-                        <Link href={`/library/${library.permalink || library.id}`}>
+                        <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
                           <Button
                             variant="outline"
                             size="sm"
