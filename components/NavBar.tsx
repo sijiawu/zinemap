@@ -5,10 +5,26 @@ import Image from "next/image"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { useRouter, usePathname } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
+import { LogIn, LogOut } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function NavBar() {
   const { user, loading } = useSupabaseUser();
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setProfileImage(null);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('profile_image')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => setProfileImage(data?.profile_image || null));
+  }, [user?.id]);
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -124,26 +140,34 @@ export default function NavBar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {!loading && user && (
               <>
                 {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
                   <Link href="/admin" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Admin</Link>
                 )}
-                <Link href="/profile" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Profile</Link>
+                <Link href="/profile" className="rounded-full transition-all duration-200 hover:scale-105 hover:shadow-md" aria-label="My profile">
+                  <Avatar className="h-9 w-9 border-2 border-stone-300">
+                    <AvatarImage src={profileImage || undefined} alt="" />
+                    <AvatarFallback className="bg-stone-200 text-stone-600 text-sm">
+                      {user.email?.[0]?.toUpperCase() || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
               </>
             )}
             {!loading && !user && (
-              <Link href="/login">
-                <button className="px-4 py-2 rounded bg-stone-800 hover:bg-stone-900 text-white font-gloria transition-colors">Log In</button>
+              <Link href="/login" className="p-2 rounded-md hover:bg-stone-100 transition-colors" aria-label="Log in">
+                <LogIn className="h-5 w-5 text-stone-600" />
               </Link>
             )}
             {!loading && user && (
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 rounded bg-stone-300 text-stone-800 font-gloria hover:bg-stone-400 transition-colors"
+                className="p-2 rounded-md hover:bg-stone-100 transition-colors"
+                aria-label="Log out"
               >
-                Log out
+                <LogOut className="h-5 w-5 text-stone-600" />
               </button>
             )}
           </div>
@@ -283,14 +307,21 @@ export default function NavBar() {
                     <Link 
                       href="/profile" 
                       onClick={() => setMobileMenuOpen(false)}
-                      className="font-gloria text-base py-2.5 px-3 rounded-md text-stone-700 hover:text-rose-600 hover:bg-stone-50 transition-all"
+                      className="font-gloria text-base py-2.5 px-3 rounded-md text-stone-700 hover:text-rose-600 hover:bg-stone-50 transition-all flex items-center gap-2"
                     >
-                      Profile
+                      <Avatar className="h-6 w-6 border-2 border-stone-300">
+                        <AvatarImage src={profileImage || undefined} alt="" />
+                        <AvatarFallback className="bg-stone-200 text-stone-600 text-xs">
+                          {user.email?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      My profile
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="font-gloria text-base py-2.5 px-3 rounded-md text-left text-stone-700 hover:text-stone-900 hover:bg-stone-50 transition-all"
+                      className="font-gloria text-base py-2.5 px-3 rounded-md text-left text-stone-700 hover:text-stone-900 hover:bg-stone-50 transition-all flex items-center gap-2"
                     >
+                      <LogOut className="h-4 w-4" />
                       Log out
                     </button>
                   </>
@@ -299,10 +330,10 @@ export default function NavBar() {
                   <Link 
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 font-gloria text-base py-2.5 px-3 rounded-md text-stone-700 hover:bg-stone-50 transition-all"
                   >
-                    <button className="w-full px-4 py-2.5 rounded-md bg-stone-800 hover:bg-stone-900 text-white font-gloria text-base transition-colors">
-                      Log In
-                    </button>
+                    <LogIn className="h-4 w-4" />
+                    Log in
                   </Link>
                 )}
               </div>

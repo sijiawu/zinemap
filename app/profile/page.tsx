@@ -9,21 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft, Store, Library, Pencil } from "lucide-react"
+import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft, Store, Library, Pencil, Bookmark, Landmark, Clock } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { UserProfile, Zine } from '@/lib/types'
 import { generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 import AddZineModal from '@/components/AddZineModal'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+import { SaveButton } from '@/components/SaveButton'
+import { RelativeDateWithTooltip } from '@/components/RelativeDateWithTooltip'
 import { formatDateReadable, isPastEvent } from "@/lib/utils"
+import { StoreMap } from "@/components/store-map"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Store as StoreType, Library as LibraryType, Event as EventType } from "@/lib/types"
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useSupabaseUser()
@@ -89,7 +88,32 @@ export default function ProfilePage() {
     sectionUrl: string
     note?: string
     createdAt: string
+    pending?: boolean
   }[]>([])
+  const [savedStores, setSavedStores] = useState<StoreType[]>([])
+  const [savedLibraries, setSavedLibraries] = useState<LibraryType[]>([])
+  const [savedEvents, setSavedEvents] = useState<EventType[]>([])
+  const [contributionsPage, setContributionsPage] = useState(1)
+  const [savedPinsTab, setSavedPinsTab] = useState<'stores' | 'libraries' | 'events'>('stores')
+  const [profileTab, setProfileTab] = useState('profile')
+  const [isDesktop, setIsDesktop] = useState(true)
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  const handleSavedPinCardClick = (location: StoreType | LibraryType | EventType, type: 'store' | 'library' | 'event') => {
+    if (isDesktop && (window as any).selectMapLocation) {
+      (window as any).selectMapLocation(location, type)
+    } else if (!isDesktop) {
+      if (type === 'store') router.push(`/store/${(location as StoreType).id}`)
+      else if (type === 'library') router.push(`/library/${(location as LibraryType).id}`)
+      else router.push(`/event/${(location as EventType).permalink}`)
+    }
+  }
 
   const fetchProfileData = useCallback(async () => {
     if (!user) return
@@ -120,8 +144,8 @@ export default function ProfilePage() {
       })
       setProfileImagePreview(profileData.profile_image || null)
 
-      // Fetch zines, contributions, activities, and attending events in parallel
-      const [zinesRes, , , attendingRes] = await Promise.all([
+      // Fetch zines, contributions, activities, attending events, and saved locations in parallel
+      const [zinesRes, , , attendingRes, savedRes] = await Promise.all([
         supabase.from('zines').select('id, title, description, cover_image, permalink, is_public').eq('user_id', user.id).order('created_at', { ascending: false }),
         fetchContributions(user.id),
         fetchActivities(user.id),
@@ -129,6 +153,7 @@ export default function ProfilePage() {
           event_id,
           events!inner(id, name, category, start_date, end_date, city, state, country, permalink)
         `).eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('saved_locations').select('entity_type, entity_id').eq('user_id', user.id),
       ])
 
       if (zinesRes.error) {
@@ -153,6 +178,72 @@ export default function ProfilePage() {
         setAttendingEvents(events)
       }
 
+      // Fetch saved locations' full entity data
+      const savedData = savedRes.data || []
+      const storeIds = savedData.filter((s: { entity_type: string }) => s.entity_type === 'store').map((s: { entity_id: string }) => s.entity_id)
+      const libraryIds = savedData.filter((s: { entity_type: string }) => s.entity_type === 'library').map((s: { entity_id: string }) => s.entity_id)
+      const eventIds = savedData.filter((s: { entity_type: string }) => s.entity_type === 'event').map((s: { entity_id: string }) => s.entity_id)
+
+      const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
+      const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
+      const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website'
+
+      const [savedStoresRes, savedLibrariesRes, savedEventsRes, storeTagsRes, libraryTagsRes] = await Promise.all([
+        storeIds.length ? supabase.from('stores').select(storeColumns).in('id', storeIds).eq('approved', true) : Promise.resolve({ data: [] }),
+        libraryIds.length ? supabase.from('libraries').select(libraryColumns).in('id', libraryIds).eq('approved', true) : Promise.resolve({ data: [] }),
+        eventIds.length ? supabase.from('events').select(eventColumns).in('id', eventIds).eq('approved', true) : Promise.resolve({ data: [] }),
+        storeIds.length ? supabase.from('store_tags').select('id, store_id, tag_id, tags!inner(id, label, category)').in('store_id', storeIds) : Promise.resolve({ data: [] }),
+        libraryIds.length ? supabase.from('library_tags').select('id, library_id, tag_id, tags!inner(id, label, category)').in('library_id', libraryIds) : Promise.resolve({ data: [] }),
+      ])
+
+      const allStores = (savedStoresRes.data || []) as StoreType[]
+      const allLibraries = (savedLibrariesRes.data || []) as LibraryType[]
+      const allEvents = (savedEventsRes.data || []) as EventType[]
+      const storeTagsData = storeTagsRes.data || []
+      const libraryTagsData = libraryTagsRes.data || []
+
+      const storeTagsByStoreId = new Map<string, { id: string; store_id: string; tag_id: string; tag: any }[]>()
+      for (const t of storeTagsData) {
+        const list = storeTagsByStoreId.get(t.store_id) || []
+        list.push({ id: t.id, store_id: t.store_id, tag_id: t.tag_id, tag: t.tags })
+        storeTagsByStoreId.set(t.store_id, list)
+      }
+      const libraryTagsByLibraryId = new Map<string, { id: string; library_id: string; tag_id: string; tag: any }[]>()
+      for (const t of libraryTagsData) {
+        const list = libraryTagsByLibraryId.get(t.library_id) || []
+        list.push({ id: t.id, library_id: t.library_id, tag_id: t.tag_id, tag: t.tags })
+        libraryTagsByLibraryId.set(t.library_id, list)
+      }
+      const storesWithTags = allStores.map((store) => ({
+        ...store,
+        store_tags: storeTagsByStoreId.get(store.id) || []
+      }))
+      const librariesWithTags = allLibraries.map((library) => ({
+        ...library,
+        library_tags: libraryTagsByLibraryId.get(library.id) || []
+      }))
+
+      const submitterIds = [...new Set([
+        ...storesWithTags.map((s: any) => s.submitted_by).filter(Boolean),
+        ...librariesWithTags.map((l: any) => l.submitted_by).filter(Boolean),
+        ...allEvents.map((e: any) => e.submitted_by).filter(Boolean),
+      ])]
+      let profileMap: Record<string, { display_name: string | null; permalink: string | null }> = {}
+      if (submitterIds.length > 0) {
+        const { data: profilesData } = await supabase.from('profiles').select('id, display_name, permalink').in('id', submitterIds)
+        if (profilesData) {
+          profileMap = profilesData.reduce((acc: any, p: any) => { acc[p.id] = { display_name: p.display_name, permalink: p.permalink }; return acc }, {})
+        }
+      }
+      const attachUser = (entity: any) => {
+        const p = entity.submitted_by ? profileMap[entity.submitted_by] : null
+        return { ...entity, user_name: p?.display_name || null, user_permalink: p?.permalink || null }
+      }
+
+      setSavedStores(storesWithTags.map(attachUser))
+      setSavedLibraries(librariesWithTags.map(attachUser))
+      setSavedEvents(allEvents.map(attachUser))
+
     } catch (err) {
       console.error('Error fetching profile data:', err)
       setError('Failed to load profile data')
@@ -165,10 +256,10 @@ export default function ProfilePage() {
   const fetchContributions = async (userId: string) => {
     try {
       const [storesRes, librariesRes, eventsRes, notesRes] = await Promise.all([
-        supabase.from('stores').select('*', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('libraries').select('*', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('events').select('*', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('community_notes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('stores').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
+        supabase.from('libraries').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
+        supabase.from('events').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
+        supabase.from('community_notes').select('id', { count: 'exact', head: true }).eq('user_id', userId),
       ])
       setContributions({
         stores: storesRes.count || 0,
@@ -184,15 +275,18 @@ export default function ProfilePage() {
 
   const fetchActivities = async (userId: string) => {
     try {
-      const allActivities: { id: string; type: 'store' | 'library' | 'event' | 'note' | 'edit'; entityType: 'shop' | 'library' | 'event' | 'edit'; entityName: string; entityUrl: string; sectionLabel: string; sectionUrl: string; note?: string; createdAt: string }[] = []
+      const allActivities: { id: string; type: 'store' | 'library' | 'event' | 'note' | 'edit'; entityType: 'shop' | 'library' | 'event' | 'edit'; entityName: string; entityUrl: string; sectionLabel: string; sectionUrl: string; note?: string; createdAt: string; pending?: boolean }[] = []
       const entityIdsByUser = { stores: new Set<string>(), libraries: new Set<string>(), events: new Set<string>() }
 
-      const [storesRes, librariesRes, eventsRes, notesRes, editsRes] = await Promise.all([
+      const [storesRes, librariesRes, eventsRes, notesRes, editsRes, storesPendingRes, librariesPendingRes, eventsPendingRes] = await Promise.all([
         supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
         supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
         supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
         supabase.from('community_notes').select('id, store_id, library_id, event_id, text, submitted_at, anonymous').eq('user_id', userId).order('submitted_at', { ascending: false }),
-        supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at, status').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
+        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
+        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
       ])
 
       const storesData = storesRes.data || []
@@ -214,6 +308,16 @@ export default function ProfilePage() {
         allActivities.push({ id: `event-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at })
       })
 
+      ;(storesPendingRes.data || []).forEach((s: { id: string; name: string; permalink: string | null; created_at: string }) => {
+        allActivities.push({ id: `store-pending-${s.id}`, type: 'store', entityType: 'shop', entityName: s.name, entityUrl: `/store/${s.permalink || s.id}`, sectionLabel: sectionByType.shop.label, sectionUrl: sectionByType.shop.url, createdAt: s.created_at, pending: true })
+      })
+      ;(librariesPendingRes.data || []).forEach((l: { id: string; name: string; permalink: string | null; created_at: string }) => {
+        allActivities.push({ id: `library-pending-${l.id}`, type: 'library', entityType: 'library', entityName: l.name, entityUrl: `/library/${l.permalink || l.id}`, sectionLabel: sectionByType.library.label, sectionUrl: sectionByType.library.url, createdAt: l.created_at, pending: true })
+      })
+      ;(eventsPendingRes.data || []).forEach((e: { id: string; name: string; permalink: string | null; created_at: string }) => {
+        allActivities.push({ id: `event-pending-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at, pending: true })
+      })
+
       const nonAnonymousNotes = notesData.filter((n: { anonymous?: boolean }) => !n.anonymous)
       const storeIds = [...new Set(nonAnonymousNotes.filter((n: { store_id: string | null }) => n.store_id).map((n: { store_id: string | null }) => n.store_id!))]
       const libraryIds = [...new Set(nonAnonymousNotes.filter((n: { library_id: string | null }) => n.library_id).map((n: { library_id: string | null }) => n.library_id!))]
@@ -228,6 +332,12 @@ export default function ProfilePage() {
       const storeMap = new Map((storesForNotes.data || []).map((s: { id: string; name: string; permalink: string | null }) => [s.id, s]))
       const libraryMap = new Map((libsForNotes.data || []).map((l: { id: string; name: string; permalink: string | null }) => [l.id, l]))
       const eventMap = new Map((evsForNotes.data || []).map((e: { id: string; name: string; permalink: string | null }) => [e.id, e]))
+
+      const activityByEntityId = new Map<string, typeof allActivities[0]>()
+      for (const a of allActivities) {
+        const m = a.id.match(/^(store|library|event)-(.*)$/)
+        if (m) activityByEntityId.set(`${m[1]}-${m[2]}`, a)
+      }
 
       for (const n of nonAnonymousNotes) {
         let entityName = ''
@@ -255,9 +365,13 @@ export default function ProfilePage() {
           isOnUserEntity = entityIdsByUser.events.has(n.event_id)
         }
         if (isOnUserEntity) {
-          const existing = allActivities.find(a => a.id === `store-${n.store_id}` || a.id === `library-${n.library_id}` || a.id === `event-${n.event_id}`)
+          const entityKey = n.store_id ? `store-${n.store_id}` : n.library_id ? `library-${n.library_id}` : `event-${n.event_id}`
+          const existing = activityByEntityId.get(entityKey)
           if (existing) existing.note = n.text
-          else allActivities.push({ id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '' })
+          else {
+            const note: typeof allActivities[0] = { id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '' }
+            allActivities.push(note)
+          }
         } else {
           allActivities.push({ id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '' })
         }
@@ -302,7 +416,8 @@ export default function ProfilePage() {
           sectionUrl = '/events'
         }
         if (entityName) {
-          allActivities.push({ id: `edit-${edit.id}`, type: 'edit', entityType: 'edit', entityName, entityUrl, sectionLabel, sectionUrl, createdAt: edit.created_at })
+          const isPending = edit.status === 'pending'
+          allActivities.push({ id: `edit-${edit.id}`, type: 'edit', entityType: 'edit', entityName, entityUrl, sectionLabel, sectionUrl, createdAt: edit.created_at, pending: isPending })
         }
       }
 
@@ -498,9 +613,10 @@ export default function ProfilePage() {
       setSuccess('Profile updated successfully!')
       setIsEditing(false)
       setFieldErrors({})
-      
-      // Refresh profile data
-      await fetchProfileData()
+      setProfile(prev => prev ? { ...prev, display_name: formData.display_name.trim(), site: finalSite, bio: formData.bio?.trim() || null, permalink: finalPermalink, profile_image: profileImageUrl } : null)
+      setFormData(prev => ({ ...prev, display_name: formData.display_name.trim(), site: finalSite || '', bio: formData.bio?.trim() || '', permalink: finalPermalink }))
+      setProfileImagePreview(profileImageUrl)
+      setProfileImage(null)
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000)
@@ -600,17 +716,43 @@ export default function ProfilePage() {
 
   return (
                     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
-      {/* Header with back button */}
+      <Tabs value={profileTab} onValueChange={setProfileTab} className="w-full">
+      {/* Header with back button and tabs */}
       <div className="bg-white border-b border-stone-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to map
             </Button>
           </Link>
+          {/* Mobile: dropdown */}
+          <div className="lg:hidden w-full max-w-[200px]">
+            <Select value={profileTab} onValueChange={setProfileTab}>
+              <SelectTrigger className="w-full font-gloria border-stone-200 bg-stone-50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="profile" className="font-gloria">My Profile</SelectItem>
+                <SelectItem value="contributions" className="font-gloria">My Contributions</SelectItem>
+                <SelectItem value="my-saved-pins" className="font-gloria">My Saved Pins</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Desktop: tabs */}
+          <TabsList className="hidden lg:inline-flex h-11 gap-0.5 p-1 rounded-full bg-stone-200/50 border border-stone-200/70 shadow-inner shrink-0">
+            <TabsTrigger value="profile" className="font-gloria rounded-full px-4 sm:px-6 py-2.5 text-sm font-medium text-stone-600 data-[state=active]:bg-white data-[state=active]:text-stone-900 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-stone-200/80 transition-all duration-200 hover:text-stone-800">
+              My Profile
+            </TabsTrigger>
+            <TabsTrigger value="contributions" className="font-gloria rounded-full px-4 sm:px-6 py-2.5 text-sm font-medium text-stone-600 data-[state=active]:bg-white data-[state=active]:text-stone-900 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-stone-200/80 transition-all duration-200 hover:text-stone-800">
+              My Contributions
+            </TabsTrigger>
+            <TabsTrigger value="my-saved-pins" className="font-gloria rounded-full px-5 sm:px-8 py-2.5 text-sm font-medium text-stone-600 data-[state=active]:bg-white data-[state=active]:text-stone-900 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-stone-200/80 transition-all duration-200 hover:text-stone-800 min-w-[140px]">
+              My Saved Pins
+            </TabsTrigger>
+          </TabsList>
         </div>
-        </div>
+      </div>
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -627,6 +769,7 @@ export default function ProfilePage() {
           </div>
         )}
 
+          <TabsContent value="profile" className="mt-0 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Profile Section */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
@@ -634,7 +777,7 @@ export default function ProfilePage() {
               {!isEditing ? (
                 <>
                   <CardHeader className="flex flex-row items-start justify-between gap-4 pb-4">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                         {/* Profile Image */}
                         <div className="flex-shrink-0">
@@ -642,13 +785,13 @@ export default function ProfilePage() {
                             <img
                               src={profile.profile_image}
                               alt="Profile"
-                              className="w-20 h-20 object-cover rounded-full border-2 border-stone-200 cursor-pointer hover:opacity-80 transition-opacity"
+                              className="w-20 h-20 object-cover rounded-full border-2 border-stone-300 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md"
                               onClick={() => setIsEditing(true)}
                               title="Click to edit profile"
                             />
                           ) : (
                             <div 
-                              className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-200 flex items-center justify-center cursor-pointer hover:bg-stone-200 transition-colors"
+                              className="w-20 h-20 rounded-full bg-stone-100 border-2 border-stone-300 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md hover:bg-stone-200"
                               onClick={() => setIsEditing(true)}
                               title="Click to edit profile"
                             >
@@ -689,9 +832,8 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Action Buttons */}
-                    <div className="flex-shrink-0 flex gap-2">
+                    {/* Action Buttons - right side, Edit under View as Public */}
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 flex-shrink-0">
                       <Link href={`/profile/${profile.permalink}`}>
                         <Button
                           variant="outline"
@@ -756,7 +898,7 @@ export default function ProfilePage() {
                             <img
                               src={profileImagePreview}
                               alt="Profile preview"
-                              className="w-24 h-24 object-cover rounded-full border border-stone-200"
+                              className="w-24 h-24 object-cover rounded-full border-2 border-stone-300"
                             />
                             <Button
                               type="button"
@@ -920,87 +1062,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Contributions Section - Horizontal Carousel */}
-        {activities.length > 0 && (
-          <div className="mt-8 mb-6 sm:mb-8">
-            <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-gloria">
-                  <MapPin className="h-5 w-5" />
-                  Contributions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Carousel opts={{ align: "start", loop: false }} className="w-full">
-                  <CarouselContent className="-ml-4">
-                    {activities.map((activity) => (
-                      <CarouselItem key={activity.id} className="pl-4 basis-[90%] sm:basis-[75%] md:basis-[55%] lg:min-w-[400px] lg:basis-[400px] h-auto">
-                        <div className="block pt-5 pr-5 pb-3 pl-3 bg-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 min-h-[140px] h-full border border-stone-100/80">
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 relative w-14 h-14">
-                              <div className="absolute left-0 top-0 w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm bg-stone-100 z-10">
-                                {profile?.profile_image ? (
-                                  <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <User className="h-4 w-4 text-stone-400" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className={`absolute right-0 bottom-0 w-9 h-9 rounded-full border-2 border-white shadow-sm flex items-center justify-center z-0 ${
-                                activity.entityType === 'shop' ? 'bg-rose-100 text-rose-600' :
-                                activity.entityType === 'library' ? 'bg-blue-100 text-blue-600' :
-                                activity.entityType === 'event' ? 'bg-green-100 text-green-600' :
-                                'bg-amber-100 text-amber-600'
-                              }`}>
-                                {activity.entityType === 'shop' && <Store className="h-4 w-4" />}
-                                {activity.entityType === 'library' && <Library className="h-4 w-4" />}
-                                {activity.entityType === 'event' && <Calendar className="h-4 w-4" />}
-                                {activity.entityType === 'edit' && <Pencil className="h-4 w-4" />}
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-stone-500 mb-1">
-                                {new Date(activity.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
-                              <p className="text-sm text-stone-700 leading-snug">
-                                <Link href={profile?.permalink ? `/profile/${profile.permalink}` : '/profile'} target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-800 hover:text-rose-600 hover:underline">
-                                  {profile?.display_name || 'Anonymous'}
-                                </Link>
-                                {activity.type === 'edit' ? (
-                                  <> suggested an edit to the page: <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">{activity.entityName}</Link>.</>
-                                ) : (
-                                  <>
-                                    {' added '}
-                                    <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">
-                                      {activity.entityName}
-                                    </Link>
-                                    {' to '}
-                                    <Link href={activity.sectionUrl} target="_blank" rel="noopener noreferrer" className="font-bold italic text-stone-700 hover:text-stone-900 hover:underline">
-                                      {activity.sectionLabel}
-                                    </Link>
-                                    {activity.note ? (
-                                      <>: <span className="italic line-clamp-4">&ldquo;{activity.note}&rdquo;</span></>
-                                    ) : (
-                                      '.'
-                                    )}
-                                  </>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="-left-2 sm:-left-4" />
-                  <CarouselNext className="-right-2 sm:-right-4" />
-                </Carousel>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Zines Section - Full Width */}
         <div className="mt-8 mb-6 sm:mb-8">
             <Card className="bg-white border-stone-200 shadow-sm">
@@ -1110,8 +1171,8 @@ export default function ProfilePage() {
             </Card>
         </div>
 
-        {/* Events Section - Full Width */}
-        <div className="mb-6 sm:mb-8 space-y-6">
+        {/* Events Section - Upcoming + Past */}
+        <div className="space-y-6">
           {/* Upcoming Events */}
           <Card className="bg-white border-stone-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1225,7 +1286,462 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="contributions">
+        <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-gloria">
+              <MapPin className="h-5 w-5" />
+              Contributions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activities.length === 0 ? (
+              <div className="text-center py-12">
+                <MapPin className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                <h3 className="text-lg font-semibold text-stone-800 mb-2">No contributions yet</h3>
+                <p className="text-stone-600 mb-4">Add shops, libraries, and events to the map to see them here.</p>
+                <Link href="/stores">
+                  <Button variant="outline" className="mr-2">Add a shop</Button>
+                </Link>
+                <Link href="/libraries">
+                  <Button variant="outline" className="mr-2">Add a library</Button>
+                </Link>
+                <Link href="/events">
+                  <Button variant="outline">Add an event</Button>
+                </Link>
+              </div>
+            ) : (
+              <>
+              <div className="space-y-3">
+                {activities.slice((contributionsPage - 1) * 15, contributionsPage * 15).map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                  >
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white bg-stone-100 flex items-center justify-center ring-2 ring-stone-200">
+                        {profile?.profile_image ? (
+                          <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="h-4 w-4 text-stone-500" />
+                        )}
+                      </div>
+                      <div className={`absolute -bottom-3 -right-2 w-[26px] h-[26px] rounded-full flex items-center justify-center border-2 border-white ${
+                        activity.entityType === 'shop' ? 'bg-rose-100 text-rose-600' :
+                        activity.entityType === 'library' ? 'bg-blue-100 text-blue-600' :
+                        activity.entityType === 'event' ? 'bg-green-100 text-green-600' :
+                        'bg-amber-100 text-amber-600'
+                      }`}>
+                        {activity.entityType === 'shop' && <Store className="h-3 w-3" />}
+                        {activity.entityType === 'library' && <Library className="h-3 w-3" />}
+                        {activity.entityType === 'event' && <Calendar className="h-3 w-3" />}
+                        {activity.entityType === 'edit' && <Pencil className="h-3 w-3" />}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-stone-500 mb-1 flex items-center gap-2 flex-wrap">
+                        <span>{new Date(activity.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        {activity.pending && (
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-stone-700 leading-snug">
+                        <Link href={profile?.permalink ? `/profile/${profile.permalink}` : '/profile'} target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-800 hover:text-rose-600 hover:underline">
+                          {profile?.display_name || 'Anonymous'}
+                        </Link>
+                        {activity.type === 'edit' ? (
+                          <> suggested an edit to the page: <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">{activity.entityName}</Link>.</>
+                        ) : activity.note ? (
+                          <>
+                            {' added '}
+                            <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">
+                              {activity.entityName}
+                            </Link>
+                            {' to '}
+                            <Link href={activity.sectionUrl} target="_blank" rel="noopener noreferrer" className="font-bold italic text-stone-700 hover:text-stone-900 hover:underline">
+                              {activity.sectionLabel}
+                            </Link>
+                            {' with a note: '}
+                            <span className="italic line-clamp-4">&ldquo;{activity.note}&rdquo;</span>
+                          </>
+                        ) : (
+                          <>
+                            {' added '}
+                            <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">
+                              {activity.entityName}
+                            </Link>
+                            {' to '}
+                            <Link href={activity.sectionUrl} target="_blank" rel="noopener noreferrer" className="font-bold italic text-stone-700 hover:text-stone-900 hover:underline">
+                              {activity.sectionLabel}
+                            </Link>
+                            .
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {activities.length > 15 && (
+                <div className="flex items-center justify-end mt-4 pt-4 border-t border-stone-200">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setContributionsPage(p => Math.max(1, p - 1))}
+                      disabled={contributionsPage <= 1}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setContributionsPage(p => Math.min(Math.ceil(activities.length / 15), p + 1))}
+                      disabled={contributionsPage >= Math.ceil(activities.length / 15)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+          </TabsContent>
+
+          <TabsContent value="my-saved-pins" className="overflow-hidden">
+        {(savedStores.length > 0 || savedLibraries.length > 0 || savedEvents.length > 0) ? (
+          <Card className="bg-white border-stone-200 shadow-sm overflow-hidden">
+            <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 font-gloria text-lg sm:text-xl">
+                <Bookmark className="h-5 w-5 shrink-0" />
+                My Saved Pins ({savedStores.length + savedLibraries.length + savedEvents.length})
+              </CardTitle>
+              <p className="text-sm text-stone-500 mt-1">
+                These are all the pins you have saved on the map!
+              </p>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-0">
+                <div className="w-full lg:w-[380px] lg:shrink-0 min-w-0">
+                {/* Mobile: encourage desktop for map */}
+                <div className="lg:hidden mb-4 p-3 rounded-lg bg-stone-100 border border-stone-200 text-sm text-stone-600">
+                  <p className="font-medium text-stone-700 mb-1">View on desktop for the full experience</p>
+                  <p>Open your profile on a laptop or desktop to see your saved pins on the map and use list-to-map navigation.</p>
+                </div>
+                <Tabs value={savedPinsTab} onValueChange={(v) => setSavedPinsTab(v as 'stores' | 'libraries' | 'events')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-3 sm:mb-4 gap-1 p-1 h-auto">
+                    <TabsTrigger value="stores" className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm truncate min-w-0">
+                      <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">Shops ({savedStores.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="libraries" className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm truncate min-w-0">
+                      <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">Libraries ({savedLibraries.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="events" className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm truncate min-w-0">
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">Events ({savedEvents.length})</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="stores" className="!mt-0">
+                    <div className="space-y-3 sm:space-y-4 lg:max-h-[500px] overflow-y-auto pr-2">
+                      {savedStores.length === 0 ? (
+                        <p className="text-stone-500 text-sm py-4">No saved shops.</p>
+                      ) : (
+                        savedStores.map((store) => (
+                          <Card key={store.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer" onClick={() => handleSavedPinCardClick(store, 'store')}>
+                            <CardHeader className="p-3 sm:p-4 pb-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <CardTitle className="text-base sm:text-lg font-semibold text-stone-800 mb-1">
+                                    <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer" className="hover:text-rose-600 transition-colors" onClick={(e) => e.stopPropagation()}>
+                                      {store.name}
+                                    </Link>
+                                  </CardTitle>
+                                  <div className="flex items-center text-stone-600 text-sm mb-2">
+                                    <MapPin className="h-4 w-4 mr-1" />
+                                    {store.city}{store.state && `, ${store.state}`}, {store.country}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-rose-600 hover:bg-rose-50">
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                  <SaveButton
+                                    entityType="store"
+                                    entityId={store.id}
+                                    variant="ghost"
+                                    size="icon"
+                                    showLabel={false}
+                                    className="h-8 w-8 text-stone-500 hover:text-rose-600 hover:bg-rose-50"
+                                    initialSaved
+                                    onUnsave={() => setSavedStores(prev => prev.filter(x => x.id !== store.id))}
+                                    unsaveLabel="Unsave"
+                                  />
+                                </div>
+                              </div>
+                              {store.store_tags && store.store_tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-3">
+                                  {store.store_tags.map((storeTag, index) => (
+                                    <Badge key={storeTag.id || `store-tag-${store.id}-${index}`} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
+                                      {storeTag.tag.label}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </CardHeader>
+                            <CardContent className="pt-0 px-3 sm:px-4 pb-3">
+                              <p className="text-stone-600 text-sm mb-3 sm:mb-4 leading-relaxed line-clamp-3 sm:line-clamp-5">
+                                {store.notes}
+                              </p>
+                              {(store.user_name || store.created_at) && (
+                                <div className="text-xs text-stone-500 mb-3">
+                                  {store.user_name && (
+                                    <>
+                                      Added by{' '}
+                                      {store.user_permalink ? (
+                                        <Link href={`/profile/${store.user_permalink}`} className="text-stone-800 hover:underline transition-colors">
+                                          {store.user_name}
+                                        </Link>
+                                      ) : (
+                                        store.user_name
+                                      )}
+                                      {store.created_at && <RelativeDateWithTooltip dateString={store.created_at} prefix=" · " />}
+                                    </>
+                                  )}
+                                  {!store.user_name && store.created_at && (
+                                    <RelativeDateWithTooltip dateString={store.created_at} />
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="libraries" className="!mt-0">
+                    <div className="space-y-3 sm:space-y-4 lg:max-h-[500px] overflow-y-auto pr-2">
+                      {savedLibraries.length === 0 ? (
+                        <p className="text-stone-500 text-sm py-4">No saved libraries.</p>
+                      ) : (
+                        savedLibraries.map((library) => (
+                          <Card key={library.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer" onClick={() => handleSavedPinCardClick(library, 'library')}>
+                            <CardHeader className="p-3 sm:p-4 pb-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <CardTitle className="text-base sm:text-lg font-semibold text-stone-800 mb-1">
+                                    <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>
+                                      {library.name}
+                                    </Link>
+                                  </CardTitle>
+                                  <div className="flex items-center text-stone-600 text-sm mb-2">
+                                    <MapPin className="h-4 w-4 mr-1" />
+                                    {library.city}{library.state && `, ${library.state}`}, {library.country}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50">
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                  <SaveButton
+                                    entityType="library"
+                                    entityId={library.id}
+                                    variant="ghost"
+                                    size="icon"
+                                    showLabel={false}
+                                    className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50"
+                                    initialSaved
+                                    onUnsave={() => setSavedLibraries(prev => prev.filter(x => x.id !== library.id))}
+                                    unsaveLabel="Unsave"
+                                  />
+                                </div>
+                              </div>
+                              {library.library_tags && library.library_tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-3">
+                                  {library.library_tags.map((libraryTag, index) => (
+                                    <Badge key={libraryTag.id || `library-tag-${library.id}-${index}`} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
+                                      {libraryTag.tag.label}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </CardHeader>
+                            <CardContent className="pt-0 px-3 sm:px-4 pb-3">
+                              <p className="text-stone-600 text-sm mb-3 sm:mb-4 leading-relaxed line-clamp-3 sm:line-clamp-5">
+                                {library.notes}
+                              </p>
+                              {(library.user_name || library.created_at) && (
+                                <div className="text-xs text-stone-500 mb-3">
+                                  {library.user_name && (
+                                    <>
+                                      Added by{' '}
+                                      {library.user_permalink ? (
+                                        <Link href={`/profile/${library.user_permalink}`} className="text-stone-800 hover:underline transition-colors">
+                                          {library.user_name}
+                                        </Link>
+                                      ) : (
+                                        library.user_name
+                                      )}
+                                      {library.created_at && <RelativeDateWithTooltip dateString={library.created_at} prefix=" · " />}
+                                    </>
+                                  )}
+                                  {!library.user_name && library.created_at && (
+                                    <RelativeDateWithTooltip dateString={library.created_at} />
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="events" className="!mt-0">
+                    <div className="space-y-3 sm:space-y-4 lg:max-h-[500px] overflow-y-auto pr-2">
+                      {savedEvents.length === 0 ? (
+                        <p className="text-stone-500 text-sm py-4">No saved events.</p>
+                      ) : (
+                        savedEvents.map((event) => (
+                          <Card key={event.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer" onClick={() => handleSavedPinCardClick(event, 'event')}>
+                            <CardHeader className="p-3 sm:p-4 pb-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <CardTitle className="text-base sm:text-lg font-semibold text-stone-800 mb-1">
+                                    <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#009035] transition-colors" onClick={(e) => e.stopPropagation()}>
+                                      {event.name}
+                                    </Link>
+                                  </CardTitle>
+                                  {event.venue_name && (
+                                    <div className="flex items-center text-stone-600 text-sm mb-1">
+                                      <Landmark className="h-4 w-4 mr-1" />
+                                      <span className="font-medium">{event.venue_name}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center text-stone-600 text-sm mb-2">
+                                    <MapPin className="h-4 w-4 mr-1" />
+                                    {event.city}{event.state && `, ${event.state}`}, {event.country}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                  <SaveButton
+                                    entityType="event"
+                                    entityId={event.id}
+                                    variant="ghost"
+                                    size="icon"
+                                    showLabel={false}
+                                    className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50"
+                                    initialSaved
+                                    onUnsave={() => setSavedEvents(prev => prev.filter(x => x.id !== event.id))}
+                                    unsaveLabel="Unsave"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                <Badge variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
+                                  {getEventCategoryDisplay(event.category)}
+                                </Badge>
+                                {isPastEvent(event) && (
+                                  <Badge variant="outline" className="text-xs bg-stone-100 text-stone-500 border-stone-300">Past Event</Badge>
+                                )}
+                                <div className="flex items-center text-xs text-stone-500">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  {formatDateReadable(event.start_date)}
+                                  {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                                </div>
+                                {event.category === "festival" && event.application_deadline && (() => {
+                                  const today = new Date();
+                                  const deadlineDate = new Date(event.application_deadline);
+                                  today.setHours(0, 0, 0, 0);
+                                  deadlineDate.setHours(0, 0, 0, 0);
+                                  return deadlineDate >= today;
+                                })() && (
+                                  <div className="flex items-center text-xs text-stone-500">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Apply by {formatDateReadable(event.application_deadline)}
+                                  </div>
+                                )}
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-0 px-3 sm:px-4 pb-3">
+                              <p className="text-stone-600 text-sm mb-3 sm:mb-4 leading-relaxed line-clamp-3 sm:line-clamp-5">
+                                {event.notes}
+                              </p>
+                              {(event.user_name || event.created_at) && (
+                                <div className="text-xs text-stone-500 mb-3">
+                                  {event.user_name && (
+                                    <>
+                                      Added by{' '}
+                                      {event.user_permalink ? (
+                                        <Link href={`/profile/${event.user_permalink}`} className="text-stone-800 hover:underline transition-colors">
+                                          {event.user_name}
+                                        </Link>
+                                      ) : (
+                                        event.user_name
+                                      )}
+                                      {event.created_at && <RelativeDateWithTooltip dateString={event.created_at} prefix=" · " />}
+                                    </>
+                                  )}
+                                  {!event.user_name && event.created_at && (
+                                    <RelativeDateWithTooltip dateString={event.created_at} />
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                </div>
+                {/* Map: desktop only */}
+                <div className="hidden lg:block w-full flex-1 h-[500px] rounded-lg overflow-hidden border border-stone-200 min-w-0">
+                  <StoreMap
+                    stores={savedStores}
+                    libraries={savedLibraries}
+                    events={savedEvents}
+                    searchQuery=""
+                    hideFilterBar
+                    savedPinsMode
+                    onUnsave={(type, id) => {
+                      if (type === 'store') setSavedStores(prev => prev.filter(x => x.id !== id))
+                      else if (type === 'library') setSavedLibraries(prev => prev.filter(x => x.id !== id))
+                      else setSavedEvents(prev => prev.filter(x => x.id !== id))
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white border-stone-200 shadow-sm">
+            <CardContent className="py-12 text-center">
+              <Bookmark className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+              <h3 className="text-lg font-semibold text-stone-800 mb-2">No saved pins yet</h3>
+              <p className="text-stone-600 mb-4">Save shops, libraries, and events from the map to see them here.</p>
+              <Link href="/">
+                <Button>Explore the map</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+          </TabsContent>
       </div>
+        </Tabs>
 
       {/* Zine Modal */}
       <AddZineModal

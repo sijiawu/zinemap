@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
 import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent } from "@/lib/utils"
 import Link from "next/link"
+import { SaveButton } from "@/components/SaveButton"
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const { user } = useSupabaseUser()
@@ -635,9 +636,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-stone-50 font-serif">
       {/* Header */}
-      <header id="event-header" className="w-full bg-white/70 backdrop-blur-sm border-b border-stone-200 shadow-sm order-1 lg:order-none">
+      <header id="event-header" className="w-full bg-white/70 backdrop-blur-sm border-b border-stone-200 shadow-sm order-1 lg:order-none relative">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+          <SaveButton entityType="event" entityId={event.id} variant="ghost" size="icon" showLabel={false} className="text-stone-500 hover:text-[#009035] hover:bg-green-50" />
+        </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="mb-4">
             <Link href="/">
               <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -728,17 +732,17 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
             </div>
 
             {!user ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Link href="/login">
                   <Button
-                    className="w-full bg-[#009035] hover:bg-[#007a2a] text-white"
+                    className="w-full sm:w-auto bg-[#009035] hover:bg-[#007a2a] text-white"
                   >
                     {event && isPastEvent(event) ? "Sign in to mark attendance" : "Sign in to RSVP"}
                   </Button>
                 </Link>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={handleAttendToggle}
                   variant={isAttending ? "outline" : "default"}

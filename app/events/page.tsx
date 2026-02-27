@@ -17,6 +17,7 @@ import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
+import { SaveButton } from "@/components/SaveButton"
 
 export default function EventsPage() {
   const searchParams = useSearchParams()
@@ -560,13 +561,16 @@ export default function EventsPage() {
                       className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                       onClick={() => handleCardClick(event)}
                     >
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div>
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="min-w-0 flex-1">
                             <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
                               <Link 
                                 href={`/event/${event.permalink || event.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="hover:text-[#009035] transition-colors"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {event.name}
                               </Link>
@@ -581,6 +585,14 @@ export default function EventsPage() {
                               <Calendar className="h-4 w-4 mr-1" />
                               {event.city}{event.state && `, ${event.state}`}, {event.country}
                             </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <SaveButton entityType="event" entityId={event.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50" />
                           </div>
                         </div>
                         
@@ -612,7 +624,7 @@ export default function EventsPage() {
                         </div>
                       </CardHeader>
 
-                      <CardContent className="pt-0">
+                      <CardContent className="pt-0 px-4 pb-3">
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {event.notes ? formatSocialMedia(event.notes, '#009035', '#007a2a') : event.notes}
                         </p>
@@ -658,16 +670,6 @@ export default function EventsPage() {
                             )}
                           </div>
                         )}
-                        <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-[#009035] text-[#009035] hover:bg-green-50 hover:border-[#007a2a] hover:text-[#007a2a] transition-colors bg-transparent"
-                          >
-                            View Details
-                            <ExternalLink className="h-3 w-3 ml-2" />
-                          </Button>
-                        </Link>
                       </CardContent>
                     </Card>
                   ))

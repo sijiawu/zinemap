@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen, Calendar, Clock, Landmark, Plus, Minus, Store as StoreIcon } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
 import Link from "next/link"
+import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
-
 interface StoreMapProps {
   stores: Store[]
   libraries: Library[]
@@ -16,13 +16,16 @@ interface StoreMapProps {
   onLocationSelect?: (location: Store | Library | Event, type: 'store' | 'library' | 'event') => void
   onMapReady?: () => void
   hideFilterBar?: boolean
+  savedPinsMode?: boolean
+  onUnsave?: (type: 'store' | 'library' | 'event', id: string) => void
 }
 
-export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, onMapReady, hideFilterBar = false }: StoreMapProps) {
+export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, onMapReady, hideFilterBar = false, savedPinsMode = false, onUnsave }: StoreMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const lastDataRef = useRef<string>('')
+  const initialFitDoneRef = useRef(false)
   const storesRef = useRef<Store[]>(stores)
   const librariesRef = useRef<Library[]>(libraries)
   const eventsRef = useRef<Event[]>(events)
@@ -162,13 +165,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
   }
 
-  // Expose selectLocation function to parent components
+  // Expose selectLocation function for list-card-to-map sync (used by homepage, profile saved pins, etc.)
   useEffect(() => {
-    if (onLocationSelect) {
-      // Store the selectLocation function on the window object for parent access
-      (window as any).selectMapLocation = selectLocation
+    (window as any).selectMapLocation = selectLocation
+    return () => {
+      delete (window as any).selectMapLocation
     }
-  }, [onLocationSelect])
+  }, [])
 
   // Zoom functions
   const zoomIn = () => {
@@ -372,20 +375,18 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
 
 
-    // Create a data signature to check if markers actually need updating
-    // Only include items that have valid coordinates
+    // Create a data signature to check if markers actually need updating (cheap: IDs only, no full JSON)
     const validStores = stores.filter(s => s.latitude && s.longitude)
     const validLibraries = libraries.filter(l => l.latitude && l.longitude)
     const validEvents = events.filter(e => e.latitude && e.longitude)
 
-    const dataSignature = JSON.stringify({
-      stores: validStores.map(s => ({ id: s.id, lat: s.latitude, lng: s.longitude })),
-      libraries: validLibraries.map(l => ({ id: l.id, lat: l.latitude, lng: l.longitude })),
-      events: validEvents.map(e => ({ id: e.id, lat: e.latitude, lng: e.longitude })),
+    const dataSignature = [
+      validStores.map(s => s.id).sort().join(','),
+      validLibraries.map(l => l.id).sort().join(','),
+      validEvents.map(e => e.id).sort().join(','),
       mapView,
       searchQuery
-      // Note: selectedLocation is excluded to prevent marker recreation on selection
-    })
+    ].join('|')
 
     // Only update markers if data has actually changed
     if (dataSignature === lastDataRef.current) {
@@ -580,7 +581,27 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       })
     }
 
-  }, [stores, libraries, events, mapView, searchQuery, mapReady])
+    // In savedPinsMode, fit map to show all pins on first load (cheap: no API, just bounds math)
+    if (savedPinsMode && !initialFitDoneRef.current && map.current) {
+      const allCoords: [number, number][] = []
+      if (mapView === 'stores' || mapView === 'all') filteredStores.forEach(s => allCoords.push([s.longitude!, s.latitude!]))
+      if (mapView === 'libraries' || mapView === 'all') filteredLibraries.forEach(l => allCoords.push([l.longitude!, l.latitude!]))
+      if (mapView === 'events' || mapView === 'all') filteredEvents.forEach(e => allCoords.push([e.longitude!, e.latitude!]))
+      if (allCoords.length > 0) {
+        const lngs = allCoords.map(c => c[0])
+        const lats = allCoords.map(c => c[1])
+        const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)]
+        const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)]
+        // Single point: expand slightly so we get a reasonable zoom
+        const pad = 0.001
+        if (sw[0] === ne[0]) { sw[0] -= pad; ne[0] += pad }
+        if (sw[1] === ne[1]) { sw[1] -= pad; ne[1] += pad }
+        map.current.fitBounds([sw, ne], { padding: 40, maxZoom: 14, duration: 0 })
+        initialFitDoneRef.current = true
+      }
+    }
+
+  }, [stores, libraries, events, mapView, searchQuery, mapReady, savedPinsMode])
 
   // Separate effect to update active state without recreating markers
   useEffect(() => {
@@ -618,7 +639,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   }, [selectedLocation, locationType, mapReady])
 
   return (
-    <div className="h-[600px] relative rounded-lg overflow-hidden border border-gray-200">
+    <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${savedPinsMode ? 'h-full min-h-[384px]' : 'h-[600px]'}`}>
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Zoom Controls */}
@@ -698,17 +719,17 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         </div>
       )}
 
-      {/* Location Popup */}
+      {/* Location Popup - unified card for both modes */}
       {selectedLocation && (
-        <div className="absolute top-4 left-4 right-4 sm:right-20 sm:w-80 bg-white rounded-lg shadow-lg border border-stone-200 p-4 z-20">
+        <div className="absolute top-4 left-4 right-4 sm:right-20 bg-white rounded-lg shadow-lg border border-stone-200 p-3 z-20 sm:w-80 max-h-[calc(100%-2rem)] overflow-y-auto">
           <button
             onClick={() => setSelectedLocation(null)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
+            className="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-600 text-xl"
           >
             ×
           </button>
 
-          <div className="flex items-start gap-3 mb-3">
+          <div className="flex items-start gap-3 mb-2">
             <div className="flex-shrink-0 mt-0.5">
               {locationType === 'store' ? (
                 <StoreIcon className="h-5 w-5 text-[#e11d48]" />
@@ -723,6 +744,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                 {locationType === 'store' ? (
                   <Link 
                     href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#e11d48] transition-colors"
                   >
                     {selectedLocation.name}
@@ -730,6 +753,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                 ) : locationType === 'library' ? (
                   <Link 
                     href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-blue-600 transition-colors"
                   >
                     {selectedLocation.name}
@@ -737,6 +762,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                 ) : (
                   <Link 
                     href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#009035] transition-colors"
                   >
                     {selectedLocation.name}
@@ -746,132 +773,135 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
             </div>
           </div>
 
-            {locationType === 'event' && 'venue_name' in selectedLocation && selectedLocation.venue_name && (
-              <div className="text-sm text-gray-600 mb-2">
-                <Landmark className="h-4 w-4 inline mr-1" />{selectedLocation.venue_name}
-              </div>
-            )}
-            <p className="text-sm text-gray-600 mb-3">
-              <MapPin className="h-4 w-4 inline mr-1" />{selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}
-            </p>
-          {/* Event-specific info */}
+          {locationType === 'event' && 'venue_name' in selectedLocation && selectedLocation.venue_name && (
+            <div className="text-sm text-gray-600 mb-2 flex items-start gap-2">
+              <Landmark className="h-4 w-4 shrink-0 mt-0.5 text-stone-500" strokeWidth={2} />
+              <span>{selectedLocation.venue_name}</span>
+            </div>
+          )}
+          <div className="text-sm text-gray-600 mb-2 flex items-start gap-2">
+            <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-stone-500" strokeWidth={2} />
+            <span>{selectedLocation.city}{'state' in selectedLocation && selectedLocation.state ? `, ${selectedLocation.state}` : ''}, {selectedLocation.country}</span>
+          </div>
+
+          {/* Website - for events: above tags (category/dates); for stores/libraries: above tags */}
+          {'website' in selectedLocation && selectedLocation.website && (
+            <div className="mb-2 flex items-start gap-2">
+              <Globe className="h-4 w-4 shrink-0 mt-0.5 text-stone-500" strokeWidth={2} />
+              <a
+                href={selectedLocation.website.startsWith('http') ? selectedLocation.website : `https://${selectedLocation.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-stone-600 hover:underline"
+              >
+                {selectedLocation.website.replace(/^https?:\/\//, '')}
+              </a>
+            </div>
+          )}
+
+          {/* Event-specific info (category/dates - "tags" for events) */}
           {locationType === 'event' && 'category' in selectedLocation && selectedLocation.category && (
-            <div className="mb-4">
+            <div className="mb-2">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <Badge 
-                  variant="outline"
-                  className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
-                >
+                <Badge variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
                   {getEventCategoryDisplay(selectedLocation.category)}
                 </Badge>
                 {'end_date' in selectedLocation && selectedLocation.end_date && (() => {
                   const today = new Date().toISOString().split('T')[0]
                   return selectedLocation.end_date < today
                 })() && (
-                  <Badge 
-                    variant="outline"
-                    className="text-xs bg-stone-100 text-stone-500 border-stone-300"
-                  >
-                    Past Event
-                  </Badge>
+                  <Badge variant="outline" className="text-xs bg-stone-100 text-stone-500 border-stone-300">Past Event</Badge>
                 )}
               </div>
               {'start_date' in selectedLocation && selectedLocation.start_date && (
-                <p className="text-xs text-gray-500">
-                  <Calendar className="h-3 w-3 inline mr-1" />{formatDateReadable(selectedLocation.start_date)}
-                  {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && 
-                    ` - ${formatDateReadable(selectedLocation.end_date)}`
-                  }
-                </p>
-              )}
-              {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {
-                const today = new Date();
-                const deadlineDate = new Date(selectedLocation.application_deadline);
-                today.setHours(0, 0, 0, 0);
-                deadlineDate.setHours(0, 0, 0, 0);
-                return deadlineDate >= today;
-              })() && (
                 <p className="text-xs text-gray-500 mt-1">
-                  <Clock className="h-3 w-3 inline mr-1" />
-                  Apply by {formatDateReadable(selectedLocation.application_deadline)}
+                  {formatDateReadable(selectedLocation.start_date)}
+                  {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && ` – ${formatDateReadable(selectedLocation.end_date)}`}
+                  {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {
+                    const today = new Date(); const deadlineDate = new Date(selectedLocation.application_deadline);
+                    today.setHours(0, 0, 0, 0); deadlineDate.setHours(0, 0, 0, 0);
+                    return deadlineDate >= today;
+                  })() && ` · Apply by ${formatDateReadable(selectedLocation.application_deadline)}`}
                 </p>
               )}
             </div>
           )}
 
-          {/* Tags - Show for all types to maintain consistent spacing */}
+          {/* Tags */}
           {locationType === 'store' && 'store_tags' in selectedLocation && selectedLocation.store_tags && selectedLocation.store_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-4">
+            <div className="flex flex-wrap gap-1 mb-2">
               {selectedLocation.store_tags.map((storeTag) => (
-                <Badge
-                  key={storeTag.id}
-                  variant="outline"
-                  className="text-xs bg-stone-50 text-stone-700 border-stone-200"
-                >
-                  {storeTag.tag.label}
-                </Badge>
+                <Badge key={storeTag.id} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200">{storeTag.tag.label}</Badge>
               ))}
             </div>
           )}
-
           {locationType === 'library' && 'library_tags' in selectedLocation && selectedLocation.library_tags && selectedLocation.library_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-4">
+            <div className="flex flex-wrap gap-1 mb-2">
               {selectedLocation.library_tags.map((libraryTag) => (
-                <Badge
-                  key={libraryTag.id}
-                  variant="outline"
-                  className="text-xs bg-stone-50 text-stone-700 border-stone-200"
-                >
-                  {libraryTag.tag.label}
-                </Badge>
+                <Badge key={libraryTag.id} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200">{libraryTag.tag.label}</Badge>
               ))}
             </div>
           )}
 
-          {/* Empty space for events to maintain consistent height */}
-          {locationType === 'event' && (
-            <div className="mb-4">
-              {/* This empty div ensures events have the same spacing as stores/libraries with tags */}
-            </div>
-          )}
-
-          {/* User info */}
+          {/* Added by */}
           {selectedLocation.user_name && (
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-gray-500 mb-2">
               Added by{' '}
               {selectedLocation.user_permalink ? (
-                <Link 
-                  href={`/profile/${selectedLocation.user_permalink}`}
-                  className="text-stone-800 hover:underline transition-colors"
-                >
-                  {selectedLocation.user_name}
-                </Link>
+                <Link href={`/profile/${selectedLocation.user_permalink}`} target="_blank" rel="noopener noreferrer" className="text-stone-800 hover:underline transition-colors">{selectedLocation.user_name}</Link>
               ) : (
                 selectedLocation.user_name
               )}
             </p>
           )}
 
-          {/* View Details Button */}
-          {locationType === 'store' ? (
-            <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" className="w-full border-[#e11d48] text-[#e11d48] hover:bg-rose-50">
-                View Details
-              </Button>
-            </Link>
-          ) : locationType === 'library' ? (
-            <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
-                View Details
-              </Button>
-            </Link>
-          ) : (
-            <Link href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" className="w-full border-[#009035] text-[#009035] hover:bg-green-50">
-                View Details
-              </Button>
-            </Link>
-          )}
+          {/* Buttons */}
+          <div className="flex gap-2">
+            {locationType === 'store' ? (
+              <Link href={`/store/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full border-[#e11d48] text-[#e11d48] hover:bg-rose-50">
+                  View Details
+                </Button>
+              </Link>
+            ) : locationType === 'library' ? (
+              <Link href={`/library/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50">
+                  View Details
+                </Button>
+              </Link>
+            ) : (
+              <Link href={`/event/${('permalink' in selectedLocation && selectedLocation.permalink) ? selectedLocation.permalink : selectedLocation.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full border-[#009035] text-[#009035] hover:bg-green-50">
+                  View Details
+                </Button>
+              </Link>
+            )}
+            {savedPinsMode && onUnsave ? (
+              <SaveButton
+                entityType={locationType}
+                entityId={selectedLocation.id}
+                variant="outline"
+                size="sm"
+                showLabel={true}
+                initialSaved={true}
+                unsaveLabel="Unsave"
+                onUnsave={() => {
+                  onUnsave(locationType, selectedLocation.id)
+                  setSelectedLocation(null)
+                }}
+                className={locationType === 'store' ? 'border-[#e11d48] text-[#e11d48] hover:bg-rose-50 shrink-0' : locationType === 'library' ? 'border-blue-300 text-blue-700 hover:bg-blue-50 shrink-0' : 'border-[#009035] text-[#009035] hover:bg-green-50 shrink-0'}
+              />
+            ) : (
+              <SaveButton
+                entityType={locationType}
+                entityId={selectedLocation.id}
+                variant="outline"
+                size="sm"
+                showLabel={false}
+                className={locationType === 'store' ? 'border-[#e11d48] text-[#e11d48] hover:bg-rose-50 shrink-0' : locationType === 'library' ? 'border-blue-300 text-blue-700 hover:bg-blue-50 shrink-0' : 'border-[#009035] text-[#009035] hover:bg-green-50 shrink-0'}
+              />
+            )}
+          </div>
         </div>
       )}
 

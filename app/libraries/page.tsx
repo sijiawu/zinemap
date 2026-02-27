@@ -15,6 +15,7 @@ import { Store, Library, Event, Tag } from "@/lib/types"
 import { formatSocialMedia } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
+import { SaveButton } from "@/components/SaveButton"
 
 export default function LibrariesPage() {
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -499,13 +500,16 @@ export default function LibrariesPage() {
                       className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                       onClick={() => handleCardClick(library)}
                     >
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div>
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="min-w-0 flex-1">
                             <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
                               <Link 
                                 href={`/library/${library.permalink || library.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="hover:text-blue-600 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {library.name}
                               </Link>
@@ -514,6 +518,14 @@ export default function LibrariesPage() {
                               <BookOpen className="h-4 w-4 mr-1" />
                               {library.city}{library.state && `, ${library.state}`}, {library.country}
                             </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50">
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <SaveButton entityType="library" entityId={library.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50" />
                           </div>
                         </div>
                         
@@ -533,7 +545,7 @@ export default function LibrariesPage() {
                         )}
                       </CardHeader>
 
-                      <CardContent className="pt-0">
+                      <CardContent className="pt-0 px-4 pb-3">
                         <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                           {library.notes ? formatSocialMedia(library.notes, '#3b82f6', '#2563eb') : library.notes}
                         </p>
@@ -579,16 +591,6 @@ export default function LibrariesPage() {
                             )}
                           </div>
                         )}
-                        <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-800 transition-colors bg-transparent"
-                          >
-                            View Details
-                            <ExternalLink className="h-3 w-3 ml-2" />
-                          </Button>
-                        </Link>
                       </CardContent>
                     </Card>
                   ))

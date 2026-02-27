@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react"
 import { Landmark, ExternalLink, Clock } from "lucide-react"
+import { SaveButton } from "@/components/SaveButton"
 import { Calendar } from "@/components/ui/calendar"
 import { Event } from "@/lib/types"
 import { getEventCategoryDisplay, formatDateReadable } from "@/lib/utils"
@@ -243,10 +244,12 @@ export function EventsCalendarView({
                   }}
                   className="block p-3 rounded-lg border border-stone-200 hover:border-[#009035] hover:bg-green-50/50 transition-colors cursor-pointer"
                 >
-                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/event/${event.permalink || event.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="font-semibold text-stone-800 hover:text-[#009035] line-clamp-1 block"
                       >
@@ -304,14 +307,25 @@ export function EventsCalendarView({
                         </div>
                       )}
                     </div>
-                    <Link
-                      href={`/event/${event.permalink || event.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-shrink-0 mt-0.5 p-1 rounded hover:bg-green-100 transition-colors"
-                      aria-label={`View ${event.name}`}
-                    >
-                      <ExternalLink className="h-4 w-4 text-stone-400 hover:text-[#009035]" />
-                    </Link>
+                    <div className="flex items-center gap-0.5 shrink-0 mt-0.5" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        href={`/event/${event.permalink || event.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded hover:bg-green-100 transition-colors"
+                        aria-label={`View ${event.name}`}
+                      >
+                        <ExternalLink className="h-4 w-4 text-stone-400 hover:text-[#009035]" />
+                      </Link>
+                      <SaveButton
+                        entityType="event"
+                        entityId={event.id}
+                        variant="ghost"
+                        size="icon"
+                        showLabel={false}
+                        className="h-8 w-8 text-stone-400 hover:text-[#009035] hover:bg-green-50"
+                      />
+                    </div>
                   </div>
                 </div>
               </li>

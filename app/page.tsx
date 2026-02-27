@@ -13,6 +13,7 @@ import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
@@ -91,9 +92,9 @@ export default function HomePage() {
 
   // Phase 1: Load basic data immediately (stores, libraries, events without tags/user info)
   // Select only columns needed for list + map to reduce payload
-  const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before'
-  const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before'
-  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline'
+  const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
+  const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
+  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website'
 
   useEffect(() => {
     const fetchBasicData = async () => {
@@ -764,13 +765,16 @@ export default function HomePage() {
                         className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                         onClick={() => handleCardClick(store, 'store')}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                            <div>
+                        <CardHeader className="p-4 pb-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="min-w-0 flex-1">
                               <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
                                 <Link 
                                   href={`/store/${store.permalink || store.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="hover:text-rose-600 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {store.name}
                                 </Link>
@@ -779,6 +783,14 @@ export default function HomePage() {
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {store.city}{store.state && `, ${store.state}`}, {store.country}
                               </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-rose-600 hover:bg-rose-50">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <SaveButton entityType="store" entityId={store.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-rose-600 hover:bg-rose-50" />
                             </div>
                           </div>
                           
@@ -798,7 +810,7 @@ export default function HomePage() {
                           )}
                         </CardHeader>
 
-                        <CardContent className="pt-0">
+                        <CardContent className="pt-0 px-4 pb-3">
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {store.notes}
                           </p>
@@ -844,16 +856,6 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full border-stone-300 text-stone-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-colors bg-transparent"
-                            >
-                              View Details
-                              <ExternalLink className="h-3 w-3 ml-2" />
-                            </Button>
-                          </Link>
                         </CardContent>
                       </Card>
                     ))
@@ -909,13 +911,16 @@ export default function HomePage() {
                         className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                         onClick={() => handleCardClick(library, 'library')}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                            <div>
+                        <CardHeader className="p-4 pb-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="min-w-0 flex-1">
                               <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
                                 <Link 
                                   href={`/library/${library.permalink || library.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="hover:text-blue-600 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {library.name}
                                 </Link>
@@ -924,6 +929,14 @@ export default function HomePage() {
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {library.city}{library.state && `, ${library.state}`}, {library.country}
                               </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <SaveButton entityType="library" entityId={library.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50" />
                             </div>
                           </div>
                           
@@ -943,7 +956,7 @@ export default function HomePage() {
                           )}
                         </CardHeader>
 
-                        <CardContent className="pt-0">
+                        <CardContent className="pt-0 px-4 pb-3">
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {library.notes}
                           </p>
@@ -989,16 +1002,6 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-800 transition-colors bg-transparent"
-                            >
-                              View Details
-                              <ExternalLink className="h-3 w-3 ml-2" />
-                            </Button>
-                          </Link>
                         </CardContent>
                       </Card>
                     ))
@@ -1077,13 +1080,16 @@ export default function HomePage() {
                         className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                         onClick={() => handleCardClick(event, 'event')}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                            <div>
+                        <CardHeader className="p-4 pb-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="min-w-0 flex-1">
                               <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
                                 <Link 
                                   href={`/event/${event.permalink || event.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="hover:text-[#009035] transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {event.name}
                                 </Link>
@@ -1097,7 +1103,16 @@ export default function HomePage() {
                               <div className="flex items-center text-stone-600 text-sm mb-2">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {event.city}{event.state && `, ${event.state}`}, {event.country}
-                              </div>                            </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <SaveButton entityType="event" entityId={event.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50" />
+                            </div>
                           </div>
                           
                           {/* Event Category and Dates */}
@@ -1136,7 +1151,7 @@ export default function HomePage() {
                           </div>
                         </CardHeader>
 
-                        <CardContent className="pt-0">
+                        <CardContent className="pt-0 px-4 pb-3">
                           <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
                             {event.notes}
                           </p>
@@ -1182,16 +1197,6 @@ export default function HomePage() {
                               )}
                             </div>
                           )}
-                          <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full border-[#009035] text-[#009035] hover:bg-green-50 hover:border-[#007a2a] hover:text-[#007a2a] transition-colors bg-transparent"
-                            >
-                              View Details
-                              <ExternalLink className="h-3 w-3 ml-2" />
-                            </Button>
-                          </Link>
                         </CardContent>
                       </Card>
                     ))

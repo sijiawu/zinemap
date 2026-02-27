@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 import { Library, LibraryTag, CommunityNote } from "@/lib/types"
+import { SaveButton } from "@/components/SaveButton"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -481,7 +482,10 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Library header */}
         <div className="text-center space-y-4">
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200">
+          <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200 relative">
+            <div className="absolute top-4 right-4">
+              <SaveButton entityType="library" entityId={library.id} variant="ghost" size="icon" showLabel={false} className="text-stone-500 hover:text-blue-600 hover:bg-blue-50" />
+            </div>
             <div className="flex flex-col items-center gap-4 mb-4">
               <h2 className="font-gloria text-4xl md:text-5xl font-bold text-stone-800 tracking-tight">{library.name}</h2>
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
