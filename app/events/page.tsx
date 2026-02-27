@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Calendar, Filter, ExternalLink, User, ChevronDown, ChevronUp, Landmark, Clock } from "lucide-react"
+import { Search, Calendar, Filter, ExternalLink, User, ChevronDown, ChevronUp, Landmark, Clock, List, CalendarDays } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,14 +9,17 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
 import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
+import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 
 export default function EventsPage() {
+  const searchParams = useSearchParams()
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +29,10 @@ export default function EventsPage() {
   const [timeFilter, setTimeFilter] = useState<"upcoming" | "past" | "all">("all")
   const [applicationsOpen, setApplicationsOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<"list" | "calendar">(
+    () => (searchParams.get("view") === "calendar" ? "calendar" : "list")
+  )
+  const [calendarFilteredEvents, setCalendarFilteredEvents] = useState<Event[]>([])
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
@@ -437,8 +444,11 @@ export default function EventsPage() {
             </Card>
           </div>
 
-          {/* Map and List - Mobile: Map first, then List */}
-          <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch" style={{ maxHeight: '100%' }}>
+          {/* Map and List - Mobile: Map first, then List. Calendar view: list column wider */}
+          <div
+            className={`flex-1 flex flex-col lg:grid lg:grid-rows-1 gap-6 min-h-0 overflow-hidden lg:items-stretch ${viewMode === "calendar" ? "lg:grid-cols-[1.2fr_1fr]" : "lg:grid-cols-2"}`}
+            style={{ maxHeight: '100%' }}
+          >
             {/* Map View - Mobile: First */}
             <div className="order-1 lg:order-2 lg:sticky lg:top-6 h-fit lg:h-auto lg:flex lg:flex-col">
               <Card ref={mapCardRef} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
@@ -452,7 +462,7 @@ export default function EventsPage() {
                       <StoreMap 
                         stores={[]}
                         libraries={[]}
-                        events={events}
+                        events={viewMode === "calendar" ? calendarFilteredEvents : filteredEvents}
                         searchQuery={debouncedSearchQuery}
                         hideFilterBar={true}
                         onLocationSelect={handleLocationSelect}
@@ -472,14 +482,39 @@ export default function EventsPage() {
               </div>
             </div>
 
-            {/* List View - Mobile: Second */}
+            {/* List / Calendar View - Mobile: Second */}
             <div className="flex flex-col space-y-4 order-2 lg:order-1 flex-1 min-h-0 lg:h-full overflow-hidden mb-8">
-              <div className="flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center justify-between flex-shrink-0 gap-2">
                 <h2 className="text-xl font-semibold text-stone-800">
                   Events ({filteredEvents.length})
                 </h2>
+                <div className="flex rounded-lg border border-stone-200 p-0.5 bg-stone-50">
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === "list"
+                        ? "bg-white text-stone-800 shadow-sm"
+                        : "text-stone-600 hover:text-stone-800"
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                    List
+                  </button>
+                  <button
+                    onClick={() => setViewMode("calendar")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === "calendar"
+                        ? "bg-white text-stone-800 shadow-sm"
+                        : "text-stone-600 hover:text-stone-800"
+                    }`}
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    Calendar
+                  </button>
+                </div>
               </div>
               
+              {viewMode === "list" ? (
               <div 
                 className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8 lg:min-h-[900px]"
                 style={{
@@ -638,6 +673,24 @@ export default function EventsPage() {
                   ))
                 )}
               </div>
+              ) : (
+              <div 
+                className="flex-1 min-h-0 overflow-y-auto pr-2 pt-[5px] pb-8"
+                style={{
+                  maxHeight: mapHeight > 0 
+                    ? `max(${mapHeight}px, calc(100vh - 350px))`
+                    : 'calc(100vh - 350px)',
+                  minHeight: '400px'
+                }}
+              >
+                <EventsCalendarView
+                  events={filteredEvents}
+                  onEventClick={handleCardClick}
+                  onCalendarFilterChange={setCalendarFilteredEvents}
+                  hasLocationFilter={selectedCountry !== "all" || selectedState !== "all" || selectedCity !== "all"}
+                />
+              </div>
+              )}
             </div>
           </div>
         </div>
