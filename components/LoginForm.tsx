@@ -47,8 +47,8 @@ export default function AuthForm() {
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-stone-800 mb-2">{mode === 'signup' ? 'Sign Up' : 'Log In'}</h2>
         <p className="text-stone-600 text-sm">
-        Sign up / log in to contribute, explore, and support indie stores and small press creators.<br />
-          <span className="text-rose-600 font-semibold">User profiles are now live!<br />Add your bio and showcase your zines.</span>
+        Sign up or log in to contribute, share your work, and help grow the map together.<br />
+          <span className="text-rose-600 font-semibold">New on ZineMap: Saved Pins!<br />Save locations and events to come back to anytime.</span>
         </p>
       </div>
       <div className="flex justify-center mb-6">

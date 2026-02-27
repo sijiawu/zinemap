@@ -157,8 +157,8 @@ export default function NavBar() {
               </>
             )}
             {!loading && !user && (
-              <Link href="/login" className="p-2 rounded-md hover:bg-stone-100 transition-colors" aria-label="Log in">
-                <LogIn className="h-5 w-5 text-stone-600" />
+              <Link href="/login" className="font-gloria text-lg transition-all duration-200 hover:scale-105 text-stone-700 hover:text-rose-600">
+                Log in
               </Link>
             )}
             {!loading && user && (
