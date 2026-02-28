@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { Landmark, ExternalLink, Clock } from "lucide-react"
+import { Landmark, ExternalLink, Clock, Calendar as CalendarIcon } from "lucide-react"
 import { SaveButton } from "@/components/SaveButton"
 import { Calendar } from "@/components/ui/calendar"
 import { Event } from "@/lib/types"
@@ -268,6 +268,11 @@ export function EventsCalendarView({
                         >
                           {getEventCategoryDisplay(event.category)}
                         </Badge>
+                        <span className="flex items-center text-xs text-stone-500">
+                          <CalendarIcon className="h-3 w-3 mr-0.5 flex-shrink-0" />
+                          {formatDateReadable(event.start_date)}
+                          {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
+                        </span>
                         <span className="text-xs text-stone-500">
                           {event.city}
                           {event.state && `, ${event.state}`}
