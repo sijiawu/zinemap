@@ -1429,8 +1429,7 @@ export default function ProfilePage() {
                 <div className="w-full lg:w-[380px] lg:shrink-0 min-w-0">
                 {/* Mobile: encourage desktop for map */}
                 <div className="lg:hidden mb-4 p-3 rounded-lg bg-stone-100 border border-stone-200 text-sm text-stone-600">
-                  <p className="font-medium text-stone-700 mb-1">View on desktop for the full experience</p>
-                  <p>Open your profile on a laptop or desktop to see your saved pins on the map and use list-to-map navigation.</p>
+                  <p className="font-medium text-stone-700 mb-1">View on desktop (for now) to see these pins on the map! Mobile support coming soon 🫶</p>
                 </div>
                 <Tabs value={savedPinsTab} onValueChange={(v) => setSavedPinsTab(v as 'stores' | 'libraries' | 'events')} className="w-full">
                   <TabsList className="grid w-full grid-cols-3 mb-3 sm:mb-4 gap-1 p-1 h-auto">

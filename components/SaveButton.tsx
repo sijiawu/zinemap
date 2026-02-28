@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,11 @@ export function SaveButton({
   const { toast } = useToast()
   const router = useRouter()
   const [optimisticSaved, setOptimisticSaved] = useState(initialSaved)
+
+  // Reset when entity changes (e.g. map popup switches to different location)
+  useEffect(() => {
+    setOptimisticSaved(initialSaved)
+  }, [entityId, entityType, initialSaved])
   const [isLoading, setIsLoading] = useState(false)
   const [showAlreadySavedModal, setShowAlreadySavedModal] = useState(false)
   const [showUnsaveConfirmModal, setShowUnsaveConfirmModal] = useState(false)
