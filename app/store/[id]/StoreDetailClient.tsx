@@ -14,7 +14,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 import { Store, StoreTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
-import { sortSplitTagsByCreatorPercentage } from "@/lib/utils"
+import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay } from "@/lib/utils"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -638,7 +638,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                 {Object.entries(tagsByCategory).map(([category, tags]) => (
                   <div key={category} className="space-y-4">
                     <div className="bg-stone-50 p-4 rounded-lg border border-rose-100">
-                      <h4 className="font-semibold text-stone-800 mb-2 capitalize">{category}</h4>
+                      <h4 className="font-semibold text-stone-800 mb-2">{getTagCategoryDisplay(category)}</h4>
                       <div className="space-y-1">
                         {tags.map((tag) => (
                           <p key={tag.id} className="text-sm">{tag.label}</p>

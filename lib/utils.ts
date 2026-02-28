@@ -143,6 +143,26 @@ export function formatDateMonthDay(dateString: string | Date): string {
 }
 
 /**
+ * Convert database tag category to display phrase (matches add-store/add-library form labels)
+ */
+export function getTagCategoryDisplay(category: string): string {
+  const map: Record<string, string> = {
+    // Store tag categories
+    split: 'Revenue Split',
+    payment: 'Payment Types',
+    method: 'Payout Methods',
+    limits: 'Copy Limits',
+    pricing: 'Pricing Requirements',
+    returns: 'Return Policy',
+    // Library tag categories
+    service: 'Available Services',
+    usage: 'Usage',
+    access: 'Access Requirements',
+  }
+  return map[category] ?? category.replace(/\b\w/g, l => l.toUpperCase())
+}
+
+/**
  * Convert database event category to readable display name
  */
 export function getEventCategoryDisplay(category: string): string {
