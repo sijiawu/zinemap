@@ -16,7 +16,7 @@ excerpt: "A conversation with Aleah, who runs the bookstore's zine rack, about b
 We are a super new bookstore; we only opened in February (2025). I came in around July, so the bookstore was already up and running. The person I worked with before was a really talented zinester, and they are the one who set up our zine rack. I had heard of zines, but they encouraged me to make one, which opened a door. I owe all the credit to them, and I have tried to carry on their legacy to the best of my ability.
 
 <ImageWithCaption
-  src="/corner-feminist-bookstore.jpg"
+  src="the-feminist-bookstore/corner-feminist-bookstore.jpg"
   alt="A cozy corner of The Feminist Bookstore."
   caption="A cozy corner of The Feminist Bookstore · Photo by Aleah C"
 />
@@ -31,7 +31,7 @@ The selection is entirely artist-run. Zinesters keep 100% of the money because, 
 I know. I sell my zines at other bookstores, and their rate is 50%. Here I wanted to do it differently. The setup is very self-sufficient. And since we are working with small, local, independent artists who just want to get their work out there and maintain everything on their own, we are not trying to take any of that money away from them.
 
 <ImageWithCaption
-  src="/zine-shelf-feminist-bookstore.jpg"
+  src="the-feminist-bookstore/zine-shelf-feminist-bookstore.jpg"
   alt="The zine rack at The Feminist Bookstore."
   caption="The zine rack at The Feminist Bookstore · Photo by Aleah C"
 />
@@ -43,7 +43,7 @@ Let me take a look… we have five right now. When my coworker left, there were 
 People call, DM or email me, and I try to get back to them. I make sure the topics align with the values of the bookstore. I don’t want to carry something in bad taste or offensive. I’ll look at their Instagram or other writing to make sure everything checks out, then I'll go through the zine to make sure there are proper sources and that it reads well. I tell them that they are responsible for maintaining their stock and printing their payment info. Some people have emailed asking me to print and assemble their zines from a digital file, but I have to say no because we’re such a small bookstore, and it would take away the whole point of the money going to the author.
 
 <ImageWithCaption
-  src="/zines-1-feminist-bookstore.jpg"
+  src="the-feminist-bookstore/zines-1-feminist-bookstore.jpg"
   alt="Some of the zines currently on the rack at The Feminist Bookstore."
   caption="Some of the zines currently on the rack at The Feminist Bookstore · Photo by Aleah C"
 />
@@ -52,7 +52,7 @@ People call, DM or email me, and I try to get back to them. I make sure the topi
 If somebody works with a large publisher, or they want a lot of money for it, that probably would not fit. Pricing is a big aspect. Many makers use sliding pay scales. It will say $1-$5 for a little one, $5-$10 for a big one. I really like that. Sometimes they write it on the back of the zine and sometimes it’s on a card with their payment info. I’ll take any format whether it’s small folded ones, bound ones or saddle stitched.
 
 <ImageWithCaption
-  src="/zines-2-feminist-bookstore.jpg"
+  src="the-feminist-bookstore/zines-2-feminist-bookstore.jpg"
   alt="More zines! "
   caption="More zines! Photo by Aleah C"
 />

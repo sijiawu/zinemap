@@ -7,7 +7,7 @@ tags:
   - Events
 author: CJ Wu
 author_permalink: cjmakescomics
-thumbnail: "/krakow-zine-fest-9.jpg"
+thumbnail: "krakow-zine-fest/krakow-zine-fest-9.jpg"
 slug: krakow-zine-fest-behind-the-zine-scenes
 excerpt: A conversation with Ilde, who runs Kraków Zine Fest (KRAK!), about organizing a locally rooted, community-centered DIY festival in one of Poland’s key cultural cities.
 ---
@@ -25,7 +25,7 @@ CJ: Like a secret little club?
 Ilde: Well, a little bar. He likes to tell stories about bands and old-school punk zines. One night we were talking again. This was sometime during COVID, when things started to be a bit more relaxed. I said maybe we could do a small zine event in your bar. He agreed so I contacted the people I knew who drew comics and zines. The place was very small, space for maybe 15 participants. But we did it. And so many people came! It was crazy. There was nothing like this for a long time here in Kraków, so many people seemed interested.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-1.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-1.jpg"
   alt="First edition of Kraków Zine Fest, Oct 2021"
   caption="First edition of Kraków Zine Fest, Oct 2021 · Photos by Gabriel Kutz"
 />
@@ -35,7 +35,7 @@ CJ: Where was this bar?
 Ilde: In Kazimierz. It was a basement bar and it got full of people, we could barely move! We realized we had to find a bigger place. The next year we did it on the other side of the river, in [**Skład Solny**](https://www.teh.net/our-members/sklad-solny), an independent cultural space connected to activism. And again a lot of people came. Some people knew what zines were, some didn’t, but they were curious about it and wanted to know more.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-2.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-2.jpg"
   alt="Skład Solny on Na Zjeździe 8"
   caption="We passed Skład Solny on Na Zjeździe 8 on our walk. Ilde pointed it out as the location of the second edition of Kraków Zine Fest. The former salt warehouse now hosts cultural and ecological NGOs, artists’ studios, music and conservation workshops, a recording studio, and a gallery. Photo by CJ Wu"
 />
@@ -47,7 +47,7 @@ CJ: Ah, so the other person, Agnieszka, is your girlfriend? I wasn’t sure who 
 Ilde: Yes, she’s also folding zines today. You’ll meet her tomorrow. Anyways, the third edition was really big, with many rooms and tons of people. It was growing too fast. I didn’t like it this way. It was also going in a different direction than what I’d imagine. So I thought, okay, let’s go back to the beginning and try to find a smaller place to focus on local zines. Like the place where we’ll do the fest tomorrow. It’s cool because that place, [**Spółdzielnia Ogniwo**](https://www.ogniwo.org), is also run by activists. It self-sustains by organizing events and selling books. It’s a very nice place.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-3.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-3.jpg"
   alt="Third edition of Kraków Zine Fest at Poczta Główna, May 2023"
   caption="Third edition of Kraków Zine Fest at Poczta Główna, May 2023 · Photo by Konrad Waszkiewicz"
 />
@@ -97,7 +97,7 @@ CJ: Do you have pictures? I'm so curious.
 Ilde: I can try to find it and take photos. Agnieszka has it. Wojtek later worked on a collection of old polish punk zines with his friend. They reprinted them in a big book called “Antena Krzyku: Antologia 1986-1990”.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-5.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-5.jpg"
   alt="A page from Antena Krzyku: Antologia 1986-1990 · Photo by Ilde B"
   caption="A page from Antena Krzyku: Antologia 1986-1990 · Photo by Ilde B"
 />
@@ -107,7 +107,7 @@ CJ: I keep hearing this overlap between punk and the zine community.
 Ilde: I guess it’s all about DIY and freedom. Do it yourself, do what you want. Tomorrow I can show you a funny zine about aliens we made with Agnieszka and some musician friends. It's based on a popular Polish UFO sighting from the end of 1950s. We took that story, added tons of absurdity, and put it together. Our friends from Ascending Order, who also play in some punk bands, helped with the story and made a soundtrack for it. We released it on cassette tape with the zine together.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-6.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-6.jpg"
   alt="Cassette tape released alongside Ascending Order Magazine ZENON (2023) · Photo by Ilde B"
   caption="Cassette tape released alongside Ascending Order Magazine ZENON (2023) · Photo by Ilde B"
 />
@@ -121,7 +121,7 @@ CJ: That’s so cool!
 Ilde: We made the zine at the end of 2023. We printed 100 copies with cassettes that sold out fast, then decided to reprint the zine. The cassette was pure green, screen-printed with a little drawing of the main character Agnieszka made. Anyways. I’m telling you all this because of the connection with music. The friend who had the idea of the whole story proposed to write music for the zine, because he doesn’t draw but likes comics. It was very natural and fun to do it together. 
 
 <ImageWithCaption
-  src="/krakow-zine-fest-7.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-7.jpg"
   alt="A copy of said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu"
   caption="A copy of said zine came home with me as a trade with Agnieszka and Ilde at Kraków Zine Festival. Photo by CJ Wu
 "
@@ -140,7 +140,7 @@ CJ: How did you sell?
 Ilde: Mostly at festivals or online, people contact by e-mail or social media.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-8.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-8.jpg"
   alt="Mózgroty (2025), a zine by Ilde B · Photo by Ilde B"
   caption="Mózgroty (2025), a zine by Ilde B · Photo by Ilde B"
 />
@@ -152,7 +152,7 @@ Ilde: I would like to see more zine-related events throughout the year. Lectures
 <Callout>The next day, the festival unfolded much like Ilde had described. The space was small and cozy. Some people sat on chairs, others on couches. There was steady foot traffic, but nothing felt rushed. I got up from my table several times to talk and trade. My Polish-learning zine nearly sold out. <br><br> Watching Ilde move through the space, checking in on everyone, greeting people, answering questions, switching between languages, I was reminded of what he'd said the night before about place not being a limitation; clearly language shouldn't be either. After we'd stopped recording, I asked him what it's like to run festivals and build community in a foreign language. He said he can now manage most things in Polish, and only occasionally needs help with a word. For phone calls and logistics, like renting tables for the fest, he relies on Agnieszka. The rest, he figures out as he goes.</Callout>
 
 <ImageWithCaption
-  src="/krakow-zine-fest-9.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-9.jpg"
   alt="Fest day at Spółdzielnia Ogniwo, Kraków, Dec 7, 2025. Photo by Ilde B."
   caption="Fest day at Spółdzielnia Ogniwo, Kraków, Dec 7, 2025. Photo by Ilde B."
 />
@@ -174,7 +174,7 @@ CJ: Coś typu tajnego, małego klubu?
 Ilde: No, po prostu mały bar. Wojtek uwielbia opowiadać o zespołach i starych punkowych zinach. Pewnej nocy znowu się rozgadaliśmy. To było jeszcze w czasie pandemii, kiedy restrykcje zaczęły trochę odpuszczać. Rzuciłem, że może moglibyśmy zorganizować u niego małe wydarzenie zinowe. Zgodził się, więc skontaktowałem się z ludźmi, których znałem z rysowania komiksów i robienia zinów. Lokal był malutki, mieściło się tam może z 15 wystawców. Ale zrobiliśmy to. I przyszło tyle ludzi! To było szalone. W Krakowie dawno nie było niczego w tym stylu, więc zainteresowanie było ogromne.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-1.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-1.jpg"
   alt="Pierwsza edycja Kraków Zine Fest, październik 2021"
   caption="Pierwsza edycja Kraków Zine Fest, październik 2021 · Zdjęcia: Gabriel Kutz"
 />
@@ -184,7 +184,7 @@ CJ: Gdzie był ten bar?
 Ilde: Na Kazimierzu. To był bar w piwnicy i wypełnił się ludźmi, ledwo się dało ruszyć! Zrozumieliśmy, że musimy znaleźć większe miejsce. W następnym roku zrobiliśmy festiwal po drugiej stronie rzeki, w [**Składzie Solnym**](https://www.teh.net/our-members/sklad-solny), niezależnej przestrzeni kulturalnej związanej z aktywizmem. I znowu przyszło mnóstwo ludzi. Niektórzy wiedzieli, co to zine'y, niektórzy nie, ale byli ciekawi i chcieli dowiedzieć się więcej.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-2.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-2.jpg"
   alt="Skład Solny przy Na Zjeździe 8"
   caption="Minęliśmy Skład Solny przy Na Zjeździe 8 podczas spaceru. Ilde wskazał go jako miejsce drugiej edycji Kraków Zine Fest. Dawny magazyn solny gości dziś organizacje pozarządowe zajmujące się kulturą i ekologią, pracownie artystów, warsztaty muzyczne i konserwatorskie, studio nagraniowe i galerię. Zdjęcie: CJ Wu"
 />
@@ -196,7 +196,7 @@ CJ: Aha, więc ta druga osoba, Agnieszka, to twoja dziewczyna? Nie byłam pewna,
 Ilde: Tak, ona też dziś składa zine'y. Spotkasz ją jutro. W każdym razie trzecia edycja była naprawdę duża, z wieloma salami i mnóstwem ludzi. Rosła za szybko. Nie podobało mi się to. Szła też w innym kierunku niż ten, który sobie wyobrażałem. Więc pomyślałem: okay, wróćmy do początków i spróbujmy znaleźć mniejsze miejsce, żeby skupić się na lokalnych zine'ach. Jak to miejsce, gdzie jutro zrobimy festiwal. Fajne jest to, że [**Spółdzielnia Ogniwo**](https://www.ogniwo.org) też jest prowadzona przez aktywistów. Utrzymuje się z organizowania wydarzeń i sprzedaży książek. To bardzo fajne miejsce.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-3.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-3.jpg"
   alt="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023"
   caption="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023 · Zdjęcie: Konrad Waszkiewicz"
 />
@@ -246,7 +246,7 @@ CJ: Macie zdjęcia? Jestem tak ciekawa.
 Ilde: Mogę spróbować znaleźć i zrobić zdjęcia. Agnieszka ma jeden. Wojtek później pracował z przyjacielem nad zbiorem starych polskich punkowych zine'ów. Wydrukowali je ponownie w dużej książce „Antena Krzyku: Antologia 1986-1990”.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-5.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-5.jpg"
   alt="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
   caption="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
 />
@@ -256,7 +256,7 @@ CJ: Ciągle słyszę o tym nakładaniu się punku i społeczności zine'ów.
 Ilde: Chyba chodzi o DIY i wolność. Zrób to sam, rób co chcesz. Jutro mogę pokazać ci zabawny zine o kosmitach, który zrobiliśmy z Agnieszką i kilkoma znajomymi muzykami. Opiera się na popularnym polskim obserwowaniu UFO z końca lat 50. Wzięliśmy tę historię, dodaliśmy mnóstwo absurdu i złożyliśmy to w całość. Nasi znajomi z Ascending Order, którzy grają też w kilku zespołach punkowych, pomogli z historią i zrobili do niej ścieżkę dźwiękową. Wydaliśmy to na kasecie magnetofonowej razem z zine'em.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-6.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-6.jpg"
   alt="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
   caption="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
 />
@@ -270,7 +270,7 @@ CJ: To takie fajne!
 Ilde: Zrobiliśmy zine'a pod koniec 2023 roku. Wydrukowaliśmy 100 egzemplarzy z kasetami, które szybko się rozeszły, potem zdecydowaliśmy się na dodruk zine'a. Kaseta była czysto zielona, sitodrukowana z małym rysunkiem głównego bohatera, który zrobiła Agnieszka. W każdym razie. Mówię ci to wszystko przez ten związek z muzyką. Znajomy, który wpadł na pomysł całej historii, zaproponował napisanie muzyki do zine'a, bo nie rysuje, ale lubi komiksy. Było bardzo naturalnie i fajnie robić to razem.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-7.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-7.jpg"
   alt="Egzemplarz tego zine'a wrócił ze mną jako wymiana z Agnieszką i Ilde na Kraków Zine Festival. Zdjęcie: CJ Wu"
   caption="Egzemplarz tego zine'a wrócił ze mną jako wymiana z Agnieszką i Ilde na Kraków Zine Festival. Zdjęcie: CJ Wu"
 />
@@ -288,7 +288,7 @@ CJ: Jak sprzedawałeś?
 Ilde: Głównie na festiwalach albo online, ludzie kontaktują się przez e-mail czy media społecznościowe.
 
 <ImageWithCaption
-  src="/krakow-zine-fest-8.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-8.jpg"
   alt="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
   caption="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
 />
@@ -301,7 +301,7 @@ Ilde: Chciałbym widzieć więcej wydarzeń związanych z zine'ami w ciągu roku
 Patrząc, jak Ilde porusza się po przestrzeni, sprawdza u wszystkich, wita ludzi, odpowiada na pytania, przełącza się między językami, przypomniałam sobie, co powiedział poprzedniego wieczoru o tym, że miejsce nie jest ograniczeniem; wyraźnie język też nie powinien nim być. Po zatrzymaniu nagrywania zapytałam go, jak to jest prowadzić festiwale i budować wspólnotę w obcym języku. Powiedział, że teraz radzi sobie z większością spraw po polsku i tylko czasami potrzebuje pomocy ze słówkiem. Przy telefonach i logistyce, np. wynajmowaniu stołów na festiwal, polega na Agnieszce. Resztę ogarnia w biegu.</Callout>
 
 <ImageWithCaption
-  src="/krakow-zine-fest-9.jpg"
+  src="krakow-zine-fest/krakow-zine-fest-9.jpg"
   alt="Dzień festiwalu w Spółdzielni Ogniwo, Kraków, 7 grudnia 2025. Zdjęcie: Ilde B."
   caption="Dzień festiwalu w Spółdzielni Ogniwo, Kraków, 7 grudnia 2025. Zdjęcie: Ilde B."
 />

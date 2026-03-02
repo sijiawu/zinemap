@@ -25,5 +25,5 @@ Lots of love!
 CJ from ZineMap
 
 <ImageWithCaption
-  src="/interview-series.png"
+  src="behind-the-zine-scenes/interview-series.png"
 />

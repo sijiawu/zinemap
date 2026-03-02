@@ -23,9 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
   }
 
-  // Use story thumbnail if available, otherwise fall back to default preview image
-  const imageUrl = story.metadata.thumbnail 
-    ? `${BASE_URL}${story.metadata.thumbnail}`
+  // Use story thumbnail if available (may be Supabase URL or same-origin path)
+  const imageUrl = story.metadata.thumbnail
+    ? (story.metadata.thumbnail.startsWith('http') ? story.metadata.thumbnail : `${BASE_URL}${story.metadata.thumbnail}`)
     : `${BASE_URL}/preview-image.png`
 
   return {

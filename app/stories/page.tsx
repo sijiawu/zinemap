@@ -91,7 +91,7 @@ export default async function StoriesPage({
                       href={`/stories/${story.slug}`}
                       className="flex-shrink-0 w-full sm:w-48 h-48 relative rounded-lg overflow-hidden bg-stone-100 group hover:opacity-80 transition-opacity"
                     >
-                      {story.thumbnail.endsWith('.svg') ? (
+                      {story.thumbnail.endsWith('.svg') || story.thumbnail.startsWith('http') ? (
                         <img
                           src={story.thumbnail}
                           alt={story.title}

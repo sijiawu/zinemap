@@ -1,4 +1,5 @@
 import matter from 'gray-matter'
+import { getStoryImageUrl } from './storyImages'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
@@ -371,7 +372,8 @@ export function parseStory(markdownContent: string, slug: string): Story {
   }
 
   // Extract thumbnail from content or use explicit thumbnail field
-  const thumbnail = data.thumbnail ? String(data.thumbnail) : extractFirstImage(content)
+  const rawThumbnail = data.thumbnail ? String(data.thumbnail) : extractFirstImage(content)
+  const thumbnail = rawThumbnail ? getStoryImageUrl(rawThumbnail) : undefined
 
   const metadata: StoryMetadata = {
     title: String(data.title),

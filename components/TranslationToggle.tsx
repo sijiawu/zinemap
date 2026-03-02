@@ -8,10 +8,10 @@ type Lang = 'pl' | 'en' | 'fr'
 const MESSAGES: Record<Lang, Partial<Record<Lang, { message: string; button: string }>>> = {
   en: {
     pl: { message: 'Ten artykuł jest również dostępny po polsku.', button: 'Przeczytaj po polsku' },
-    fr: { message: "Cet article est également disponible en français.", button: 'Lire en français' },
+    fr: { message: 'This interview was conducted in French. The article is also available in French.', button: 'Read in French' },
   },
   pl: { en: { message: 'This article is also available in English.', button: 'Read in English' } },
-  fr: { en: { message: 'This article is also available in English.', button: 'Read in English' } },
+  fr: { en: { message: 'This interview was conducted in French. The article is also available in English.', button: 'Read in English' } },
 }
 
 interface TranslationToggleProps {

@@ -15,7 +15,7 @@ author: Author Name              # Required: Author name
 author_permalink: username       # Optional: ZineMap profile permalink - makes author name a link to their profile
 slug: story-slug                 # Required: URL slug (must match filename without .md)
 excerpt: "Short description"     # Required: Used in story listing page (use quotes if needed)
-thumbnail: "/path/to/image.jpg"  # Optional: Thumbnail image for listing page (if not provided, first image in content is used)
+thumbnail: "story-images/folder/filename.jpg"  # Optional: Supabase path (e.g., la-fanzinotheque-genevoise/stef.jpg). If not provided, first image in content is used.
 password: "secret123"            # Optional: Password to protect the story. If set, story won't appear in listing and requires password to view
 ---
 ```
@@ -48,7 +48,7 @@ You can use these custom components in your markdown:
 />
 ```
 
-- `src`: Path to image (relative to `/public` folder, e.g., `/story-world-map.svg`)
+- `src`: Path to image. Use Supabase Storage paths: `story-images/<folder>/<filename>` (e.g., `la-fanzinotheque-genevoise/la-mouche.jpg`). Full URLs and same-origin paths (e.g., `/placeholder.svg`) also work.
 - `alt`: Alt text for accessibility
 - `caption`: Caption displayed below the image
 
