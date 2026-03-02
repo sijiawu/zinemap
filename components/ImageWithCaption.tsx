@@ -3,8 +3,8 @@ import { getStoryImageUrl } from '@/lib/storyImages'
 
 interface ImageWithCaptionProps {
   src: string
-  alt: string
-  caption: string
+  alt?: string
+  caption?: string
   width?: number
   height?: number
   priority?: boolean
@@ -51,7 +51,7 @@ function parseCaptionWithLinks(caption: string): React.ReactNode {
 
 export function ImageWithCaption({
   src,
-  alt,
+  alt = '',
   caption,
   width = 1200,
   height = 800,
@@ -92,9 +92,11 @@ export function ImageWithCaption({
           />
         )}
       </div>
-      <figcaption className="mt-3 text-center text-sm text-stone-600 font-serif italic">
-        {parseCaptionWithLinks(caption)}
-      </figcaption>
+      {caption != null && caption !== '' && (
+        <figcaption className="mt-3 text-center text-sm text-stone-600 font-serif italic">
+          {parseCaptionWithLinks(caption)}
+        </figcaption>
+      )}
     </figure>
   )
 }
