@@ -16,6 +16,7 @@ import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
 import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
+import { HowDoesThisWorkLink } from "@/components/HowDoesThisWorkModal"
 
 export default function HomePage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -659,7 +660,7 @@ export default function HomePage() {
             </Card>
 
             {/* Add Store, Library, and Event buttons under the map - Mobile: order-3 */}
-            <div className="mt-6 lg:mt-8 flex justify-center order-3 mb-16">
+            <div className="mt-6 lg:mt-8 flex flex-col items-center gap-2 order-3 mb-16">
               <div className="relative add-menu-container">
                 <Button 
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
@@ -694,6 +695,7 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+              <HowDoesThisWorkLink />
             </div>
           </div>
 
