@@ -1,6 +1,6 @@
 ---
 title: "Behind the Zine Scenes #3: La Fanzinothèque genevoise"
-date: 2026-01-25
+date: 2026-03-03
 tags:
   - Behind the Zine Scenes
   - Libraries
@@ -15,7 +15,7 @@ primary_lang: fr
 ---
 
 <Callout>Stef a ajouté [**FanzinoGE – La Fanzinothèque genevoise**](https://zinemap.com/library/fanzinoge-la-fanzinothque-genevoise-geneva) sur [**ZineMap**](zinemap.com) en septembre 2025. C'est ainsi qu'est apparue la toute première épingle sur ZineMap en Suisse, qui est un statut de pionnière auquel l'association est habituée, puisqu'à ce jour, FanzinoGE reste la seule fanzinothèque connue du pays. <br><br>
-Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à ZineMap en me disant : « Écris-moi si tu passes par Genève », je ne m'attendais pas à faire du couchsurfing chez elle et son partenaire à peine deux mois plus tard, pile pour le week-end de l'Escalade. Elle m'a fait découvrir la ville : quelques librairies de fanzines et de BD, le dépôt de FanzinoGE à la rue Louis Favre, puis [**un atelier de fanzines à la Ferme de la Chapelle**](https://fanzino-ge.ch/nos-corps-perceptibles-ferme-de-la-chapelle-11-nov-14-dec-2025/), qu'elle animait. Au retour de l'atelier, nous nous sommes installées à sa table de salle à manger pour cet entretien — la raison officielle de ma visite :</Callout>
+Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à ZineMap en me disant : *« Écris-moi si tu passes par Genève »*, je ne m'attendais pas à faire du couchsurfing chez elle et son partenaire à peine deux mois plus tard, pile pour le week-end de l'Escalade. Elle m'a fait découvrir la ville : quelques librairies de fanzines et de BD, le dépôt de FanzinoGE à la rue Louis Favre, puis [**un atelier de fanzines à la Ferme de la Chapelle**](https://fanzino-ge.ch/nos-corps-perceptibles-ferme-de-la-chapelle-11-nov-14-dec-2025/), qu'elle animait. Au retour de l'atelier, nous nous sommes installées à sa table de salle à manger pour cet entretien — la raison officielle de ma visite :</Callout>
 
 **CJ :** Tu peux expliquer ce que c'est, la Fanzinothèque, pour les gens qui ne la connaissent pas ?
 
@@ -27,7 +27,7 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 
 **CJ :** Et les livres de poche se trouvent partout !
 
-**Stef :** C'est ça. C'est un peu la origin story. C'est là que je prends conscience qu'en fait, c'est important, c'est rare et c'est précieux, contrairement à d'autres livres qu'on trouve dans le commerce. Et puis ça a fait son petit chemin : j'ai fait des études d'art, je m'intéressais aux livres d'artistes, à la publication, et en sortant de l'école, j'ai fondé [**La Mouche**](https://lamouche.ch), un journal collectif fanzine qui dure depuis 11 ans, et c'est devenu un truc pour rencontrer du monde, faire du réseau, s'amuser… c'est un espace de liberté.
+**Stef :** C'est ça. C'est un peu la *origin story*. C'est là que je prends conscience qu'en fait, c'est important, c'est rare et c'est précieux, contrairement à d'autres livres qu'on trouve dans le commerce. Et puis ça a fait son petit chemin : j'ai fait des études d'art, je m'intéressais aux livres d'artistes, à la publication, et en sortant de l'école, j'ai fondé [**La Mouche**](https://lamouche.ch), un journal collectif fanzine qui dure depuis 11 ans, et c'est devenu un truc pour rencontrer du monde, faire du réseau, s'amuser… c'est un espace de liberté.
 
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/la-mouche.jpg"
@@ -164,7 +164,7 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/permanence.jpg"
   alt="Permanence dans les locaux de l'Usine, 19 mai 2024"
-  caption="Permanence dans les locaux de l'Usine, 19 mai 2024. Photo : Stef Probst"
+  caption="Permanence dans les locaux de l'Usine (l’ancien espace de la Fanzinothèque), 19 mai 2024. Photo : Stef Probst"
 />
 
 <ImageWithCaption
