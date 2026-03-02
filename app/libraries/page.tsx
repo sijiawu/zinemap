@@ -16,6 +16,7 @@ import { formatSocialMedia } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
+import { HowDoesThisWorkLink } from "@/components/HowDoesThisWorkModal"
 
 export default function LibrariesPage() {
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -438,12 +439,13 @@ export default function LibrariesPage() {
               </Card>
 
               {/* Add Library button under the map */}
-              <div className="mt-6 flex justify-center">
+              <div className="mt-6 flex flex-col items-center gap-2">
                 <Link href="/add-library">
                   <Button className="bg-blue-500 hover:bg-blue-600 text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors">
                     Add a library
                   </Button>
                 </Link>
+                <HowDoesThisWorkLink />
               </div>
             </div>
 

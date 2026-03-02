@@ -18,6 +18,7 @@ import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
+import { HowDoesThisWorkLink } from "@/components/HowDoesThisWorkModal"
 
 export default function EventsPage() {
   const searchParams = useSearchParams()
@@ -474,12 +475,13 @@ export default function EventsPage() {
               </Card>
 
               {/* Add Event button under the map */}
-              <div className="mt-6 flex justify-center">
+              <div className="mt-6 flex flex-col items-center gap-2">
                 <Link href="/add-event">
                   <Button className="bg-[#009035] hover:bg-[#007a2a] text-white font-gloria px-8 py-4 text-lg rounded-lg shadow-md transition-colors">
                     Add an event
                   </Button>
                 </Link>
+                <HowDoesThisWorkLink />
               </div>
             </div>
 
