@@ -511,6 +511,9 @@ export default function EventsPage() {
                   >
                     <CalendarDays className="h-4 w-4" />
                     Calendar
+                    <span className="text-xs bg-[#009035] text-white px-1.5 py-0.5 rounded font-bold font-sans">
+                      NEW
+                    </span>
                   </button>
                 </div>
               </div>

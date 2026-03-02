@@ -220,7 +220,8 @@ export function EventsCalendarView({
         </h3>
         {!hasLocationFilter && (
           <p className="text-xs text-stone-500 mb-3">
-            All events for this time frame are shown. You can use the location filter to narrow them down!
+            All events for this time frame are shown. You can use the{' '}
+            <span className="font-semibold text-[#009035]">location filter</span> to narrow them down!
           </p>
         )}
         {hasLocationFilter && <div className="mb-3" />}
