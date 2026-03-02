@@ -14,7 +14,7 @@ excerpt: A conversation with Stef, founder of FanzinoGE – La Fanzinothèque ge
 primary_lang: fr
 ---
 
-<Callout>Stef a ajouté [**FanzinoGE – La Fanzinothèque genevoise**](https://zinemap.com/library/fanzinoge-la-fanzinothque-genevoise-geneva) sur [**ZineMap**](zinemap.com) en septembre 2025. C'est ainsi qu'est apparue la toute première épingle sur ZineMap en Suisse, qui est un statut de pionnière auquel l'association est habituée, puisqu'à ce jour, FanzinoGE reste la seule fanzinothèque connue du pays. <br><br>
+<Callout>Stef a ajouté [**FanzinoGE – La Fanzinothèque genevoise**](https://zinemap.com/library/fanzinoge-la-fanzinothque-genevoise-geneva) sur [**ZineMap**](https://zinemap.com) en septembre 2025. C'est ainsi qu'est apparue la toute première épingle sur ZineMap en Suisse, qui est un statut de pionnière auquel l'association est habituée, puisqu'à ce jour, FanzinoGE reste la seule fanzinothèque connue du pays. <br><br>
 Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à ZineMap en me disant : *« Écris-moi si tu passes par Genève »*, je ne m'attendais pas à faire du couchsurfing chez elle et son partenaire à peine deux mois plus tard, pile pour le week-end de l'Escalade. Elle m'a fait découvrir la ville : quelques librairies de fanzines et de BD, le dépôt de FanzinoGE à la rue Louis Favre, puis [**un atelier de fanzines à la Ferme de la Chapelle**](https://fanzino-ge.ch/nos-corps-perceptibles-ferme-de-la-chapelle-11-nov-14-dec-2025/), qu'elle animait. Au retour de l'atelier, nous nous sommes installées à sa table de salle à manger pour cet entretien — la raison officielle de ma visite :</Callout>
 
 **CJ :** Tu peux expliquer ce que c'est, la Fanzinothèque, pour les gens qui ne la connaissent pas ?
@@ -286,7 +286,7 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
   caption="Fanzinothèque outdoors in the Orangerie garden with Arboretum during Fête de la Musique 2024. Photo: [fanzino-ge.ch](https://fanzino-ge.ch)"
 />
 
-**CJ:** Are there other projects?
+**CJ:** Do you have any other projects?
 
 **Stef:** The big challenge today is really doing the paperwork to get some help finding a space. There's a possible option for end of 2026 but we need to have the guarantees, the funding… So that's a lot of administrative work.
 
