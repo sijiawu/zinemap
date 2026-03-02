@@ -16,7 +16,7 @@ interface HowDoesThisWorkModalProps {
 
 const CONTENT = `ZineMap is a community-maintained map of spaces and events connected to zines and independent publishing.
 
-Its goal is to help people discover and connect with independent publishing communities around the world. Anyone can contribute to making that possible.
+The goal is to help people discover and connect with independent publishing communities around the world. Anyone is welcome to contribute.
 
 If you know of a shop that carries zines, a library or archive with a zine collection, or an event that celebrates zines or small-press work, you can add it to the map. This includes spaces or events you run, places you’ve visited, or those identified through reliable public sources.
 
