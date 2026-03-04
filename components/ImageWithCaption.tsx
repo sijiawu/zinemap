@@ -63,7 +63,7 @@ export function ImageWithCaption({
 
   return (
     <figure className="my-8 sm:my-12">
-      <div className="relative w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-stone-100">
+      <div className="relative w-full max-w-xl mx-auto rounded-lg overflow-hidden bg-stone-100">
         {isExternal ? (
           // For external images (Supabase, etc.), use regular img tag
           <img

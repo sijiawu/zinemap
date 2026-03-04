@@ -215,7 +215,7 @@
   }
   
   .prose p {
-    @apply mb-6 leading-relaxed text-base sm:text-lg font-serif;
+    @apply mb-6 leading-relaxed text-base font-serif;
   }
   
   .prose ul,
@@ -232,7 +232,7 @@
   }
   
   .prose li {
-    @apply leading-relaxed text-base sm:text-lg font-serif;
+    @apply leading-relaxed text-base font-serif;
   }
   
   .prose blockquote {

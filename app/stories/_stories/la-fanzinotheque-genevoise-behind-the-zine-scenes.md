@@ -35,6 +35,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
   caption="La Mouche lors du salon de microédition BDFil en 2023. Photo : [@la_mouche_zine](https://www.instagram.com/la_mouche_zine/)"
 />
 
+<Callout variant="highlight">
+« Je n'ai pas envie de les posséder pour moi seule. J'ai juste envie de savoir qu'on peut les retrouver, qu'il y a un endroit qui les conserve où on peut aller les lire ou en faire. »
+</Callout>
+
 **Stef :** Au bout de quelques années, j'avais envie de trouver un endroit pour rencontrer des gens autour du fanzine… et retrouver peut-être ces fanzines que j'avais perdus ou d'autres. Et ça n'existait pas, ni à Genève ni en Suisse. Donc j'ai étudié pour devenir bibliothécaire et fonder la Fanzinothèque. C'est un peu une obsession, mais je crois que pour s'intéresser aux fanzines, il faut être un petit peu fanatique. Pendant toutes ces années, j'ai continué à garder les fanzines, mais je n'ai pas du tout l'esprit d'une collectionneuse. Je n'ai pas envie de les posséder pour moi seule. J'ai juste envie de savoir qu'on peut les retrouver, qu'il y a un endroit qui les conserve où on peut aller les lire ou en faire. À un moment donné, je me suis sentie suffisamment prête. C'est comme ça que j'ai fondé la Fanzinothèque, qui a bientôt trois ans, qui a une cinquantaine de membres. Pendant deux ans, on avait un espace où on a fait des rencontres, des vernissages… c'était chouette. Aujourd'hui, on n'a plus de locaux, mais on est en train de trouver des solutions. En attendant, c'est une Fanzinothèque nomade, où il y a des petits bouts de collections qui vont sur des stands, dans des expos, dans des parcs.
 
 **CJ :** Tu as déjà fait des expos cette année ?
@@ -73,6 +77,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
   caption="Fanzinothèque en plein air dans le jardin de l'Orangerie, avec Arboretum lors de la fête de la musique 2024. Photo : [fanzino-ge.ch](https://fanzino-ge.ch)"
 />
 
+<Callout variant="highlight">
+« Pour raconter cette histoire, toutes ces voix qu'on n'a pas écoutées, que personne ne connaît, ou que les gens ont oubliées, et qui font l'histoire et qui sont importantes aussi. »
+</Callout>
+
 **CJ :** Est-ce qu'il y a d'autres projets ?
 
 **Stef :** Le gros challenge aujourd'hui c'est vraiment de faire des dossiers pour obtenir un peu d'aide pour trouver un espace. Il y a une option possible pour fin 2026 mais il faut qu'on ait les garanties, les financements... Donc ça c'est un gros travail administratif.
@@ -107,6 +115,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
   caption="L'« Agenda de la Résistance » à l'intérieur du fanzine « Roberta ». On y trouve des annonces d'assemblées, des discussions, des séances de cinéma et des concerts. Photo : CJ Wu"
 />
 
+<Callout variant="highlight">
+« Revenir au format papier, ça redonne le lien humain... »
+</Callout>
+
 **CJ :** On peut parler un peu plus du côté musique et punk ?
 
 **Stef :** Le fanzine en Suisse, comme dans plein d'autres pays, c'est vraiment le média qui permet de faire des chroniques de groupes, de lister les concerts, de faire des interviews de tous ces bands qui jouent dans des caves. Il y a une grande partie de la Fanzinothèque qui parle de musique, de tous les genres, beaucoup de punk aussi, évidemment. C'est là que j'ai rencontré les fanzines, aux concerts. C'était de l'information qu'on ne trouvait pas tellement ailleurs.
@@ -127,6 +139,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 
 **Stef :** L'expérience que j'ai par rapport à ces fanzines des années 2000 ou 2010… il y a souvent un site web, genre : « Retrouve les autres exemplaires sur ce site ! » Sauf que le site n'existe plus depuis 10 ans. Il a été en ligne pendant six mois et personne ne l'a payé ou archivé. Ce qu'il reste, c'est le papier. Tout le monde pense que si c'est sur internet, c'est *forever* ! Mais pas du tout. Le papier peut durer une centaine d'années, si on le range et si on sait où le trouver. C'est un peu le travail de la Fanzinothèque. Je ne suis pas anti-internet, et j'aime bien que les deux coexistent, et qu'ils n'aient pas le même usage. Ce qui est intéressant, c'est qu'il y a plein de réseaux autour du fanzine, comme [**ZineMap**](https://zinemap.com) par exemple, qui font que les gens se retrouvent en ligne pour se donner rendez-vous en vrai dans des festivals, ou s'envoyer des exemplaires par la poste, ou s'échanger des PDF, ou retrouver un lien vers une ressource, ou se donner des conseils... et ça c'est super.
 
+<Callout variant="highlight">
+« Le fanzine est très libre et sauvage d'un côté, mais, quand on veut archiver, il faut structurer pour pouvoir fonctionner, sinon c'est perdu, et c'est des piles et des piles de documents qui ne servent à rien. »
+</Callout>
+
 **CJ :** Je suis curieuse de la gestion aussi. Est-ce que tu penses que tes études bibliothécaires ont beaucoup aidé dans la gestion de la Fanzinothèque ?
 
 **Stef :** Oui. Ce n'est pas obligatoire d'être bibliothécaire archiviste pour faire une fanzinothèque, mais au bout d'un moment, il faut avoir des notions de catalogage, savoir comment indiquer les informations, surtout sur des objets comme des fanzines, où des fois il n'y a pas de nom, pas de titre, pas de date, pas de lieu… ce qui permet d'identifier des fois est très difficile. Et comme c'est un peu confidentiel ou qu'il y a très peu d'exemplaires, personne ne sait que ça existe. Donc comment va-t-on tomber dessus ? Il faut le décrire, il faut des mots clés, le contexte. Tout ça, j'ai appris à le structurer pendant mes études.
@@ -134,6 +150,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 <Callout>Dans [**une interview radio en 2023**](https://radiovostok.ch/la-fanzinotheque-genevoise/), Stef expliquait en détail le catalogage contextuel, une pratique qu'elle applique à chaque nouvelle acquisition et dont j'ai pu être le témoin direct : quand je lui ai offert mes propres fanzines de BD, elle a immédiatement sorti un stylo et des post-it pour me demander : combien d'exemplaires ? Imprimés où ? Disponibles en quelles langues ? Au-delà de l'honneur de voir mes créations prises au sérieux, c'était un aperçu fascinant de sa manière de travailler.</Callout>
 
 **Stef :** C'est le boulot backend très fastidieux et répétitif que personne ne veut faire parce qu'il faut vraiment aligner des infos dans des cases. Si quelqu'un dit : « Moi, ça m'intéresse les fanzines sur les girafes. » Quand on en a trois, quatre-mille fanzines avec des formats très différents, comment va-t-on le retrouver ? Le fanzine est très libre et sauvage d'un côté, mais, quand on veut archiver, il faut structurer pour pouvoir fonctionner, sinon c'est perdu, et c'est des piles et des piles de documents qui ne servent à rien.
+
+<Callout variant="highlight">
+« Le rêve quand on aura un espace, c'est de faire plusieurs permanences par semaine, des rendez-vous réguliers fixes, d'accueillir des chercheuses ou chercheurs, ou des collectifs d'artistes pour venir travailler sur place, faire des résidences... »
+</Callout>
 
 **CJ :** Qu'est-ce que tu fais pour encore développer la collection ?
 
@@ -156,6 +176,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 **CJ :** Et tu mets combien d'heures par semaine ?
 
 **Stef :** C'est un truc qu'il ne faut pas compter (rire) ! C'est du travail bénévole. Il y a de petits défraiements pour les personnes qui participent aux événements, ou qui donnent des ateliers, on paie les artistes qu'on invite pour faire des interventions, un forfait. Idéalement, il faudrait 40% de temps de travail, donc deux jours par semaine, soit 16 heures. Ça dépend complètement des périodes. Une journée en festival, c'est facilement dix heures, peut-être plus avec la préparation, le rangement, le trajet. Beaucoup d'heures. Pour fonctionner comme une bibliothèque professionnelle dans de bonnes conditions, il faudrait au moins trois postes à mi-temps ou quatre, soit une personne et demie ou deux personnes tout le temps sur plusieurs tâches : la gestion, l'admin, la programmation et les événements, le catalogage, l'archivage et l'indexation, et l'accueil du public. Le rêve quand on aura un espace, c'est de faire plusieurs permanences par semaine, des rendez-vous réguliers fixes, d'accueillir des chercheuses ou chercheurs, ou des collectifs d'artistes pour venir travailler sur place, faire des résidences, de la production, de la promotion, par exemple de petites vidéos, des capsules, de la valorisation. J'aimerais beaucoup aussi travailler sur le contenu, toute cette histoire, tous ces documents… il faudrait l'analyser, et ça, c'est encore un gros travail à faire. Trois personnes, ce serait bien, après on fera comme on pourra.
+
+<Callout variant="highlight">
+« Tout le travail pénible, je n'ai pas osé demander à d'autres de le faire gratuitement, donc c'était beaucoup moi, mais c'était mon obsession, mon projet, et comme j'avais fait ces études, je savais ce qu'il fallait faire. »
+</Callout>
 
 **CJ :** Ça fonctionnait un peu comme ça avant quand on avait un espace ?
 
@@ -180,6 +204,10 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 **CJ :** On sait jamais…
 
 **Stef :** Voilà. Mais modulable, mobile... un petit studio peut-être pour capturer les fanzines, faire de petites vidéos pour les mettre en valeur. Ce qui serait super, c'est qu'on ait des membres ou des bénévoles qui viennent raconter ce qu'iels ont trouvé dans la collection ou faire comme un channel de présentation… on verra. Il n'y a pas de bureau des bibliothécaires en fait. Les bibliothécaires travaillent avec le public, tout le monde est dans le même espace, il n'y a pas de hiérarchie. Il y aurait une partie de professionnels, une partie de bénévoles qui veulent s'impliquer et proposer de faire des choses, pour que ça fonctionne aussi sans moi.
+
+<Callout variant="highlight">
+« D'avoir un espace où on peut discuter, faire des expériences, essayer des choses sur plein d'axes différents, je pense que ça rendrait la Fanzinothèque plus riche, plus diverse, plus inclusive et plus fun. »
+</Callout>
 
 **CJ :** C'est important que ça fonctionne aussi sans toi ?
 
@@ -211,7 +239,15 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
   caption="Tote bag sérigraphié avec une illustration de Ben Comix (série de 50 exemplaires) · Photo : Stef Probst"
 />
 
+<Callout variant="highlight">
+« Le critère, c'est que la Fanzinothèque est un refuge qui va accueillir les publications qui ne vont pas être conservées ailleurs. »
+</Callout>
+
 **Stef :** J'ajouterais peut-être un détail par rapport à ce qui rentre ou pas dans la collection. En fait, la Fanzinothèque s'intéresse aux fanzines, zines, microédition et livres d'artistes. Parce qu'on pourrait passer toute sa vie à définir le "fanzine", et personne n'est jamais totalement d'accord. L'autodétermination prime. Ce qui est intéressant, c'est les pratiques de l'édition indépendante, en dehors des circuits classiques. Il y a plusieurs critères : l'esprit DIY, autonome, collectif, amateur… et le nombre de tirages. Si on fait du papier glacé à 50 000 exemplaires, on sort du cadre. Mais des zines tirés à beaucoup d'exemplaires peuvent rentrer si c'est fait de manière indépendante, en dehors d'un magazine grand public. Le livre d'artiste se définit par peu d'exemplaires, et le travail est souvent plus conséquent ou plus travaillé. Et pour la microédition, on a des collectifs qui sont des éditeurs ou des éditrices, ou presque, qui publient des livres mais qui en font peu ou dans un cercle restreint. Le critère, c'est que la Fanzinothèque est un refuge qui va accueillir les publications qui ne vont pas être conservées ailleurs. Dans une bibliothèque institutionnelle, il faut un bon de commande, une facture, etc. Parce que personne ne sait que ça existe, ou que c'est prix libre sur une table, si ça ne passe pas par un libraire c'est très compliqué pour une institution normale de faire rentrer ça dans une comptabilité. La Fanzinothèque peut le faire, et ça permet de sauver tout un tas de choses qui, sinon, disparaîtraient. Ces petites voix que peu de monde écoute mais qui sont importantes. Il y a une politique d'acquisition écrite, basée sur [**une analyse sur la fanzinothèque**](https://sonar.ch/hesso/documents/330536) faite par Cécile Aguzzi, et c'est une base de critères qui nous permet de décider multilatéralement, c'est des guidelines. Donc l'idée du refuge est importante pour les zines, et aussi pour les gens. Tout le monde est bienvenu.
+
+<Callout variant="highlight">
+« L'idée c'est de ne pas juger le sujet, mais de faire attention à ne pas mettre n'importe quelle information dans les mains de tout le monde si ça peut être problématique. »
+</Callout>
 
 **CJ :** Tu as déjà dit non à quelqu'un ?
 
@@ -247,6 +283,10 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
   alt="La Mouche at the BDFil micro-publishing fair, 2023"
   caption="La Mouche at the BDFil micro-publishing fair, 2023. Photo: [@la_mouche_zine](https://www.instagram.com/la_mouche_zine/)"
 />
+
+<Callout variant="highlight">
+"I don't want to own the zines just for myself. What matters to me is that they can be accessed, and that there's a place that preserves them where you can go read them, or even make your own."
+</Callout>
 
 **Stef:** After a few years, I wanted a place where people could gather around zines… to discover new zines, and maybe even come across the ones I had lost. But nothing like that existed in Geneva. In fact, nothing like that existed anywhere in Switzerland. So I studied to become a librarian, with the goal of founding the Fanzinothèque. It’s a bit of an obsession, but I think you need to be slightly obsessive to care about zines. All those years I kept collecting zines, but I don't really have a collector's mindset. I don't want to own them just for myself. What matters to me is that they can be accessed, and that there's a place that preserves them where you can go read them, or even make your own. At some point I felt ready enough. So that’s how I founded the Fanzinothèque. It’s now almost three years old and has around 50 members. For two years we had a physical space where we held gatherings and openings, which was great. Today we don't have premises anymore, but we're working on solutions. In the meantime, it's a nomadic zine library, with little parts of the collection going out to stalls, exhibitions, or out in the parks.
 
@@ -286,6 +326,10 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
   caption="Fanzinothèque outdoors in the Orangerie garden with Arboretum during Fête de la Musique 2024. Photo: [fanzino-ge.ch](https://fanzino-ge.ch)"
 />
 
+<Callout variant="highlight">
+"The goal is to tell this history: all those voices that were never heard, that nobody knows about, or that people have forgotten, even though they are part of that history and are important too."
+</Callout>
+
 **CJ:** Are there other projects in the works?
 
 **Stef:** The main challenge right now is preparing funding applications so we can get support to secure a space. There’s a potential option for late 2026, but we still need guarantees and financing. So at the moment it’s a lot of administrative work.
@@ -306,7 +350,7 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
   src="la-fanzinotheque-genevoise/rapport.jpg"
   alt="Couverture du Rapport de la Permanence juridique G8 (10 octobre 2003)"
   caption="Cover of the report Rapport de la Permanence juridique G8 (10 October 2003): Police violence and abuses in Geneva during the G8 period (May–June 2003).
-Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
+Collection of La Fanzinothèque genevoise. Photo: CJ Wu"
 />
 
 **Stef:** Today there are still collectives working around social struggles. The collection of the Fanzinothèque includes many feminist and queer zines. In the 2000s there were a lot of anarchist zines. Today the activism tends to focus more on people’s rights regardless of gender, anti-colonial issues, and housing, which remains a constant. I recently came across a zine from the 1980s made by students… teenagers. It talks about the war in Palestine, sexism, and police violence. And today these are still the same topics making the news over and over again.
@@ -318,8 +362,12 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/roberta.jpg"
   alt="The 'Agenda de la Résistance' inside the zine Roberta"
-  caption="The 'Agenda de la Résistance' inside the zine Roberta: announcements of assemblies, discussions, film screenings and concerts. Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
+  caption="The 'Agenda de la Résistance' inside the zine Roberta: announcements of assemblies, discussions, film screenings and concerts. Collection of La Fanzinothèque genevoise. Photo: CJ Wu"
 />
+
+<Callout variant="highlight">
+"When you return to paper, it creates a different kind of human connection."
+</Callout>
 
 **CJ:** Can we talk a bit more about the music and punk side of things?
 
@@ -328,7 +376,7 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/spouri.png"
   alt="Spouri: Le Canard Tout Enculeur, Swiss punk rock and trash-humor comics fanzine, with a split 45-rpm single by Ludwig Von 88 and P.P.I., 1986."
-  caption="Spouri: Le Canard Tout Enculeur, Swiss punk rock and trash-humor comics fanzine, with a split 45-rpm single by Ludwig Von 88 and P.P.I., 1986. Collection of the Fanzinothèque genevoise. Photo: CJ Wu"
+  caption="Spouri: Le Canard Tout Enculeur, Swiss punk rock and trash-humor comics fanzine, with a split 45-rpm single by Ludwig Von 88 and P.P.I., 1986. Collection of La Fanzinothèque genevoise. Photo: CJ Wu"
 />
 
 **Stef:** What’s funny is that it’s coming back. Between 2010 and 2020 there were fewer zines being made, or at least I saw fewer of them. People thought we didn’t need zines anymore because we had the internet, Facebook, MySpace, all of that. But I think today people are a bit tired of reading on screens, and we’re drowning in too much information. When you return to paper, it creates a different kind of human connection. A zine is something you pass from hand to hand, something you sometimes have to go out and hunt for, and often there are only a few copies, so it feels like a treasure. And we concentrate much better on a printed page than on a backlit screen. I think going back to manual work, to paper, to face-to-face encounters is something people really miss, especially after COVID.
@@ -336,10 +384,14 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/poemes-a-bruler.png"
   alt="Poèmes à brûler by Ariane Mayer: handmade cigarettes, each containing a short rolled poem"
-  caption="Poèmes à brûler by Ariane Mayer: handmade cigarettes, each containing a short rolled poem. Collection of the Fanzinothèque genevoise. Photo: CJ Wu"
+  caption="Poèmes à brûler by Ariane Mayer: handmade cigarettes, each containing a short rolled poem. Collection of La Fanzinothèque genevoise. Photo: CJ Wu"
 />
 
 **Stef:** One thing I’ve noticed with fanzines from the 2000s or 2010s is that they often say something like: “Find the other issues on this website!” But the site has been down for ten years. It might have been online for six months, and then nobody paid for the hosting or archived it. What remains is the paper. People think that if something is on the internet, it’s forever, but that’s not true at all. Paper can last a hundred years if it’s stored properly and if people know where to find it. That’s part of the work of the Fanzinothèque. I’m not anti-internet or anything. I actually like the idea that both can coexist and serve different purposes. What’s interesting is that there are many networks around zines, like [**ZineMap**](https://zinemap.com) for example, that help people find each other online to then meet up in person at festivals, or trade zines by mail, or exchange PDFs, or find a link to a resource, or give each other advice… and that's great.
+
+<Callout variant="highlight">
+"Zines are inherently free-form and unstructured. But if you want to archive them, you have to impose some structure for the collection to function, otherwise you just end up with piles and piles of documents that no one can actually use."
+</Callout>
 
 **CJ:** I'm curious about the management aspect as well. Do you think your library studies helped a lot with running the Fanzinothèque?
 
@@ -349,6 +401,10 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 </Callout>
 
 **Stef:** It’s the tedious, repetitive backend work that nobody really wants to do, because you have to line up information into little boxes. If someone says, “I’m interested in zines about giraffes,” and we have three or four thousand zines in all kinds of different formats, how would we ever find them? Zines are inherently free-form and unstructured. But if you want to archive them, you have to impose some structure for the collection to function, otherwise you just end up with piles and piles of documents that no one can actually use.
+
+<Callout variant="highlight">
+"The dream, once we have a dedicated space, would be to have several opening hours each week, regular scheduled visits, and to host researchers or artist collectives working on site for residencies..."
+</Callout>
 
 **CJ:** What do you do to keep developing the collection?
 
@@ -371,6 +427,10 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 **CJ:** And how many hours per week do you put in?
 
 **Stef:** That’s something you really shouldn’t try to calculate (laughs)! It’s all volunteer work, except that there are small reimbursements for people who help run events or workshops, and we pay the artists we invite for talks or activities with a modest honorarium. Ideally, the work would represent about 40% of a full-time job, or two workdays every week, but it varies a lot depending on the time period. A festival day alone can easily be ten hours, maybe more once you include preparation, packing up, and travel. It adds up to many hours. To function like a professional library under good conditions, we would need at least three or four half-time positions, which is essentially one and a half to two people working continuously across different tasks: management, administration, programming and events, cataloguing, archiving and indexing, and welcoming visitors. The dream, once we have a dedicated space, would be to have several opening hours each week, regular scheduled visits, and to host researchers or artist collectives working on site for residencies, production, promotion, and maybe short videos or small media pieces that highlight the collection. I’d also love to work on the content itself — all this history and all these documents. They still need to be studied and analyzed, and that’s another huge task in itself. Three people would be really great. After that, we’ll do what we can.
+
+<Callout variant="highlight">
+"There was a lot of tedious work that I did not dare ask others to do for free, so I took on most of it myself. But it was my obsession, my project, and because I had studied this field, I knew what needed to be done."
+</Callout>
 
 **CJ:** Did it work a bit like that back when you had a space?
 
@@ -395,6 +455,10 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
 **CJ:** Well, you never know…
 
 **Stef:** Right. But modular, movable… maybe a small studio for filming flip-through videos of the zines to highlight them. It would be great if members or volunteers could come in and talk about what they’ve discovered in the collection, or create something like a presentation channel… we’ll see. There wouldn’t really be a librarians’ office. Librarians would work directly with the public, with everyone sharing the same space and no real hierarchy. There would be both professionals and volunteers who want to get involved and suggest ideas, so that the place can also function without me.
+
+<Callout variant="highlight">
+"Having a space where people can talk, experiment, and try different approaches would make the Fanzinothèque richer, more diverse, more inclusive, and more fun."
+</Callout>
 
 **CJ:** Is it important that it functions without you?
 
@@ -426,7 +490,15 @@ Collection of the Fanzinothèque genevoise. Photo: CJ Wu."
   caption="Screen-printed tote bag with illustration by Ben Comix (edition of 50). Photo: Stef Probst"
 />
 
-**Stef:** I’d maybe add a detail about what does or doesn’t enter the collection. The Fanzinothèque is interested in zines, micro-publishing, and artists’ books. Because you could spend your whole life trying to define what a “zine” is, and nobody ever fully agrees. Self-identification matters most. What interests us are independent publishing practices, outside the usual circuits. There are several criteria: the DIY spirit, autonomy, collective or amateur practices… and the size of the print run. If something is printed on glossy paper in 50,000 copies, that falls outside the scope. But zines printed in larger quantities can still fit if they’re produced independently and not as part of a mainstream magazine. Artists’ books are usually defined by smaller editions, and the work is often more elaborate. And with micro-publishing, we often see collectives that are essentially small publishers who produce books, but in limited quantities or within a relatively small circle. The guiding idea is that the Fanzinothèque acts as a refuge for publications that would not otherwise be preserved. In an institutional library, you need a purchase order, an invoice, and so on. If nobody even knows the publication exists, or if it’s sold at a pay-what-you-want table, and it doesn’t go through a bookstore, it becomes very difficult for a conventional institution to integrate it into their accounting system. The Fanzinothèque can do that, and it allows us to preserve many things that would otherwise disappear. These small voices that few people listen to, but that are important. There is also a written acquisitions policy based on [**a study of the Fanzinothèque**](https://sonar.ch/hesso/documents/330536) conducted by Cécile Aguzzi. It provides a framework of criteria that helps us make collective decisions — more like guidelines. So the idea of refuge is important, for zines but also for people. Everyone is welcome.
+<Callout variant="highlight">
+"The guiding principle is that the Fanzinothèque acts as a refuge for publications that would not otherwise be preserved."
+</Callout>
+
+**Stef:** I’d maybe add a detail about what does or doesn’t enter the collection. The Fanzinothèque is interested in zines, micro-publishing, and artists’ books. Because you could spend your whole life trying to define what a “zine” is, and nobody ever fully agrees. Self-identification matters most. What interests us are independent publishing practices, outside the usual circuits. There are several criteria: the DIY spirit, autonomy, collective or amateur practices… and the size of the print run. If something is printed on glossy paper in 50,000 copies, that falls outside the scope. But zines printed in larger quantities can still fit if they’re produced independently and not as part of a mainstream magazine. Artists’ books are usually defined by smaller editions, and the work is often more elaborate. And with micro-publishing, we often see collectives that are essentially small publishers who produce books, but in limited quantities or within a relatively small circle. The guiding principle is that the Fanzinothèque acts as a refuge for publications that would not otherwise be preserved. In an institutional library, you need a purchase order, an invoice, and so on. If nobody even knows the publication exists, or if it’s sold at a pay-what-you-want table, and it doesn’t go through a bookstore, it becomes very difficult for a conventional institution to integrate it into their accounting system. The Fanzinothèque can do that, and it allows us to preserve many things that would otherwise disappear. These small voices that few people listen to, but that are important. There is also a written acquisitions policy based on [**a study of the Fanzinothèque**](https://sonar.ch/hesso/documents/330536) conducted by Cécile Aguzzi. It provides a framework of criteria that helps us make collective decisions — more like guidelines. So the idea of refuge is important, for zines but also for people. Everyone is welcome.
+
+<Callout variant="highlight">
+"The idea is not to judge the subject matter, but to be careful not to place potentially harmful information in everyone’s hands."
+</Callout>
 
 **CJ:** Have you ever said no to someone?
 

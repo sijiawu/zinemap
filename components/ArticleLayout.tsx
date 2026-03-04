@@ -71,7 +71,7 @@ export function ArticleLayout({ children, title, date, tags, author, authorPerma
       </header>
 
       {/* Content */}
-      <div className="prose prose-stone prose-lg max-w-none">
+      <div className="prose prose-stone max-w-none">
         {contentTranslation && translationLang ? (
           <TranslationToggle
             primaryLang={primaryLang}
