@@ -5,7 +5,7 @@ import { getAllStories } from '@/lib/getStories'
 
 export const metadata: Metadata = {
   title: 'Stories - ZineMap',
-  description: 'Behind the scenes stories, zine culture insights, and community highlights from ZineMap.',
+  description: 'Interviews, field notes, and documentation from the world of zines and independent publishing.',
 }
 
 export default async function StoriesPage({
@@ -38,7 +38,7 @@ export default async function StoriesPage({
             Stories
           </h1>
           <p className="text-lg sm:text-xl text-stone-600 font-serif mb-6">
-            Behind the scenes stories, zine culture insights, and community highlights.
+            Interviews, field notes, and documentation from the world of zines and independent publishing.
           </p>
           
           {/* Tags Filter */}
