@@ -4,6 +4,9 @@ node_modules/
 # Next.js build output
 .next/
 
+# TypeScript build info
+tsconfig.tsbuildinfo
+
 # Production build
 out/
 

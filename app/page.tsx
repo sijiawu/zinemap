@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, isPastEvent } from "@/lib/utils"
 import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -334,54 +334,56 @@ export default function HomePage() {
     clearLocationFilters()
   }
 
-  // Helper: Check if event is past
-  const isPastEvent = (event: Event) => {
-    const today = new Date().toISOString().split('T')[0]
-    return event.end_date < today
-  }
+  const today = new Date().toISOString().split('T')[0]
+  const isPastOccurrence = (occ: { occurrence_end: string }) => occ.occurrence_end < today
 
-  // Calculate event counts for subtabs (based on search and location filters only, not time filter)
+  // Calculate event counts for subtabs (based on expanded occurrences, search and location filters)
   const getEventCounts = () => {
-    if (!events) return { all: 0, upcoming: 0, past: 0 }
-    
-    // Helper: Check if item matches location filters
-    const matchesLocation = (item: Event) => {
-      if (selectedCountry !== "all" && item.country !== selectedCountry) return false
-      if (selectedState !== "all" && (item.state || "") !== selectedState) return false
-      if (selectedCity !== "all" && item.city !== selectedCity) return false
+    if (!events.length) return { all: 0, upcoming: 0, past: 0 }
+
+    const occurrences = expandRecurringEvents(events)
+
+    const matchesLocation = (occ: { event: Event }) => {
+      const e = occ.event
+      if (selectedCountry !== "all" && e.country !== selectedCountry) return false
+      if (selectedState !== "all" && (e.state || "") !== selectedState) return false
+      if (selectedCity !== "all" && e.city !== selectedCity) return false
       return true
     }
 
-    // Helper: Check if item matches search query
-    const matchesSearch = (item: Event, query: string) => {
+    const matchesSearch = (occ: { event: Event }, query: string) => {
       if (!query) return true
       const lowerQuery = query.toLowerCase()
+      const e = occ.event
       return (
-        item.name.toLowerCase().includes(lowerQuery) ||
-        (!!item.notes && item.notes.toLowerCase().includes(lowerQuery)) ||
-        item.country.toLowerCase().includes(lowerQuery) ||
-        (!!item.state && item.state.toLowerCase().includes(lowerQuery)) ||
-        item.city.toLowerCase().includes(lowerQuery)
+        e.name.toLowerCase().includes(lowerQuery) ||
+        (!!e.notes && e.notes.toLowerCase().includes(lowerQuery)) ||
+        e.country.toLowerCase().includes(lowerQuery) ||
+        (!!e.state && e.state.toLowerCase().includes(lowerQuery)) ||
+        e.city.toLowerCase().includes(lowerQuery)
       )
     }
 
-    // Filter by location and search only
-    const filtered = events.filter(event => {
-      if (!matchesLocation(event)) return false
-      if (debouncedSearchQuery.trim()) {
-        return matchesSearch(event, debouncedSearchQuery.trim())
-      }
+    const filtered = occurrences.filter(occ => {
+      if (!matchesLocation(occ)) return false
+      if (debouncedSearchQuery.trim()) return matchesSearch(occ, debouncedSearchQuery.trim())
       return true
     })
 
     return {
       all: filtered.length,
-      upcoming: filtered.filter(event => !isPastEvent(event)).length,
-      past: filtered.filter(event => isPastEvent(event)).length
+      upcoming: filtered.filter(occ => !isPastOccurrence(occ)).length,
+      past: filtered.filter(occ => isPastOccurrence(occ)).length
     }
   }
 
   const eventCounts = getEventCounts()
+
+  // Dedupe events for map (one marker per event/venue)
+  const mapEvents = useMemo(
+    () => Array.from(new Map(filteredEvents.map(e => [e.id, e])).values()),
+    [filteredEvents]
+  )
 
   // Filter stores, libraries, and events based on debounced search query and location filters
   useEffect(() => {
@@ -419,19 +421,20 @@ export default function HomePage() {
       })
     }
 
-    // Filter events with time filter
+    // Filter events: expand recurring, then filter by location, search, and time
     const filterEvents = (items: Event[]) => {
-      let filtered = filterItems(items)
-      
-      // Apply time filter
+      const occurrences = expandRecurringEvents(items)
+      let filtered = occurrences.filter(occ => {
+        if (!matchesLocation(occ.event)) return false
+        if (debouncedSearchQuery.trim()) return matchesSearch(occ.event, debouncedSearchQuery.trim())
+        return true
+      })
       if (eventTimeFilter === "upcoming") {
-        filtered = filtered.filter(event => !isPastEvent(event))
+        filtered = filtered.filter(occ => occ.occurrence_end >= today)
       } else if (eventTimeFilter === "past") {
-        filtered = filtered.filter(event => isPastEvent(event))
+        filtered = filtered.filter(occ => occ.occurrence_end < today)
       }
-      // "all" shows everything, no additional filtering needed
-      
-      return filtered
+      return filtered.map(occ => occurrenceToDisplayEvent(occ))
     }
 
     setFilteredStores(filterItems(stores))
@@ -644,7 +647,7 @@ export default function HomePage() {
                     <StoreMap 
                       stores={filteredStores}
                       libraries={filteredLibraries}
-                      events={filteredEvents}
+                      events={mapEvents}
                       searchQuery={debouncedSearchQuery}
                       onLocationSelect={handleLocationSelect}
                       onMapReady={handleMapReady}
@@ -776,7 +779,7 @@ export default function HomePage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-rose-600 transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 >
                                   {store.name}
                                 </Link>
@@ -786,7 +789,7 @@ export default function HomePage() {
                                 {store.city}{store.state && `, ${store.state}`}, {store.country}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                               <Link href={`/store/${store.permalink || store.id}`} target="_blank" rel="noopener noreferrer">
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-rose-600 hover:bg-rose-50">
                                   <ExternalLink className="h-4 w-4" />
@@ -922,7 +925,7 @@ export default function HomePage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-blue-600 transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 >
                                   {library.name}
                                 </Link>
@@ -932,7 +935,7 @@ export default function HomePage() {
                                 {library.city}{library.state && `, ${library.state}`}, {library.country}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                               <Link href={`/library/${library.permalink || library.id}`} target="_blank" rel="noopener noreferrer">
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-blue-600 hover:bg-blue-50">
                                   <ExternalLink className="h-4 w-4" />
@@ -1078,7 +1081,7 @@ export default function HomePage() {
                   ) : (
                     filteredEvents.map((event) => (
                       <Card
-                        key={event.id}
+                        key={`${event.id}-${event.start_date}-${event.end_date}`}
                         className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                         onClick={() => handleCardClick(event, 'event')}
                       >
@@ -1091,7 +1094,7 @@ export default function HomePage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-[#009035] transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 >
                                   {event.name}
                                 </Link>
@@ -1107,7 +1110,7 @@ export default function HomePage() {
                                 {event.city}{event.state && `, ${event.state}`}, {event.country}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                               <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
                                   <ExternalLink className="h-4 w-4" />
@@ -1125,6 +1128,11 @@ export default function HomePage() {
                             >
                               {getEventCategoryDisplay(event.category)}
                             </Badge>
+                            {event.recurrence_frequency && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                Recurring
+                              </Badge>
+                            )}
                             {isPastEvent(event) && (
                               <Badge 
                                 variant="outline"

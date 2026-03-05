@@ -10,10 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -35,6 +35,7 @@ export default function EventsPage() {
     () => (searchParams.get("view") === "calendar" ? "calendar" : "list")
   )
   const [calendarFilteredEvents, setCalendarFilteredEvents] = useState<Event[]>([])
+  const [calendarEvents, setCalendarEvents] = useState<Event[]>([])
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
@@ -141,85 +142,81 @@ export default function EventsPage() {
     fetchData()
   }, [])
 
-  // Filter events based on all criteria
+  // Expand recurring events and filter based on all criteria
   useEffect(() => {
-    if (!events) return
+    if (!events.length) {
+      setFilteredEvents([])
+      return
+    }
 
-    let filtered = events
+    const occurrences = expandRecurringEvents(events)
+    let filteredOccurrences = occurrences
 
     // Apply search filter
     if (debouncedSearchQuery.trim()) {
       const query = debouncedSearchQuery.toLowerCase().trim()
-      filtered = filtered.filter(event => 
-        event.name.toLowerCase().includes(query) ||
-        event.city.toLowerCase().includes(query) ||
-        (event.state && event.state.toLowerCase().includes(query)) ||
-        event.country.toLowerCase().includes(query) ||
-        event.address.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query) ||
-        (event.venue_name && event.venue_name.toLowerCase().includes(query))
+      filteredOccurrences = filteredOccurrences.filter(occ =>
+        occ.event.name.toLowerCase().includes(query) ||
+        occ.event.city.toLowerCase().includes(query) ||
+        (occ.event.state && occ.event.state.toLowerCase().includes(query)) ||
+        occ.event.country.toLowerCase().includes(query) ||
+        occ.event.address.toLowerCase().includes(query) ||
+        occ.event.category.toLowerCase().includes(query) ||
+        (occ.event.venue_name && occ.event.venue_name.toLowerCase().includes(query))
       )
     }
 
-    // Apply country filter
+    // Apply location filters
     if (selectedCountry && selectedCountry !== "all") {
-      filtered = filtered.filter(event => event.country === selectedCountry)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.event.country === selectedCountry)
     }
-
-    // Apply state filter
     if (selectedState && selectedState !== "all") {
-      filtered = filtered.filter(event => event.state === selectedState)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.event.state === selectedState)
     }
-
-    // Apply city filter
     if (selectedCity && selectedCity !== "all") {
-      filtered = filtered.filter(event => event.city === selectedCity)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.event.city === selectedCity)
     }
 
     // Apply category filter
     if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter(event => event.category === selectedCategory)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.event.category === selectedCategory)
     }
 
-    // Apply time filter
+    // Apply time filter (use occurrence dates for recurring events)
     const today = new Date().toISOString().split('T')[0]
     if (timeFilter === "upcoming") {
-      filtered = filtered.filter(event => event.end_date >= today)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.occurrence_end >= today)
     } else if (timeFilter === "past") {
-      filtered = filtered.filter(event => event.end_date < today)
+      filteredOccurrences = filteredOccurrences.filter(occ => occ.occurrence_end < today)
     }
-    // "all" shows everything
 
-    // Apply applications open filter
+    // Apply applications open filter (uses event-level deadline, not occurrence)
     if (applicationsOpen) {
       const now = new Date()
-      now.setHours(0, 0, 0, 0) // Set to start of day for accurate date comparison
-      
-      filtered = filtered.filter(event => {
-        // If no application_deadline, applications can't be open
+      now.setHours(0, 0, 0, 0)
+      filteredOccurrences = filteredOccurrences.filter(occ => {
+        const event = occ.event
         if (!event.application_deadline) return false
-        
         const applicationDeadline = new Date(event.application_deadline)
         applicationDeadline.setHours(0, 0, 0, 0)
-        
-        // If deadline has passed, applications are closed
         if (now > applicationDeadline) return false
-        
-        // If application_open exists, check if we're past the open date
         if (event.application_open) {
           const applicationOpenDate = new Date(event.application_open)
           applicationOpenDate.setHours(0, 0, 0, 0)
-          
-          // Applications are open if we're between open date and deadline
           return now >= applicationOpenDate && now <= applicationDeadline
         }
-        
-        // If no application_open date but deadline is in the future, applications are open
         return now <= applicationDeadline
       })
     }
 
-    setFilteredEvents(filtered)
+    // List view: show only NEXT occurrence per recurring event (avoid clutter)
+    const listOccurrences = occurrencesToNextOnly(filteredOccurrences)
+    const listDisplayEvents = listOccurrences.map(occ => occurrenceToDisplayEvent(occ))
+    setFilteredEvents(listDisplayEvents)
+
+    // Calendar view: all occurrences (calendar filters by month internally)
+    const allDisplayEvents = filteredOccurrences.map(occ => occurrenceToDisplayEvent(occ))
+    setCalendarEvents(allDisplayEvents)
   }, [events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedCategory, timeFilter, applicationsOpen])
 
   const handleLocationSelect = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
@@ -233,6 +230,20 @@ export default function EventsPage() {
       (window as any).selectMapLocation(event, 'event')
     }
   }
+
+  // Map: one marker per event, show next occurrence for recurring (Recurring tag + next date)
+  const mapEvents = useMemo(() => {
+    const source = viewMode === "calendar" ? calendarFilteredEvents : filteredEvents
+    const today = new Date().toISOString().split('T')[0]
+    const recurring = source.filter(e => e.recurrence_frequency && e.start_date >= today)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date))
+    const oneTime = source.filter(e => !e.recurrence_frequency)
+    const byId = new Map<string, Event>()
+    for (const e of [...recurring, ...oneTime]) {
+      if (!byId.has(e.id)) byId.set(e.id, e)
+    }
+    return Array.from(byId.values())
+  }, [viewMode, calendarFilteredEvents, filteredEvents])
 
   const clearFilters = () => {
     setSearchQuery("")
@@ -464,7 +475,7 @@ export default function EventsPage() {
                       <StoreMap 
                         stores={[]}
                         libraries={[]}
-                        events={viewMode === "calendar" ? calendarFilteredEvents : filteredEvents}
+                        events={mapEvents}
                         searchQuery={debouncedSearchQuery}
                         hideFilterBar={true}
                         onLocationSelect={handleLocationSelect}
@@ -562,7 +573,7 @@ export default function EventsPage() {
                 ) : (
                   filteredEvents.map((event) => (
                     <Card
-                      key={event.id}
+                      key={`${event.id}-${event.start_date}-${event.end_date}`}
                       className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
                       onClick={() => handleCardClick(event)}
                     >
@@ -575,7 +586,7 @@ export default function EventsPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-[#009035] transition-colors"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               >
                                 {event.name}
                               </Link>
@@ -591,7 +602,7 @@ export default function EventsPage() {
                               {event.city}{event.state && `, ${event.state}`}, {event.country}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                             <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
                                 <ExternalLink className="h-4 w-4" />
@@ -602,17 +613,29 @@ export default function EventsPage() {
                         </div>
                         
                         {/* Event Category and Dates */}
-                        <div className="flex items-center gap-2 mt-3">
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
                           <Badge 
                             variant="outline"
                             className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
                           >
                             {getEventCategoryDisplay(event.category)}
                           </Badge>
+                          {event.recurrence_frequency && (
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              Recurring
+                            </Badge>
+                          )}
                           <div className="flex items-center text-xs text-stone-500">
                             <Calendar className="h-3 w-3 mr-1" />
-                            {formatDateReadable(event.start_date)}
-                            {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                            {event.recurrence_frequency ? (
+                              <>Next: {formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                            ) : (
+                              <>
+                                {formatDateReadable(event.start_date)}
+                                {formatTimeRange(event.start_time, event.end_time)}
+                                {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
+                              </>
+                            )}
                           </div>
                           {event.category === "festival" && event.application_deadline && (() => {
                             const today = new Date();
@@ -691,7 +714,7 @@ export default function EventsPage() {
                 }}
               >
                 <EventsCalendarView
-                  events={filteredEvents}
+                  events={calendarEvents}
                   onEventClick={handleCardClick}
                   onCalendarFilterChange={setCalendarFilteredEvents}
                   hasLocationFilter={selectedCountry !== "all" || selectedState !== "all" || selectedCity !== "all"}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/lib/utils"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
@@ -806,6 +806,11 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                 <Badge variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
                   {getEventCategoryDisplay(selectedLocation.category)}
                 </Badge>
+                {'recurrence_frequency' in selectedLocation && selectedLocation.recurrence_frequency && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    Recurring
+                  </Badge>
+                )}
                 {'end_date' in selectedLocation && selectedLocation.end_date && (() => {
                   const today = new Date().toISOString().split('T')[0]
                   return selectedLocation.end_date < today
@@ -816,6 +821,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
               {'start_date' in selectedLocation && selectedLocation.start_date && (
                 <p className="text-xs text-gray-500 mt-1">
                   {formatDateReadable(selectedLocation.start_date)}
+                  {formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}
                   {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && ` – ${formatDateReadable(selectedLocation.end_date)}`}
                   {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {
                     const today = new Date(); const deadlineDate = new Date(selectedLocation.application_deadline);

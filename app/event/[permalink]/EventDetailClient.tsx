@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle, ArrowLeft, Landmark } from "lucide-react"
+import { Calendar, MapPin, Mail, Globe, Share2, Clock, Users, ExternalLink, User, MessageSquare, Edit, Trash2, AlertCircle, ArrowLeft, Landmark, Repeat } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
-import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent } from "@/lib/utils"
+import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent, formatRecurrenceDescription } from "@/lib/utils"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 
@@ -723,7 +723,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                     : `${formatDateReadable(event.start_date)} - ${formatDateReadable(event.end_date)}`
                   }
                 </div>
-                
+                {event.recurrence_frequency && (
+                  <div className="flex items-center text-green-700">
+                    <Repeat className="h-4 w-4 mr-2" />
+                    {formatRecurrenceDescription(event)}
+                  </div>
+                )}
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-2" />
                   {event && isPastEvent(event) ? `${attendeeCount} went` : `${attendeeCount} going`}

@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Metadata } from 'next'
 import { getAllStories } from '@/lib/getStories'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Stories - ZineMap',
   description: 'Interviews, field notes, and documentation from the world of zines and independent publishing.',
 }

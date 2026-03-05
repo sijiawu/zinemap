@@ -57,6 +57,9 @@ export interface Library {
   last_edit_user_permalink?: string
 }
 
+/** Recurrence frequency for recurring events. Yearly is not supported. */
+export type RecurrenceFrequency = 'weekly' | 'monthly'
+
 export interface Event {
   id: string
   name: string
@@ -71,6 +74,10 @@ export interface Event {
   category: 'festival' | 'swap' | 'workshop'
   start_date: string
   end_date: string
+  /** Start time "HH:MM". Optional. Recurring events are single-day only. */
+  start_time?: string | null
+  /** End time "HH:MM". Optional. */
+  end_time?: string | null
   application_open?: string
   application_deadline?: string
   notes?: string
@@ -81,6 +88,16 @@ export interface Event {
   latitude?: number
   longitude?: number
   approved?: boolean
+  /** Recurrence: weekly or monthly. Null for one-time events. */
+  recurrence_frequency?: RecurrenceFrequency | null
+  /** Repeat every N weeks/months/years (default 1) */
+  recurrence_interval?: number
+  /** Last date of recurrence. Null = no end (max 12 occurrences) */
+  recurrence_until?: string | null
+  /** 1=1st, 2=2nd, 3=3rd, 4=4th, 5=last. Required for monthly recurrence. */
+  recurrence_ordinal?: number | null
+  /** 0=Sunday..6=Saturday. Required for monthly recurrence. */
+  recurrence_weekday?: number | null
   user_name?: string
   user_permalink?: string
   user_email?: string
@@ -243,9 +260,19 @@ export interface EventFormData {
   category: 'festival' | 'swap' | 'workshop'
   start_date: string
   end_date: string
+  start_time?: string
+  end_time?: string
   application_open?: string
   application_deadline?: string
   notes?: string
+  /** Recurrence: weekly or monthly. Empty string for one-time. */
+  recurrence_frequency?: RecurrenceFrequency | '' | undefined
+  recurrence_interval?: number
+  recurrence_until?: string
+  /** 1-4 = 1st-4th, 5 = last. Required for monthly. */
+  recurrence_ordinal?: number
+  /** 0=Sunday..6=Saturday. Required for monthly. */
+  recurrence_weekday?: number
 }
 
 // API response types

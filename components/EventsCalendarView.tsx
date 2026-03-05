@@ -5,7 +5,7 @@ import { Landmark, ExternalLink, Clock, Calendar as CalendarIcon } from "lucide-
 import { SaveButton } from "@/components/SaveButton"
 import { Calendar } from "@/components/ui/calendar"
 import { Event } from "@/lib/types"
-import { getEventCategoryDisplay, formatDateReadable } from "@/lib/utils"
+import { getEventCategoryDisplay, formatDateReadable, formatTimeRange } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -251,7 +251,7 @@ export function EventsCalendarView({
                         href={`/event/${event.permalink || event.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         className="font-semibold text-stone-800 hover:text-[#009035] line-clamp-1 block"
                       >
                         {event.name}
@@ -269,9 +269,15 @@ export function EventsCalendarView({
                         >
                           {getEventCategoryDisplay(event.category)}
                         </Badge>
+                        {event.recurrence_frequency && (
+                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            Recurring
+                          </Badge>
+                        )}
                         <span className="flex items-center text-xs text-stone-500">
                           <CalendarIcon className="h-3 w-3 mr-0.5 flex-shrink-0" />
                           {formatDateReadable(event.start_date)}
+                          {formatTimeRange(event.start_time, event.end_time)}
                           {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
                         </span>
                         <span className="text-xs text-stone-500">
@@ -299,7 +305,7 @@ export function EventsCalendarView({
                           {event.user_permalink ? (
                             <Link
                               href={`/profile/${event.user_permalink}`}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               className="hover:text-stone-600 hover:underline"
                             >
                               {event.user_name}
@@ -313,7 +319,7 @@ export function EventsCalendarView({
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-0.5 shrink-0 mt-0.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-0.5 shrink-0 mt-0.5" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                       <Link
                         href={`/event/${event.permalink || event.id}`}
                         target="_blank"

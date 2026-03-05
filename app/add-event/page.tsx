@@ -4,9 +4,9 @@ import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
-import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon } from "lucide-react"
+import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat } from "lucide-react"
 import { nanoid } from "nanoid"
-import { normalizeUSState } from "@/lib/utils"
+import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,9 +14,17 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
-import { EventFormData } from "@/lib/types"
+import { EventFormData, RecurrenceFrequency } from "@/lib/types"
 
 export default function AddEventPage() {
   const { user, loading } = useSupabaseUser()
@@ -25,6 +33,7 @@ export default function AddEventPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isGoingToEvent, setIsGoingToEvent] = useState(false)
+  const [showRecurringOrganizerDialog, setShowRecurringOrganizerDialog] = useState(false)
 
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
@@ -39,9 +48,16 @@ export default function AddEventPage() {
     category: "festival",
     start_date: "",
     end_date: "",
+    start_time: "",
+    end_time: "",
     application_open: "",
     application_deadline: "",
-    notes: ""
+    notes: "",
+    recurrence_frequency: "",
+    recurrence_interval: 1,
+    recurrence_until: "",
+    recurrence_ordinal: 3,
+    recurrence_weekday: 0
   })
 
   // Address autocomplete state
@@ -73,6 +89,18 @@ export default function AddEventPage() {
     }
     loadCountries()
   }, [])
+
+  // Sync recurrence ordinal/weekday when start_date changes (Google Calendar–style: derived from date)
+  useEffect(() => {
+    if (!formData.recurrence_frequency || !formData.start_date) return
+    const derived = getOrdinalAndWeekdayFromDate(formData.start_date)
+    if (!derived) return
+    setFormData(prev =>
+      prev.recurrence_ordinal === derived.ordinal && prev.recurrence_weekday === derived.weekday
+        ? prev
+        : { ...prev, recurrence_ordinal: derived.ordinal, recurrence_weekday: derived.weekday }
+    )
+  }, [formData.start_date, formData.recurrence_frequency])
 
   // Handle clicks outside of address suggestions dropdown
   useEffect(() => {
@@ -253,9 +281,10 @@ export default function AddEventPage() {
   // Handle start date change
   const handleStartDateChange = (value: string) => {
     handleInputChange("start_date", value)
-    
-    // Automatically set end date to start date if end date is empty or before start date
-    if (!formData.end_date || new Date(formData.end_date) < new Date(value)) {
+    // Recurring events are single-day only: end_date = start_date
+    if (formData.recurrence_frequency) {
+      handleInputChange("end_date", value)
+    } else if (!formData.end_date || new Date(formData.end_date) < new Date(value)) {
       handleInputChange("end_date", value)
     }
   }
@@ -304,7 +333,13 @@ export default function AddEventPage() {
     }
 
 
-    if (new Date(formData.end_date) < new Date(formData.start_date)) {
+    if (formData.recurrence_frequency) {
+      if (formData.end_date !== formData.start_date) {
+        setError("Recurring events are single-day only — end date must match start date")
+        setIsSubmitting(false)
+        return
+      }
+    } else if (new Date(formData.end_date) < new Date(formData.start_date)) {
       setError("End date must be after start date")
       setIsSubmitting(false)
       return
@@ -317,6 +352,16 @@ export default function AddEventPage() {
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
+
+      const freq = formData.recurrence_frequency
+      const recurrenceFreq: RecurrenceFrequency | null = 
+        freq === 'weekly' || freq === 'monthly' ? freq : null
+      const recurrenceInterval = recurrenceFreq ? (formData.recurrence_interval ?? 1) : null
+      const recurrenceUntil = formData.recurrence_until?.trim()
+        ? new Date(formData.recurrence_until + 'T00:00:00.000Z').toISOString().split('T')[0]
+        : null
+      const recurrenceOrdinal = recurrenceFreq === 'monthly' ? (formData.recurrence_ordinal ?? 3) : null
+      const recurrenceWeekday = recurrenceFreq === 'monthly' ? (formData.recurrence_weekday ?? 0) : null
 
       const { error } = await supabase
         .from('events')
@@ -334,6 +379,8 @@ export default function AddEventPage() {
           category: formData.category,
           start_date: new Date(formData.start_date + 'T00:00:00.000Z').toISOString().split('T')[0],
           end_date: new Date(formData.end_date + 'T00:00:00.000Z').toISOString().split('T')[0],
+          start_time: formData.start_time?.trim() || null,
+          end_time: formData.end_time?.trim() || null,
           application_open: formData.application_open ? new Date(formData.application_open + 'T00:00:00.000Z').toISOString().split('T')[0] : null,
           application_deadline: formData.application_deadline ? new Date(formData.application_deadline + 'T00:00:00.000Z').toISOString().split('T')[0] : null,
           notes: formData.notes?.trim() || null,
@@ -342,6 +389,11 @@ export default function AddEventPage() {
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
           approved: false,
+          recurrence_frequency: recurrenceFreq,
+          recurrence_interval: recurrenceInterval,
+          recurrence_until: recurrenceUntil,
+          recurrence_ordinal: recurrenceOrdinal,
+          recurrence_weekday: recurrenceWeekday,
         })
 
       if (error) {
@@ -431,9 +483,16 @@ export default function AddEventPage() {
                       category: "festival",
                       start_date: "",
                       end_date: "",
+                      start_time: "",
+                      end_time: "",
                       application_open: "",
                       application_deadline: "",
-                      notes: ""
+                      notes: "",
+                      recurrence_frequency: "",
+                      recurrence_interval: 1,
+                      recurrence_until: "",
+                      recurrence_ordinal: 3,
+                      recurrence_weekday: 0
                     })
                     // Generate new preview ID
                     window.location.reload()
@@ -545,40 +604,228 @@ export default function AddEventPage() {
                   autoComplete="off"
                 />
               </div>
-              {/* Event Dates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date" className="text-stone-700 font-serif font-medium">
-                    Start Date *
-                  </Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                    required
+
+              {/* Recurring Event */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is_recurring"
+                    checked={!!formData.recurrence_frequency}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setShowRecurringOrganizerDialog(true)
+                      } else {
+                        setFormData(prev => ({ ...prev, recurrence_frequency: "", recurrence_interval: 1, recurrence_until: "" }))
+                      }
+                    }}
                   />
-                  {formData.start_date && new Date(formData.start_date) < new Date() && (
-                    <p className="text-amber-600 text-sm font-medium">
-                     📅 Past event detected - thanks for contributing to the archive!
-                    </p>
+                  <Label htmlFor="is_recurring" className="text-stone-700 font-serif font-medium cursor-pointer flex items-center gap-1">
+                    <Repeat className="h-4 w-4 text-green-500" />
+                    This is a recurring event
+                  </Label>
+                </div>
+
+                {/* Next event date / Start Date + End Date + Times — right below checkbox */}
+                <div className="space-y-4">
+                  <div className={formData.recurrence_frequency ? "space-y-2" : "grid grid-cols-1 md:grid-cols-2 gap-6"}>
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date" className="text-stone-700 font-serif font-medium">
+                        {formData.recurrence_frequency ? "Next event date *" : "Start Date *"}
+                      </Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
+                        className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                        required
+                      />
+                      {formData.start_date && new Date(formData.start_date) < new Date() && (
+                        <p className="text-amber-600 text-sm font-medium">
+                         📅 Past event detected - thanks for contributing to the archive!
+                        </p>
+                      )}
+                    </div>
+                    {!formData.recurrence_frequency && (
+                      <div className="space-y-2">
+                        <Label htmlFor="end_date" className="text-stone-700 font-serif font-medium">
+                          End Date *
+                        </Label>
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={formData.end_date}
+                          onChange={(e) => handleInputChange("end_date", e.target.value)}
+                          className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {/* When recurring: show times + recurrence options only after user fills next event date */}
+                  {(!formData.recurrence_frequency || formData.start_date) && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="start_time" className="text-stone-700 font-serif font-medium">
+                            Start Time (optional)
+                          </Label>
+                          <Input
+                            id="start_time"
+                            type="time"
+                            value={formData.start_time}
+                            onChange={(e) => handleInputChange("start_time", e.target.value)}
+                            className="bg-stone-50 border-stone-300 font-serif"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="end_time" className="text-stone-700 font-serif font-medium">
+                            End Time (optional)
+                          </Label>
+                          <Input
+                            id="end_time"
+                            type="time"
+                            value={formData.end_time}
+                            onChange={(e) => handleInputChange("end_time", e.target.value)}
+                            className="bg-stone-50 border-stone-300 font-serif"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="end_date" className="text-stone-700 font-serif font-medium">
-                    End Date *
-                  </Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => handleInputChange("end_date", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                    required
-                  />
-                </div>
+                {formData.recurrence_frequency && formData.start_date && (() => {
+                  const derived = getOrdinalAndWeekdayFromDate(formData.start_date) ?? { ordinal: 1, weekday: 1 }
+                  const dayName = WEEKDAY_NAMES[derived.weekday] ?? "day"
+                  const ordLabel = ORDINAL_LABELS[derived.ordinal] ?? "1st"
+                  const recurrenceMode = formData.recurrence_frequency === "weekly"
+                    ? (formData.recurrence_interval ?? 1) > 1
+                      ? "weekly-interval"
+                      : "weekly"
+                    : (formData.recurrence_interval ?? 1) > 1
+                      ? "monthly-interval"
+                      : "monthly"
+                  return (
+                    <div className="space-y-4 pl-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="recurrence_mode" className="text-stone-600 font-serif text-sm">
+                          Repeats
+                        </Label>
+                        <Select
+                          value={recurrenceMode}
+                          onValueChange={(value) => {
+                            const ord = derived.ordinal
+                            const wd = derived.weekday
+                            if (value === "weekly") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "weekly", recurrence_interval: 1, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else if (value === "weekly-interval") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "weekly", recurrence_interval: 2, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else if (value === "monthly") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "monthly", recurrence_interval: 1, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "monthly", recurrence_interval: 2, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="bg-stone-50 border-stone-300 font-serif">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly on {dayName}</SelectItem>
+                            <SelectItem value="monthly">Monthly on the {ordLabel} {dayName}</SelectItem>
+                            <SelectItem value="weekly-interval">Every [ ] weeks on {dayName} - set interval below</SelectItem>
+                            <SelectItem value="monthly-interval">Every [ ] months on the {ordLabel} {dayName} - set interval below</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {recurrenceMode === "weekly-interval" && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-stone-600 font-serif text-sm">Every</span>
+                          <Select
+                            value={String(formData.recurrence_interval ?? 2)}
+                            onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
+                          >
+                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-stone-600 font-serif text-sm">weeks on {dayName}</span>
+                        </div>
+                      )}
+                      {recurrenceMode === "monthly-interval" && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-stone-600 font-serif text-sm">Every</span>
+                          <Select
+                            value={String(formData.recurrence_interval ?? 2)}
+                            onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
+                          >
+                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-stone-600 font-serif text-sm">months on the {ordLabel} {dayName}</span>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="recurrence_until" className="text-stone-600 font-serif text-sm">
+                          Until (optional)
+                        </Label>
+                        <Input
+                          id="recurrence_until"
+                          type="date"
+                          value={formData.recurrence_until}
+                          onChange={(e) => handleInputChange("recurrence_until", e.target.value)}
+                          className="bg-stone-50 border-stone-300 font-serif"
+                          placeholder="No end date"
+                        />
+                      </div>
+                      <p className="text-stone-500 text-xs">
+                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.                      </p>
+                      {formData.recurrence_frequency && formData.start_date && (() => {
+                        const previewEvent = {
+                          id: "preview",
+                          name: "",
+                          city: "",
+                          country: "",
+                          address: "",
+                          submitted_by: "",
+                          created_at: new Date().toISOString(),
+                          category: "festival" as const,
+                          start_date: formData.start_date,
+                          end_date: formData.end_date || formData.start_date,
+                          recurrence_frequency: formData.recurrence_frequency,
+                          recurrence_interval: formData.recurrence_interval ?? 1,
+                          recurrence_until: formData.recurrence_until || undefined,
+                          recurrence_ordinal: formData.recurrence_ordinal ?? 1,
+                          recurrence_weekday: formData.recurrence_weekday ?? 0,
+                        }
+                        const occurrences = expandRecurringEvents([previewEvent])
+                        return (
+                          <p className="text-stone-500 text-xs mt-2">
+                            This event series is scheduled to occur on the following dates:
+                            <br />
+                            {occurrences.map((o) => (
+                              <span key={o.occurrence_start} className="block mt-0.5">
+                                {formatDateWithWeekday(o.occurrence_start)}
+                              </span>
+                            ))}
+                          </p>
+                        )
+                      })()}
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Application Deadline for Festivals */}
@@ -858,6 +1105,45 @@ export default function AddEventPage() {
           </div>
         </form>
       </div>
+
+      {/* Recurring organizer confirmation dialog */}
+      <Dialog open={showRecurringOrganizerDialog} onOpenChange={setShowRecurringOrganizerDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Are you the organizer of this event series?</DialogTitle>
+            <DialogDescription className="text-stone-600 font-serif">
+            Recurring events include multiple dates and can be trickier to manage.
+            If you're not the organizer, would you consider asking them to add it instead? Event organizers will have direct edit access to the whole series.       
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              className="font-serif"
+              onClick={() => setShowRecurringOrganizerDialog(false)}
+            >
+              I&apos;ll ask the organizer
+            </Button>
+            <Button
+              className="bg-[#009035] hover:bg-[#007a2a] font-serif"
+              onClick={() => {
+                const derived = getOrdinalAndWeekdayFromDate(formData.start_date) ?? { ordinal: 1, weekday: 1 }
+                setFormData(prev => ({
+                  ...prev,
+                  recurrence_frequency: "monthly",
+                  recurrence_interval: 1,
+                  recurrence_ordinal: derived.ordinal,
+                  recurrence_weekday: derived.weekday,
+                  end_date: prev.start_date || prev.end_date
+                }))
+                setShowRecurringOrganizerDialog(false)
+              }}
+            >
+              I am the organizer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
