@@ -651,7 +651,19 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           </div>
           
           <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-0">
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:gap-6">
+              {event.poster_image && (
+                <div className="flex-shrink-0">
+                  <div className="aspect-[3/4] w-40 sm:w-48 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 shadow-sm">
+                    <img
+                      src={event.poster_image}
+                      alt={`${event.name} poster`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-3">
                 <Badge className={`${getCategoryColor(event.category)} text-sm font-medium`}>
                   {getCategoryIcon(event.category)} {getEventCategoryDisplay(event.category)}
@@ -733,6 +745,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                   <Users className="h-4 w-4 mr-2" />
                   {event && isPastEvent(event) ? `${attendeeCount} went` : `${attendeeCount} going`}
                 </div>
+              </div>
               </div>
             </div>
 

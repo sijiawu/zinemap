@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, MapPin, Calendar, MessageSquare, Check } from "lucide-react"
+import { ArrowLeft, MapPin, Calendar, MessageSquare, Check, Image as ImageIcon } from "lucide-react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Event } from "@/lib/types"
+import { compressImage } from "@/lib/compressImage"
 
 export default function SuggestEventEditPage() {
   const { permalink } = useParams()
@@ -39,6 +40,9 @@ export default function SuggestEventEditPage() {
     end_date: "",
     application_deadline: ""
   })
+  const [posterImage, setPosterImage] = useState<File | null>(null)
+  const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
+  const [removePoster, setRemovePoster] = useState(false)
 
   // Load event data
   useEffect(() => {
@@ -72,6 +76,7 @@ export default function SuggestEventEditPage() {
             end_date: eventData.end_date || "",
             application_deadline: eventData.application_deadline || ""
           })
+          setPosterImagePreview(eventData.poster_image || null)
         }
       } catch (error) {
         console.error('Error loading event:', error)
@@ -93,6 +98,39 @@ export default function SuggestEventEditPage() {
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePosterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB')
+        return
+      }
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please select a JPG, PNG, or GIF file')
+        return
+      }
+      setError(null)
+      setPosterImage(file)
+      setRemovePoster(false)
+      const reader = new FileReader()
+      reader.onload = (ev) => setPosterImagePreview(ev.target?.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemovePoster = () => {
+    setPosterImage(null)
+    setPosterImagePreview(null)
+    setRemovePoster(true)
+  }
+
+  const handleKeepPoster = () => {
+    setPosterImage(null)
+    setPosterImagePreview(event?.poster_image || null)
+    setRemovePoster(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,10 +182,32 @@ export default function SuggestEventEditPage() {
       if (formData.application_deadline !== event.application_deadline) {
         changes.push(`old application deadline: ${event.application_deadline || 'none'}\nnew application deadline: ${formData.application_deadline || 'none'}`)
       }
+      if (removePoster) {
+        changes.push('remove poster image')
+      }
+      if (posterImage) {
+        changes.push('add/update poster image')
+      }
 
       const editSummary = changes.length > 0 
         ? changes.join('\n\n')
         : 'No specific changes detected'
+
+      let posterImageUrl: string | null | undefined = undefined
+      if (removePoster) {
+        posterImageUrl = null
+      } else if (posterImage && user) {
+        const compressed = await compressImage(posterImage)
+        const fileName = `event-posters/${user.id}/${Date.now()}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('zine-covers')
+          .upload(fileName, compressed, { cacheControl: '3600', upsert: false })
+        if (uploadError) {
+          throw new Error('Failed to upload poster image. Please try again.')
+        }
+        const { data: urlData } = supabase.storage.from('zine-covers').getPublicUrl(fileName)
+        posterImageUrl = urlData.publicUrl
+      }
 
       const editPayload = {
         name: formData.name,
@@ -162,7 +222,8 @@ export default function SuggestEventEditPage() {
         category: formData.category,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        application_deadline: formData.application_deadline || null
+        application_deadline: formData.application_deadline || null,
+        ...(posterImageUrl !== undefined && { poster_image: posterImageUrl })
       }
 
       const { error } = await supabase
@@ -353,6 +414,70 @@ export default function SuggestEventEditPage() {
                   autoComplete="off"
                 />
               </div>
+
+              {/* Poster Image */}
+              <div className="space-y-2">
+                <Label className="text-stone-700 font-serif font-medium">
+                  Poster Image
+                </Label>
+                <p className="text-sm text-stone-500">Add, change, or remove the event poster</p>
+                <div className="mt-1">
+                  {posterImagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={posterImagePreview}
+                        alt="Poster preview"
+                        className="w-full max-w-xs h-48 object-cover rounded-lg border border-stone-200"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <label className="cursor-pointer">
+                          <span className="text-sm text-[#009035] hover:underline">Change</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePosterImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={removePoster ? handleKeepPoster : handleRemovePoster}
+                          className="text-sm text-stone-600 hover:text-red-600 hover:underline"
+                        >
+                          {removePoster ? 'Keep poster' : 'Remove poster'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-stone-300 rounded-lg p-6 text-center hover:border-stone-400 transition-colors max-w-xs">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePosterImageChange}
+                        className="hidden"
+                        id="poster-image"
+                      />
+                      <label htmlFor="poster-image" className="cursor-pointer block">
+                        <ImageIcon className="h-8 w-8 text-stone-400 mx-auto mb-2" />
+                        <p className="text-sm text-stone-600">
+                          {event.poster_image ? 'Click to replace poster' : 'Click to add poster'}
+                        </p>
+                        <p className="text-xs text-stone-500 mt-1">JPG, PNG, GIF up to 5MB</p>
+                      </label>
+                      {event.poster_image && (
+                        <button
+                          type="button"
+                          onClick={handleKeepPoster}
+                          className="mt-2 text-sm text-stone-500 hover:underline"
+                        >
+                          {removePoster ? 'Undo remove' : 'Keep current poster'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Event Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">

@@ -574,41 +574,50 @@ export default function EventsPage() {
                   filteredEvents.map((event) => (
                     <Card
                       key={`${event.id}-${event.start_date}-${event.end_date}`}
-                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer overflow-hidden"
                       onClick={() => handleCardClick(event)}
                     >
-                      <CardHeader className="p-4 pb-2">
-                        <div className="flex justify-between items-start gap-2">
+                      <CardHeader className="p-4 pb-2 relative">
+                        <div className="absolute top-4 right-4 flex items-center gap-1 z-10" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                          <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <SaveButton entityType="event" entityId={event.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50" />
+                        </div>
+                        <div className="flex items-start gap-3">
+                          {event.poster_image && (
+                            <div className="flex-shrink-0 w-14 h-20 sm:w-16 sm:h-24 overflow-hidden">
+                              <img
+                                src={event.poster_image}
+                                alt={`${event.name} poster`}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
-                            <CardTitle className="text-lg font-semibold text-stone-800 mb-1">
+                            <CardTitle className="text-base sm:text-lg font-semibold text-stone-800 mb-1 pr-16">
                               <Link 
                                 href={`/event/${event.permalink || event.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-[#009035] transition-colors"
+                                className="hover:text-[#009035] transition-colors block break-words"
                                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
                               >
                                 {event.name}
                               </Link>
                             </CardTitle>
                             {event.venue_name && (
-                              <div className="flex items-center text-stone-600 text-sm mb-1">
-                                <Landmark className="h-4 w-4 mr-1" />
-                                <span className="font-medium">{event.venue_name}</span>
+                              <div className="flex items-center text-stone-600 text-sm mb-1 min-w-0">
+                                <Landmark className="h-4 w-4 mr-1 flex-shrink-0" />
+                                <span className="font-medium truncate">{event.venue_name}</span>
                               </div>
                             )}
-                            <div className="flex items-center text-stone-600 text-sm mb-2">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {event.city}{event.state && `, ${event.state}`}, {event.country}
+                            <div className="flex items-center text-stone-600 text-sm mb-2 min-w-0">
+                              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                              <span className="truncate">{event.city}{event.state && `, ${event.state}`}, {event.country}</span>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                            <Link href={`/event/${event.permalink || event.id}`} target="_blank" rel="noopener noreferrer">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50">
-                                <ExternalLink className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <SaveButton entityType="event" entityId={event.id} variant="ghost" size="icon" showLabel={false} className="h-8 w-8 text-stone-500 hover:text-[#009035] hover:bg-green-50" />
                           </div>
                         </div>
                         

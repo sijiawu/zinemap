@@ -105,6 +105,8 @@ export interface Event {
   user_is_attending?: boolean
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  /** Optional poster image URL (similar to zine cover) */
+  poster_image?: string | null
 }
 
 export interface StoreTag {
@@ -273,6 +275,8 @@ export interface EventFormData {
   recurrence_ordinal?: number
   /** 0=Sunday..6=Saturday. Required for monthly. */
   recurrence_weekday?: number
+  /** Optional poster image URL */
+  poster_image?: string | null
 }
 
 // API response types

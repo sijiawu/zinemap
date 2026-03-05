@@ -246,6 +246,15 @@ export function EventsCalendarView({
                   className="block p-3 rounded-lg border border-stone-200 hover:border-[#009035] hover:bg-green-50/50 transition-colors cursor-pointer"
                 >
                     <div className="flex items-start justify-between gap-2">
+                    {event.poster_image && (
+                      <div className="flex-shrink-0 w-14 h-20 overflow-hidden">
+                        <img
+                          src={event.poster_image}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/event/${event.permalink || event.id}`}

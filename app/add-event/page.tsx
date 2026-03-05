@@ -4,7 +4,7 @@ import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
-import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat } from "lucide-react"
+import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat, Image as ImageIcon, X } from "lucide-react"
 import { nanoid } from "nanoid"
 import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,7 @@ import {
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { EventFormData, RecurrenceFrequency } from "@/lib/types"
+import { compressImage } from "@/lib/compressImage"
 
 export default function AddEventPage() {
   const { user, loading } = useSupabaseUser()
@@ -34,6 +35,8 @@ export default function AddEventPage() {
   const [error, setError] = useState<string | null>(null)
   const [isGoingToEvent, setIsGoingToEvent] = useState(false)
   const [showRecurringOrganizerDialog, setShowRecurringOrganizerDialog] = useState(false)
+  const [posterImage, setPosterImage] = useState<File | null>(null)
+  const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
@@ -278,6 +281,26 @@ export default function AddEventPage() {
     }))
   }
 
+  const handlePosterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB')
+        return
+      }
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please select a JPG, PNG, or GIF file')
+        return
+      }
+      setError(null)
+      setPosterImage(file)
+      const reader = new FileReader()
+      reader.onload = (ev) => setPosterImagePreview(ev.target?.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
   // Handle start date change
   const handleStartDateChange = (value: string) => {
     handleInputChange("start_date", value)
@@ -363,6 +386,21 @@ export default function AddEventPage() {
       const recurrenceOrdinal = recurrenceFreq === 'monthly' ? (formData.recurrence_ordinal ?? 3) : null
       const recurrenceWeekday = recurrenceFreq === 'monthly' ? (formData.recurrence_weekday ?? 0) : null
 
+      let posterImageUrl: string | null = null
+      if (posterImage && user) {
+        const compressed = await compressImage(posterImage)
+        const fileName = `event-posters/${user.id}/${Date.now()}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('zine-covers')
+          .upload(fileName, compressed, { cacheControl: '3600', upsert: false })
+        if (uploadError) {
+          console.error('Poster upload error:', uploadError)
+          throw new Error('Failed to upload poster image. Please try again.')
+        }
+        const { data: urlData } = supabase.storage.from('zine-covers').getPublicUrl(fileName)
+        posterImageUrl = urlData.publicUrl
+      }
+
       const { error } = await supabase
         .from('events')
         .insert({
@@ -394,6 +432,7 @@ export default function AddEventPage() {
           recurrence_until: recurrenceUntil,
           recurrence_ordinal: recurrenceOrdinal,
           recurrence_weekday: recurrenceWeekday,
+          poster_image: posterImageUrl,
         })
 
       if (error) {
@@ -603,6 +642,52 @@ export default function AddEventPage() {
                   placeholder="e.g. Chicago Cultural Center"
                   autoComplete="off"
                 />
+              </div>
+
+              {/* Poster Image */}
+              <div className="space-y-2">
+                <Label className="text-stone-700 font-serif font-medium">
+                  Poster Image (optional)
+                </Label>
+                <p className="text-sm text-stone-500">Add a poster or flyer image for your event</p>
+                <div className="mt-1">
+                  {posterImagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={posterImagePreview}
+                        alt="Poster preview"
+                        className="w-full max-w-xs h-48 object-cover rounded-lg border border-stone-200"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setPosterImage(null)
+                          setPosterImagePreview(null)
+                        }}
+                        className="absolute top-2 right-2 h-6 w-6 p-0 bg-white/80 hover:bg-white rounded"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-stone-300 rounded-lg p-6 text-center hover:border-stone-400 transition-colors max-w-xs">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePosterImageChange}
+                        className="hidden"
+                        id="poster-image"
+                      />
+                      <label htmlFor="poster-image" className="cursor-pointer block">
+                        <ImageIcon className="h-8 w-8 text-stone-400 mx-auto mb-2" />
+                        <p className="text-sm text-stone-600">Click to upload poster</p>
+                        <p className="text-xs text-stone-500 mt-1">JPG, PNG, GIF up to 5MB</p>
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Recurring Event */}

@@ -511,7 +511,7 @@ export default function AdminPage() {
       setError(null)
       setSuccess(null)
 
-      const payload = edit.edit_payload as { name?: string; venue_name?: string | null; city?: string; state?: string | null; country?: string; address?: string; email?: string | null; website?: string | null; social?: string | null; category?: string; start_date?: string; end_date?: string; application_deadline?: string | null } | undefined
+      const payload = edit.edit_payload as { name?: string; venue_name?: string | null; city?: string; state?: string | null; country?: string; address?: string; email?: string | null; website?: string | null; social?: string | null; category?: string; start_date?: string; end_date?: string; application_deadline?: string | null; poster_image?: string | null } | undefined
       if (payload && edit.event_id) {
         const { error: updateError } = await supabase
           .from('events')
@@ -529,6 +529,7 @@ export default function AdminPage() {
             ...(payload.start_date != null && { start_date: payload.start_date }),
             ...(payload.end_date != null && { end_date: payload.end_date }),
             ...(payload.application_deadline !== undefined && { application_deadline: payload.application_deadline }),
+            ...(payload.poster_image !== undefined && { poster_image: payload.poster_image }),
             updated_at: new Date().toISOString()
           })
           .eq('id', edit.event_id)
