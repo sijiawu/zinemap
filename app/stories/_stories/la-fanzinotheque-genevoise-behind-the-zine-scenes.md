@@ -1,16 +1,15 @@
 ---
 title: "Behind the Zine Scenes #3: La Fanzinothèque genevoise"
-date: 2026-03-03
+date: 2026-03-08
 tags:
   - Behind the Zine Scenes
   - Libraries
-  - Switzerland
+  - Français
 author: CJ Wu
 author_permalink: cjmakescomics
-password: fanzinoge
-thumbnail: "la-fanzinotheque-genevoise/stef.jpg"
+thumbnail: "la-fanzinotheque-genevoise/piquenique-thumbnail.jpg"
 slug: la-fanzinotheque-genevoise-behind-the-zine-scenes
-excerpt: A conversation with Stef, founder of FanzinoGE – La Fanzinothèque genevoise, Switzerland's only known zine library, about building a collective archive, contextual cataloging, and why paper outlasts the internet.
+excerpt: A conversation with Stef, founder of Switzerland’s only zine library, about building a collective space where independent and alternative publications can be preserved, organized, and made accessible to the public.
 primary_lang: fr
 ---
 
@@ -40,6 +39,12 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 </Callout>
 
 **Stef :** Au bout de quelques années, j'avais envie de trouver un endroit pour rencontrer des gens autour du fanzine… et retrouver peut-être ces fanzines que j'avais perdus ou d'autres. Et ça n'existait pas, ni à Genève ni en Suisse. Donc j'ai étudié pour devenir bibliothécaire et fonder la Fanzinothèque. C'est un peu une obsession, mais je crois que pour s'intéresser aux fanzines, il faut être un petit peu fanatique. Pendant toutes ces années, j'ai continué à garder les fanzines, mais je n'ai pas du tout l'esprit d'une collectionneuse. Je n'ai pas envie de les posséder pour moi seule. J'ai juste envie de savoir qu'on peut les retrouver, qu'il y a un endroit qui les conserve où on peut aller les lire ou en faire. À un moment donné, je me suis sentie suffisamment prête. C'est comme ça que j'ai fondé la Fanzinothèque, qui a bientôt trois ans, qui a une cinquantaine de membres. Pendant deux ans, on avait un espace où on a fait des rencontres, des vernissages… c'était chouette. Aujourd'hui, on n'a plus de locaux, mais on est en train de trouver des solutions. En attendant, c'est une Fanzinothèque nomade, où il y a des petits bouts de collections qui vont sur des stands, dans des expos, dans des parcs.
+
+<ImageWithCaption
+  src="la-fanzinotheque-genevoise/piquenique.jpg"
+  alt="Pique-nique Fanzine au parc Beaulieu organisé par la Fanzinothèque genevoise, juillet 2025"
+  caption="Pique-nique Fanzine au parc Beaulieu organisé par la Fanzinothèque genevoise, juillet 2025. Photo : Trivino Rochat"
+/>
 
 **CJ :** Tu as déjà fait des expos cette année ?
 
@@ -289,6 +294,12 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
 </Callout>
 
 **Stef:** After a few years, I wanted a place where people could gather around zines… to discover new zines, and maybe even come across the ones I had lost. But nothing like that existed in Geneva. In fact, nothing like that existed anywhere in Switzerland. So I studied to become a librarian, with the goal of founding the Fanzinothèque. It’s a bit of an obsession, but I think you need to be slightly obsessive to care about zines. All those years I kept collecting zines, but I don't really have a collector's mindset. I don't want to own them just for myself. What matters to me is that they can be accessed, and that there's a place that preserves them where you can go read them, or even make your own. At some point I felt ready enough. So that’s how I founded the Fanzinothèque. It’s now almost three years old and has around 50 members. For two years we had a physical space where we held gatherings and openings, which was great. Today we don't have premises anymore, but we're working on solutions. In the meantime, it's a nomadic zine library, with little parts of the collection going out to stalls, exhibitions, or out in the parks.
+
+<ImageWithCaption
+  src="la-fanzinotheque-genevoise/piquenique.jpg"
+  alt="Zine picnic in Beaulieu Park, Geneva, organized by the Fanzinothèque genevoise, July 2025."
+  caption="Zine picnic in Beaulieu Park, Geneva, organized by the Fanzinothèque genevoise, July 2025. Photo: Trivino Rochat."
+/>
 
 **CJ:** Have you done any exhibitions this year?
 

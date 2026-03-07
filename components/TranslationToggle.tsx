@@ -11,7 +11,7 @@ const MESSAGES: Record<Lang, Partial<Record<Lang, { message: string; button: str
     fr: { message: "Cet entretien a été mené en français. ", button: 'Lire en français' },
   },
   pl: { en: { message: 'This article is also available in English.', button: 'Read in English' } },
-  fr: { en: { message: 'This interview was conducted in French. The article is also available in English.', button: 'Read in English' } },
+  fr: { en: { message: 'This interview was carried out in French. The article is also available in English.', button: 'Read in English' } },
 }
 
 interface TranslationToggleProps {
