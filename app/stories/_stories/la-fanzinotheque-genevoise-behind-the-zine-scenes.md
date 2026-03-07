@@ -268,7 +268,7 @@ When Stef replied to my thank-you email for her ZineMap contribution saying “w
 
 **CJ:** Can you explain what the Fanzinothèque is, for people who don't know it?
 
-**Stef:** Yes, of course. The Fanzinothèque is a non-profit association based in Geneva. I was the one who started the project, but the idea is for it to be truly collective. It actually began because I had the opportunity to use a studio space to work as an artist. The space was quite large, so I decided to set up the Fanzinothèque there.
+**Stef:** Yes, of course. The Fanzinothèque is a non-profit zine library and association based in Geneva. I was the one who started the project, but the idea is for it to be truly collective. It actually began because I had the opportunity to use a studio space to work as an artist. The space was quite large, so I decided to set up the Fanzinothèque there.
 
 **CJ:** But before that, you already had a personal connection to zines?
 
