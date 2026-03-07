@@ -649,7 +649,7 @@ export default function AddEventPage() {
                 <Label className="text-stone-700 font-serif font-medium">
                   Poster Image (optional)
                 </Label>
-                <p className="text-sm text-stone-500">Add a poster or flyer image for your event</p>
+                <p className="text-sm text-stone-500">Add a poster or flyer image for the event</p>
                 <div className="mt-1">
                   {posterImagePreview ? (
                     <div className="relative inline-block">

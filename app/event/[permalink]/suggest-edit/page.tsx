@@ -9,11 +9,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, MapPin, Calendar, MessageSquare, Check, Image as ImageIcon } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { ArrowLeft, MapPin, Calendar, MessageSquare, Check, Image as ImageIcon, Repeat } from "lucide-react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Event } from "@/lib/types"
 import { compressImage } from "@/lib/compressImage"
+import { getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
 
 export default function SuggestEventEditPage() {
   const { permalink } = useParams()
@@ -38,8 +48,17 @@ export default function SuggestEventEditPage() {
     category: "festival",
     start_date: "",
     end_date: "",
-    application_deadline: ""
+    start_time: "",
+    end_time: "",
+    application_open: "",
+    application_deadline: "",
+    recurrence_frequency: "" as "" | "weekly" | "monthly",
+    recurrence_interval: 1,
+    recurrence_until: "",
+    recurrence_ordinal: 3,
+    recurrence_weekday: 0
   })
+  const [showRecurringOrganizerDialog, setShowRecurringOrganizerDialog] = useState(false)
   const [posterImage, setPosterImage] = useState<File | null>(null)
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
   const [removePoster, setRemovePoster] = useState(false)
@@ -61,6 +80,7 @@ export default function SuggestEventEditPage() {
 
         if (eventData) {
           setEvent(eventData)
+          const derived = eventData.start_date ? getOrdinalAndWeekdayFromDate(eventData.start_date) : null
           setFormData({
             name: eventData.name || "",
             venue_name: eventData.venue_name || "",
@@ -74,7 +94,15 @@ export default function SuggestEventEditPage() {
             category: eventData.category || "festival",
             start_date: eventData.start_date || "",
             end_date: eventData.end_date || "",
-            application_deadline: eventData.application_deadline || ""
+            start_time: eventData.start_time || "",
+            end_time: eventData.end_time || "",
+            application_open: eventData.application_open || "",
+            application_deadline: eventData.application_deadline || "",
+            recurrence_frequency: (eventData.recurrence_frequency || "") as "" | "weekly" | "monthly",
+            recurrence_interval: eventData.recurrence_interval ?? 1,
+            recurrence_until: eventData.recurrence_until || "",
+            recurrence_ordinal: eventData.recurrence_ordinal ?? (derived?.ordinal ?? 3),
+            recurrence_weekday: eventData.recurrence_weekday ?? (derived?.weekday ?? 0)
           })
           setPosterImagePreview(eventData.poster_image || null)
         }
@@ -96,8 +124,29 @@ export default function SuggestEventEditPage() {
     }
   }, [user, loading, router, permalink])
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (field: keyof typeof formData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Sync recurrence ordinal/weekday when start_date changes
+  useEffect(() => {
+    if (!formData.recurrence_frequency || !formData.start_date) return
+    const derived = getOrdinalAndWeekdayFromDate(formData.start_date)
+    if (!derived) return
+    setFormData(prev =>
+      prev.recurrence_ordinal === derived.ordinal && prev.recurrence_weekday === derived.weekday
+        ? prev
+        : { ...prev, recurrence_ordinal: derived.ordinal, recurrence_weekday: derived.weekday }
+    )
+  }, [formData.start_date, formData.recurrence_frequency])
+
+  const handleStartDateChange = (value: string) => {
+    handleInputChange("start_date", value)
+    if (formData.recurrence_frequency) {
+      handleInputChange("end_date", value)
+    } else if (!formData.end_date || new Date(formData.end_date) < new Date(value)) {
+      handleInputChange("end_date", value)
+    }
   }
 
   const handlePosterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +186,11 @@ export default function SuggestEventEditPage() {
     e.preventDefault()
     if (!user || !event) return
 
+    if (formData.recurrence_frequency && formData.end_date !== formData.start_date) {
+      setError("Recurring events are single-day only — end date must match start date")
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -148,7 +202,7 @@ export default function SuggestEventEditPage() {
         changes.push(`old name: ${event.name}\nnew name: ${formData.name}`)
       }
       if (formData.venue_name !== event.venue_name) {
-        changes.push(`old venue name: ${event.venue_name || 'none'}nnew venue name: ${formData.venue_name || 'none'}`)
+        changes.push(`old venue name: ${event.venue_name || 'none'}\nnew venue name: ${formData.venue_name || 'none'}`)
       }      if (formData.city !== event.city) {
         changes.push(`old city: ${event.city}\nnew city: ${formData.city}`)
       }
@@ -182,6 +236,18 @@ export default function SuggestEventEditPage() {
       if (formData.application_deadline !== event.application_deadline) {
         changes.push(`old application deadline: ${event.application_deadline || 'none'}\nnew application deadline: ${formData.application_deadline || 'none'}`)
       }
+      if (formData.start_time !== (event.start_time ?? "")) {
+        changes.push(`old start time: ${event.start_time || 'none'}\nnew start time: ${formData.start_time || 'none'}`)
+      }
+      if (formData.end_time !== (event.end_time ?? "")) {
+        changes.push(`old end time: ${event.end_time || 'none'}\nnew end time: ${formData.end_time || 'none'}`)
+      }
+      if (formData.recurrence_frequency !== (event.recurrence_frequency ?? "")) {
+        changes.push(`old recurrence: ${event.recurrence_frequency || 'one-time'}\nnew recurrence: ${formData.recurrence_frequency || 'one-time'}`)
+      }
+      if (formData.recurrence_frequency && formData.recurrence_until !== (event.recurrence_until ?? "")) {
+        changes.push(`old recurrence until: ${event.recurrence_until || 'none'}\nnew recurrence until: ${formData.recurrence_until || 'none'}`)
+      }
       if (removePoster) {
         changes.push('remove poster image')
       }
@@ -209,6 +275,15 @@ export default function SuggestEventEditPage() {
         posterImageUrl = urlData.publicUrl
       }
 
+      const freq = formData.recurrence_frequency
+      const recurrenceFreq = freq === "weekly" || freq === "monthly" ? freq : null
+      const recurrenceInterval = recurrenceFreq ? (formData.recurrence_interval ?? 1) : null
+      const recurrenceUntil = formData.recurrence_until?.trim()
+        ? new Date(formData.recurrence_until + "T00:00:00.000Z").toISOString().split("T")[0]
+        : null
+      const recurrenceOrdinal = recurrenceFreq === "monthly" ? (formData.recurrence_ordinal ?? 3) : null
+      const recurrenceWeekday = recurrenceFreq === "monthly" ? (formData.recurrence_weekday ?? 0) : null
+
       const editPayload = {
         name: formData.name,
         venue_name: formData.venue_name || null,
@@ -222,7 +297,15 @@ export default function SuggestEventEditPage() {
         category: formData.category,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        application_deadline: formData.application_deadline || null,
+        start_time: formData.start_time?.trim() || null,
+        end_time: formData.end_time?.trim() || null,
+        application_open: formData.application_open?.trim() ? new Date(formData.application_open + "T00:00:00.000Z").toISOString().split("T")[0] : null,
+        application_deadline: formData.application_deadline?.trim() ? new Date(formData.application_deadline + "T00:00:00.000Z").toISOString().split("T")[0] : null,
+        recurrence_frequency: recurrenceFreq,
+        recurrence_interval: recurrenceInterval,
+        recurrence_until: recurrenceUntil,
+        recurrence_ordinal: recurrenceOrdinal,
+        recurrence_weekday: recurrenceWeekday,
         ...(posterImageUrl !== undefined && { poster_image: posterImageUrl })
       }
 
@@ -478,40 +561,237 @@ export default function SuggestEventEditPage() {
                 </div>
               </div>
 
-              {/* Event Dates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date" className="text-stone-700 font-serif font-medium">
-                    Start Date *
-                  </Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => handleInputChange("start_date", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                    required
+              {/* Recurring Event */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is_recurring"
+                    checked={!!formData.recurrence_frequency}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setShowRecurringOrganizerDialog(true)
+                      } else {
+                        setFormData(prev => ({ ...prev, recurrence_frequency: "", recurrence_interval: 1, recurrence_until: "" }))
+                      }
+                    }}
                   />
+                  <Label htmlFor="is_recurring" className="text-stone-700 font-serif font-medium cursor-pointer flex items-center gap-1">
+                    <Repeat className="h-4 w-4 text-green-500" />
+                    This is a recurring event
+                  </Label>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="end_date" className="text-stone-700 font-serif font-medium">
-                    End Date *
-                  </Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => handleInputChange("end_date", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                    required
-                  />
+                {/* Start Date + End Date + Times */}
+                <div className="space-y-4">
+                  <div className={formData.recurrence_frequency ? "space-y-2" : "grid grid-cols-1 md:grid-cols-2 gap-6"}>
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date" className="text-stone-700 font-serif font-medium">
+                        {formData.recurrence_frequency ? "Next event date *" : "Start Date *"}
+                      </Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
+                        className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                        required
+                      />
+                    </div>
+                    {!formData.recurrence_frequency && (
+                      <div className="space-y-2">
+                        <Label htmlFor="end_date" className="text-stone-700 font-serif font-medium">
+                          End Date *
+                        </Label>
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={formData.end_date}
+                          onChange={(e) => handleInputChange("end_date", e.target.value)}
+                          className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {(!formData.recurrence_frequency || formData.start_date) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="start_time" className="text-stone-700 font-serif font-medium">
+                          Start Time (optional)
+                        </Label>
+                        <Input
+                          id="start_time"
+                          type="time"
+                          value={formData.start_time}
+                          onChange={(e) => handleInputChange("start_time", e.target.value)}
+                          className="bg-stone-50 border-stone-300 font-serif"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="end_time" className="text-stone-700 font-serif font-medium">
+                          End Time (optional)
+                        </Label>
+                        <Input
+                          id="end_time"
+                          type="time"
+                          value={formData.end_time}
+                          onChange={(e) => handleInputChange("end_time", e.target.value)}
+                          className="bg-stone-50 border-stone-300 font-serif"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {formData.recurrence_frequency && formData.start_date && (() => {
+                  const derived = getOrdinalAndWeekdayFromDate(formData.start_date) ?? { ordinal: 1, weekday: 1 }
+                  const dayName = WEEKDAY_NAMES[derived.weekday] ?? "day"
+                  const ordLabel = ORDINAL_LABELS[derived.ordinal] ?? "1st"
+                  const recurrenceMode = formData.recurrence_frequency === "weekly"
+                    ? (formData.recurrence_interval ?? 1) > 1
+                      ? "weekly-interval"
+                      : "weekly"
+                    : (formData.recurrence_interval ?? 1) > 1
+                      ? "monthly-interval"
+                      : "monthly"
+                  return (
+                    <div className="space-y-4 pl-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="recurrence_mode" className="text-stone-600 font-serif text-sm">
+                          Repeats
+                        </Label>
+                        <Select
+                          value={recurrenceMode}
+                          onValueChange={(value) => {
+                            const ord = derived.ordinal
+                            const wd = derived.weekday
+                            if (value === "weekly") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "weekly", recurrence_interval: 1, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else if (value === "weekly-interval") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "weekly", recurrence_interval: 2, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else if (value === "monthly") {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "monthly", recurrence_interval: 1, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            } else {
+                              setFormData(prev => ({ ...prev, recurrence_frequency: "monthly", recurrence_interval: 2, recurrence_ordinal: ord, recurrence_weekday: wd, end_date: prev.start_date || prev.end_date }))
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="bg-stone-50 border-stone-300 font-serif">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly on {dayName}</SelectItem>
+                            <SelectItem value="monthly">Monthly on the {ordLabel} {dayName}</SelectItem>
+                            <SelectItem value="weekly-interval">Every [ ] weeks on {dayName} - set interval below</SelectItem>
+                            <SelectItem value="monthly-interval">Every [ ] months on the {ordLabel} {dayName} - set interval below</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {recurrenceMode === "weekly-interval" && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-stone-600 font-serif text-sm">Every</span>
+                          <Select
+                            value={String(formData.recurrence_interval ?? 2)}
+                            onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
+                          >
+                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-stone-600 font-serif text-sm">weeks on {dayName}</span>
+                        </div>
+                      )}
+                      {recurrenceMode === "monthly-interval" && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-stone-600 font-serif text-sm">Every</span>
+                          <Select
+                            value={String(formData.recurrence_interval ?? 2)}
+                            onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
+                          >
+                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-stone-600 font-serif text-sm">months on the {ordLabel} {dayName}</span>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="recurrence_until" className="text-stone-600 font-serif text-sm">
+                          Until (optional)
+                        </Label>
+                        <Input
+                          id="recurrence_until"
+                          type="date"
+                          value={formData.recurrence_until}
+                          onChange={(e) => handleInputChange("recurrence_until", e.target.value)}
+                          className="bg-stone-50 border-stone-300 font-serif"
+                          placeholder="No end date"
+                        />
+                      </div>
+                      <p className="text-stone-500 text-xs">
+                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.
+                      </p>
+                      {formData.recurrence_frequency && formData.start_date && (() => {
+                        const previewEvent = {
+                          id: "preview",
+                          name: "",
+                          city: "",
+                          country: "",
+                          address: "",
+                          submitted_by: "",
+                          created_at: new Date().toISOString(),
+                          category: "festival" as const,
+                          start_date: formData.start_date,
+                          end_date: formData.end_date || formData.start_date,
+                          recurrence_frequency: formData.recurrence_frequency,
+                          recurrence_interval: formData.recurrence_interval ?? 1,
+                          recurrence_until: formData.recurrence_until || undefined,
+                          recurrence_ordinal: formData.recurrence_ordinal ?? 1,
+                          recurrence_weekday: formData.recurrence_weekday ?? 0,
+                        }
+                        const occurrences = expandRecurringEvents([previewEvent])
+                        return (
+                          <p className="text-stone-500 text-xs mt-2">
+                            This event series is scheduled to occur on the following dates:
+                            <br />
+                            {occurrences.map((o) => (
+                              <span key={o.occurrence_start} className="block mt-0.5">
+                                {formatDateWithWeekday(o.occurrence_start)}
+                              </span>
+                            ))}
+                          </p>
+                        )
+                      })()}
+                    </div>
+                  )
+                })()}
               </div>
 
-              {/* Application Deadline for Festivals */}
+              {/* Application Open & Deadline for Festivals */}
               {formData.category === "festival" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="application_open" className="text-stone-700 font-serif font-medium">
+                      Application Opens (optional)
+                    </Label>
+                    <Input
+                      id="application_open"
+                      type="date"
+                      value={formData.application_open}
+                      onChange={(e) => handleInputChange("application_open", e.target.value)}
+                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="application_deadline" className="text-stone-700 font-serif font-medium">
                       Application Deadline
@@ -668,6 +948,45 @@ export default function SuggestEventEditPage() {
             </Button>
           </div>
         </form>
+
+        {/* Recurring organizer confirmation dialog */}
+        <Dialog open={showRecurringOrganizerDialog} onOpenChange={setShowRecurringOrganizerDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-serif">Are you the organizer of this event series?</DialogTitle>
+              <DialogDescription className="text-stone-600 font-serif">
+                Recurring events include multiple dates and can be trickier to manage.
+                If you&apos;re not the organizer, would you consider asking them to add it instead? Event organizers will have direct edit access to the whole series.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                className="font-serif"
+                onClick={() => setShowRecurringOrganizerDialog(false)}
+              >
+                I&apos;ll ask the organizer
+              </Button>
+              <Button
+                className="bg-[#009035] hover:bg-[#007a2a] font-serif"
+                onClick={() => {
+                  const derived = getOrdinalAndWeekdayFromDate(formData.start_date) ?? { ordinal: 1, weekday: 1 }
+                  setFormData(prev => ({
+                    ...prev,
+                    recurrence_frequency: "monthly",
+                    recurrence_interval: 1,
+                    recurrence_ordinal: derived.ordinal,
+                    recurrence_weekday: derived.weekday,
+                    end_date: prev.start_date || prev.end_date
+                  }))
+                  setShowRecurringOrganizerDialog(false)
+                }}
+              >
+                I am the organizer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
