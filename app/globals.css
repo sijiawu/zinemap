@@ -2,13 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mapbox GL CSS */
-@import 'mapbox-gl/dist/mapbox-gl.css';
-
-/* Gloria Hallelujah Font - Local TTF */
+/* Gloria Hallelujah Font */
 @font-face {
   font-family: 'Gloria Hallelujah';
-  src: url('/fonts/GloriaHallelujah-Regular.ttf') format('truetype');
+  src: url('/fonts/GloriaHallelujah-Regular.woff2') format('woff2'),
+       url('/fonts/GloriaHallelujah-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

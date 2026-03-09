@@ -1,5 +1,6 @@
 'use client'
 
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { supabase } from '@/lib/supabaseClient'

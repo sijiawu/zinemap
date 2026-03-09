@@ -1,5 +1,6 @@
 "use client"
 
+import "mapbox-gl/dist/mapbox-gl.css"
 import { useEffect, useRef, useState } from "react"
 import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
