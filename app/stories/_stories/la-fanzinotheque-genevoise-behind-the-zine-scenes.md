@@ -121,7 +121,7 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 />
 
 <Callout variant="highlight">
-« Revenir au format papier, ça redonne le lien humain... »
+« Revenir au format papier, ça redonne le lien humain : c'est un objet qu'on se passe de main en main, qu'il faut parfois aller chercher, qui a très peu d'exemplaires … et donc c'est un trésor. »
 </Callout>
 
 **CJ :** On peut parler un peu plus du côté musique et punk ?
@@ -377,7 +377,7 @@ Collection of La Fanzinothèque genevoise. Photo: CJ Wu"
 />
 
 <Callout variant="highlight">
-"When you return to paper, it creates a different kind of human connection."
+"When you return to paper, it creates a different kind of human connection. A zine is something you pass from hand to hand, something you sometimes have to go out and hunt for, and often there are only a few copies, so it feels like a treasure."
 </Callout>
 
 **CJ:** Can we talk a bit more about the music and punk side of things?
