@@ -276,6 +276,26 @@ export default function AddLibraryPage() {
     setShowCountrySuggestions(false)
   }
 
+  // On blur, resolve typed text to a known country so address isn't stuck disabled
+  const handleCountryBlur = () => {
+    setTimeout(() => {
+      setShowCountrySuggestions(false)
+      const typed = formData.country.trim().toLowerCase()
+      if (!typed) {
+        setSelectedCountry(null)
+        return
+      }
+      if (selectedCountry && selectedCountry.name.toLowerCase() === typed) return
+      const match = countries.find(c => c.name.toLowerCase() === typed)
+      if (match) {
+        setSelectedCountry(match)
+        setFormData(prev => ({ ...prev, country: match.name }))
+      } else {
+        setSelectedCountry(null)
+      }
+    }, 200)
+  }
+
   // Handle address search with country filter
   const handleAddressSearch = async (value: string) => {
     if (!value.trim() || !selectedCountry) {
@@ -510,6 +530,7 @@ export default function AddLibraryPage() {
                         handleInputChange('country', e.target.value)
                         handleCountrySearch(e.target.value)
                       }}
+                      onBlur={handleCountryBlur}
                       onFocus={() => {
                         if (formData.country.trim()) {
                           handleCountrySearch(formData.country)
@@ -549,13 +570,7 @@ export default function AddLibraryPage() {
                       placeholder="e.g., 123 Main Street"
                       className="bg-stone-50 border-stone-300 focus:border-blue-400 focus:ring-blue-200 font-serif"
                       required
-                      disabled={!selectedCountry}
                     />
-                    {!selectedCountry && (
-                      <div className="absolute inset-0 bg-stone-100 rounded flex items-center px-3 text-stone-500 text-sm">
-                        Select a country first
-                      </div>
-                    )}
                   {showAddressSuggestions && addressSuggestions.length > 0 && (
                     <div className="absolute z-50 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1">
                       {addressSuggestions.map((suggestion) => (

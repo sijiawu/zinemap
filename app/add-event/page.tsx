@@ -143,6 +143,26 @@ export default function AddEventPage() {
     setShowCountrySuggestions(false)
   }
 
+  // On blur, resolve typed text to a known country so address isn't stuck disabled
+  const handleCountryBlur = () => {
+    setTimeout(() => {
+      setShowCountrySuggestions(false)
+      const typed = formData.country.trim().toLowerCase()
+      if (!typed) {
+        setSelectedCountry(null)
+        return
+      }
+      if (selectedCountry && selectedCountry.name.toLowerCase() === typed) return
+      const match = countries.find(c => c.name.toLowerCase() === typed)
+      if (match) {
+        setSelectedCountry(match)
+        setFormData(prev => ({ ...prev, country: match.name }))
+      } else {
+        setSelectedCountry(null)
+      }
+    }, 200)
+  }
+
   // Handle address search with country filter
   const handleAddressSearch = async (value: string) => {
     if (!value.trim() || !selectedCountry) {
@@ -974,7 +994,7 @@ export default function AddEventPage() {
                         setFormData(prev => ({ ...prev, country: e.target.value }));
                         handleCountrySearch(e.target.value);
                       }}
-                      onBlur={() => setTimeout(() => setShowCountrySuggestions(false), 200)}
+                      onBlur={handleCountryBlur}
                       onFocus={() => {
                         if (formData.country.trim()) {
                           handleCountrySearch(formData.country);
@@ -1019,20 +1039,10 @@ export default function AddEventPage() {
                           handleAddressSearch(formData.address);
                         }
                       }}
-                      className={`font-serif ${
-                        selectedCountry 
-                          ? "bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200" 
-                          : "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed"
-                      }`}
-                      placeholder={selectedCountry ? "e.g. 123 Main St" : "Select a country first"}
+                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                      placeholder="e.g. 123 Main St"
                       autoComplete="off"
-                      disabled={!selectedCountry}
                     />
-                    {!selectedCountry && (
-                      <div className="absolute inset-0 bg-stone-100 rounded flex items-center px-3 text-stone-500 text-sm">
-                        Select a country first
-                      </div>
-                    )}
                     {showAddressSuggestions && addressSuggestions.length > 0 && (
                       <div className="absolute z-50 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 max-h-60 overflow-y-auto">
                         {addressSuggestions.map((feature) => (
