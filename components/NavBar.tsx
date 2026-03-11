@@ -71,6 +71,7 @@ export default function NavBar() {
                 width={32} 
                 height={32}
                 className="w-8 h-8"
+                priority
               />
               ZineMap
             </Link>
@@ -188,6 +189,7 @@ export default function NavBar() {
                 width={24} 
                 height={24}
                 className="w-6 h-6"
+                priority
               />
               ZineMap
             </Link>

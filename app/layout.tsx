@@ -1,4 +1,5 @@
 import './globals.css'
+import Script from 'next/script'
 import ClientRoot from '@/components/ClientRoot'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import FilloutButton from '@/components/FilloutButton'
@@ -53,20 +54,25 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <script defer data-domain="zinemap.com" src="https://plausible.io/js/script.js"></script>
-        <script
+        <Script
+          defer
+          data-domain="zinemap.com"
+          src="https://plausible.io/js/script.js"
+          strategy="lazyOnload"
+        />
+        <Script
+          id="hotjar"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
-              setTimeout(function(){
-                (function(h,o,t,j,a,r){
-                  h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-                  h._hjSettings={hjid:6547562,hjsv:6};
-                  a=o.getElementsByTagName('head')[0];
-                  r=o.createElement('script');r.async=1;
-                  r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-                  a.appendChild(r);
-                })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
-              },3500);
+              (function(h,o,t,j,a,r){
+                h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+                h._hjSettings={hjid:6547562,hjsv:6};
+                a=o.getElementsByTagName('head')[0];
+                r=o.createElement('script');r.async=1;
+                r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+                a.appendChild(r);
+              })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
             `,
           }}
         />
