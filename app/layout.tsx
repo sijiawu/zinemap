@@ -47,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <style dangerouslySetInnerHTML={{ __html: `.zinemap-app{display:none}.zinemap-css-fallback,.zinemap-nojs-fallback{display:none;min-height:100vh;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:2rem;background:#fafaf9;color:#292524}.zinemap-css-fallback{display:flex}` }} />
         <link
           rel="preload"
           href="/fonts/GloriaHallelujah-Regular.woff2"
@@ -77,11 +78,69 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex flex-col min-h-screen">
-        <TooltipProvider>
-          <ClientRoot>{children}</ClientRoot>
-        </TooltipProvider>
-        <FilloutButton />
+      <body>
+        <noscript>
+          <style dangerouslySetInnerHTML={{ __html: '.zinemap-app{display:none!important}.zinemap-css-fallback{display:none!important}.zinemap-nojs-fallback{display:flex!important}' }} />
+        </noscript>
+        <div className="zinemap-css-fallback">
+          <div>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1.5rem' }}>
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+              <path d="M2 17L12 22L22 17" />
+              <path d="M2 12L12 17L22 12" />
+            </svg>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              This page didn&apos;t load correctly
+            </h1>
+            <p style={{ color: '#78716c', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Some resources failed to load. This usually fixes itself.<br />
+              If the issue persists, message us on{' '}
+              <a href="https://instagram.com/zine.map" style={{ color: '#292524', textDecoration: 'underline' }}>
+                Instagram @zine.map
+              </a>
+            </p>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href=""
+              style={{
+                display: 'inline-block', padding: '0.5rem 1.5rem',
+                background: '#292524', color: 'white', borderRadius: '0.375rem',
+                textDecoration: 'none', fontWeight: 500,
+              }}
+            >
+              Refresh page
+            </a>
+          </div>
+        </div>
+        <div className="zinemap-nojs-fallback">
+          <div>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1.5rem' }}>
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+              <path d="M2 17L12 22L22 17" />
+              <path d="M2 12L12 17L22 12" />
+            </svg>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              ZineMap needs JavaScript
+            </h1>
+            <p style={{ color: '#78716c', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              The interactive map, search, and filters require JavaScript to work.<br />
+              Try refreshing, enabling JavaScript in your browser settings,<br />
+              or disabling script-blocking extensions (e.g. NoScript).
+            </p>
+            <p style={{ color: '#78716c', lineHeight: 1.6 }}>
+              If the issue persists, message us on{' '}
+              <a href="https://instagram.com/zine.map" style={{ color: '#292524', textDecoration: 'underline' }}>
+                Instagram @zine.map
+              </a>
+            </p>
+          </div>
+        </div>
+        <div className="zinemap-app flex-col min-h-screen">
+          <TooltipProvider>
+            <ClientRoot>{children}</ClientRoot>
+          </TooltipProvider>
+          <FilloutButton />
+        </div>
       </body>
     </html>
   )

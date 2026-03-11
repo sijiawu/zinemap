@@ -1,3 +1,6 @@
+.zinemap-app { display: flex !important; }
+.zinemap-css-fallback, .zinemap-nojs-fallback { display: none !important; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

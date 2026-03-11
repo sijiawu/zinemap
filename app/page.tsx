@@ -4,9 +4,9 @@ import { Store, Library, Event } from '@/lib/types'
 
 export const revalidate = 60
 
-const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
-const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
-const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website'
+  const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
+  const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
+  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website'
 
 export default async function HomePage() {
   const supabase = createClient(
@@ -14,21 +14,21 @@ export default async function HomePage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const [storesResult, librariesResult, eventsResult] = await Promise.all([
-    supabase
-      .from('stores')
-      .select(storeColumns)
-      .eq('approved', true)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('libraries')
-      .select(libraryColumns)
-      .eq('approved', true)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('events')
-      .select(eventColumns)
-      .eq('approved', true)
+        const [storesResult, librariesResult, eventsResult] = await Promise.all([
+          supabase
+            .from('stores')
+            .select(storeColumns)
+            .eq('approved', true)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('libraries')
+            .select(libraryColumns)
+            .eq('approved', true)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('events')
+            .select(eventColumns)
+            .eq('approved', true)
       .order('created_at', { ascending: false }),
   ])
 
