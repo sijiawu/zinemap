@@ -1091,7 +1091,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           </div>
                           <div className="flex items-start gap-3">
                             {event.poster_image && (
-                              <div className="flex-shrink-0 w-14 h-20 sm:w-16 sm:h-24 overflow-hidden">
+                              <div className="flex-shrink-0 w-14 sm:w-16 aspect-[3/4] overflow-hidden rounded bg-stone-100">
                                 <img
                                   src={event.poster_image}
                                   alt={`${event.name} poster`}
@@ -1166,7 +1166,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                         </CardHeader>
 
                         <CardContent className="pt-0 px-4 pb-3">
-                          <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-5">
+                          <p className="text-stone-600 text-sm mb-4 leading-relaxed line-clamp-3">
                             {event.notes}
                           </p>
                           {(event.user_name || event.last_edit_user_name || event.created_at) && (

@@ -588,11 +588,11 @@ export default function EventsPage() {
                         </div>
                         <div className="flex items-start gap-3">
                           {event.poster_image && (
-                            <div className="flex-shrink-0 w-14 h-20 sm:w-16 sm:h-24 overflow-hidden">
+                            <div className="flex-shrink-0 w-14 sm:w-16 aspect-[3/4] overflow-hidden rounded bg-stone-100">
                               <img
                                 src={event.poster_image}
                                 alt={`${event.name} poster`}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                               />
                             </div>
                           )}

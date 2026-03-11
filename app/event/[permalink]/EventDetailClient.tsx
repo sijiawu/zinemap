@@ -654,11 +654,11 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
             <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:gap-6">
               {event.poster_image && (
                 <div className="flex-shrink-0">
-                  <div className="aspect-[3/4] w-40 sm:w-48 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 shadow-sm">
+                  <div className="w-40 sm:w-48 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 shadow-sm">
                     <img
                       src={event.poster_image}
                       alt={`${event.name} poster`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-auto"
                     />
                   </div>
                 </div>
