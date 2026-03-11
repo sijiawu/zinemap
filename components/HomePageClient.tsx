@@ -49,7 +49,10 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
   const [phase3Complete, setPhase3Complete] = useState(false) // Enhanced data loaded
   
   const [searchQuery, setSearchQuery] = useState("")
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+  const [activeSearchQuery, setActiveSearchQuery] = useState("")
+  const [activeCountry, setActiveCountry] = useState("all")
+  const [activeState, setActiveState] = useState("all")
+  const [activeCity, setActiveCity] = useState("all")
   const [activeTab, setActiveTab] = useState("stores")
   const [eventTimeFilter, setEventTimeFilter] = useState<"all" | "upcoming" | "past">("all")
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
@@ -246,14 +249,6 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
     fetchEnhancedData()
   }, [phase1Complete])
 
-  // Debounce search query to improve performance (realtime search)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery.trim())
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
   // Track map height for list view min-height
   useEffect(() => {
     if (!mapCardRef.current) return
@@ -299,9 +294,55 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
     }
   }, [phase1Complete, phase2Complete])
 
+  const fitMapToResults = (query: string) => {
+    const hasQuery = !!query
+    const hasLocation = selectedCountry !== "all" || selectedState !== "all" || selectedCity !== "all"
+    if (!hasQuery && !hasLocation) return
+
+    const matchesSearch = (item: Store | Library | Event) => {
+      if (!hasQuery) return true
+      const q = query.toLowerCase()
+      return (
+        item.name.toLowerCase().includes(q) ||
+        (!!item.notes && item.notes.toLowerCase().includes(q)) ||
+        item.country.toLowerCase().includes(q) ||
+        (!!item.state && item.state.toLowerCase().includes(q)) ||
+        item.city.toLowerCase().includes(q)
+      )
+    }
+    const matchesLocation = (item: Store | Library | Event) => {
+      if (selectedCountry !== "all" && item.country !== selectedCountry) return false
+      if (selectedState !== "all" && (item.state || "") !== selectedState) return false
+      if (selectedCity !== "all" && item.city !== selectedCity) return false
+      return true
+    }
+    const coords: [number, number][] = []
+    for (const item of [...stores, ...libraries, ...events]) {
+      if (!item.latitude || !item.longitude) continue
+      if (matchesLocation(item) && matchesSearch(item)) {
+        coords.push([item.longitude!, item.latitude!])
+      }
+    }
+    if (coords.length > 0 && (window as any).__zinemap_fitBounds) {
+      (window as any).__zinemap_fitBounds(coords)
+    }
+  }
+
+  const handleSearch = () => {
+    const q = searchQuery.trim()
+    setActiveSearchQuery(q)
+    setActiveCountry(selectedCountry)
+    setActiveState(selectedState)
+    setActiveCity(selectedCity)
+    fitMapToResults(q)
+  }
+
   const handleClearSearchAndFilters = () => {
     setSearchQuery("")
-    setDebouncedSearchQuery("")
+    setActiveSearchQuery("")
+    setActiveCountry("all")
+    setActiveState("all")
+    setActiveCity("all")
     clearLocationFilters()
   }
 
@@ -316,9 +357,9 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
 
     const matchesLocation = (occ: { event: Event }) => {
       const e = occ.event
-      if (selectedCountry !== "all" && e.country !== selectedCountry) return false
-      if (selectedState !== "all" && (e.state || "") !== selectedState) return false
-      if (selectedCity !== "all" && e.city !== selectedCity) return false
+      if (activeCountry !== "all" && e.country !== activeCountry) return false
+      if (activeState !== "all" && (e.state || "") !== activeState) return false
+      if (activeCity !== "all" && e.city !== activeCity) return false
       return true
     }
 
@@ -337,7 +378,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
 
     const filtered = occurrences.filter(occ => {
       if (!matchesLocation(occ)) return false
-      if (debouncedSearchQuery.trim()) return matchesSearch(occ, debouncedSearchQuery.trim())
+      if (activeSearchQuery.trim()) return matchesSearch(occ, activeSearchQuery.trim())
       return true
     })
 
@@ -356,19 +397,17 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
     [filteredEvents]
   )
 
-  // Filter stores, libraries, and events based on debounced search query and location filters
+  // Filter stores, libraries, and events based on active search query and active location filters
   useEffect(() => {
     if (!stores || !libraries || !events) return
 
-    // Helper: Check if item matches location filters
     const matchesLocation = (item: Store | Library | Event) => {
-      if (selectedCountry !== "all" && item.country !== selectedCountry) return false
-      if (selectedState !== "all" && (item.state || "") !== selectedState) return false
-      if (selectedCity !== "all" && item.city !== selectedCity) return false
+      if (activeCountry !== "all" && item.country !== activeCountry) return false
+      if (activeState !== "all" && (item.state || "") !== activeState) return false
+      if (activeCity !== "all" && item.city !== activeCity) return false
       return true
     }
 
-    // Helper: Check if item matches search query (name, notes, country, state, city)
     const matchesSearch = (item: Store | Library | Event, query: string) => {
       if (!query) return true
       const lowerQuery = query.toLowerCase()
@@ -381,23 +420,21 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
       )
     }
 
-    // Helper: Filter items by location and search
     const filterItems = <T extends Store | Library | Event>(items: T[]) => {
       return items.filter(item => {
         if (!matchesLocation(item)) return false
-        if (debouncedSearchQuery.trim()) {
-          return matchesSearch(item, debouncedSearchQuery.trim())
+        if (activeSearchQuery.trim()) {
+          return matchesSearch(item, activeSearchQuery.trim())
         }
         return true
       })
     }
 
-    // Filter events: expand recurring, then filter by location, search, and time
     const filterEvents = (items: Event[]) => {
       const occurrences = expandRecurringEvents(items)
       let filtered = occurrences.filter(occ => {
         if (!matchesLocation(occ.event)) return false
-        if (debouncedSearchQuery.trim()) return matchesSearch(occ.event, debouncedSearchQuery.trim())
+        if (activeSearchQuery.trim()) return matchesSearch(occ.event, activeSearchQuery.trim())
         return true
       })
       if (eventTimeFilter === "upcoming") {
@@ -411,7 +448,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
     setFilteredStores(filterItems(stores))
     setFilteredLibraries(filterItems(libraries))
     setFilteredEvents(filterEvents(events))
-  }, [stores, libraries, events, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, eventTimeFilter])
+  }, [stores, libraries, events, activeSearchQuery, activeCountry, activeState, activeCity, eventTimeFilter])
 
   return (
     <div className="flex flex-col flex-1 bg-stone-50 font-serif min-h-0">
@@ -450,18 +487,17 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
 
             {showMobileFilters && (
               <div className="mt-4 space-y-3">
-                {/* Search */}
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
                   <Input
                     placeholder="Search by name or description"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
                   />
                 </div>
 
-                {/* Country */}
                 <div className="w-full">
                   <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                     <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200">
@@ -476,7 +512,6 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                   </Select>
                 </div>
 
-                {/* State */}
                 <div className="w-full">
                   <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
                     <SelectTrigger className={`${selectedCountry === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
@@ -491,7 +526,6 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                   </Select>
                 </div>
 
-                {/* City */}
                 <div className="w-full">
                   <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all"}>
                     <SelectTrigger className={`${selectedState === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
@@ -506,13 +540,16 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                   </Select>
                 </div>
 
-                <div className="pt-1">
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={handleSearch} className="flex-1 bg-stone-800 hover:bg-stone-900 text-white">
+                    Find
+                  </Button>
                   <Button 
                     variant="outline"
                     onClick={handleClearSearchAndFilters}
-                    className="w-full border-stone-300 text-stone-700 hover:bg-stone-50"
+                    className="flex-1 border-stone-300 text-stone-700 hover:bg-stone-50"
                   >
-                    Clear search
+                    Reset
                   </Button>
                 </div>
               </div>
@@ -523,74 +560,70 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
         {/* Search and Filters - Desktop only, appears above grid */}
         <div className="hidden lg:block mb-3 lg:mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search Bar */}
-              <div className="relative w-full">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
-                                  <Input
-                placeholder="Search by name or description"
-                    value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
-                  />
+                <Input
+                  placeholder="Search by name or description"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10 bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"
+                />
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-3 flex-1">
-                {/* Country */}
-                <div className="min-w-[160px] flex-1">
-                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200">
-                      <SelectValue placeholder="Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All countries</SelectItem>
-                      {countries.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* State */}
-                <div className="min-w-[160px] flex-1">
-                  <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
-                    <SelectTrigger className={`${selectedCountry === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
-                      <SelectValue placeholder="State/Province" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All states/regions</SelectItem>
-                      {states.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* City */}
-                <div className="min-w-[160px] flex-1">
-                  <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all"}>
-                    <SelectTrigger className={`${selectedState === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
-                      <SelectValue placeholder="City" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All cities</SelectItem>
-                      {cities.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Clear search (also clears filters) */}
-                <Button 
-                  variant="outline"
-                  onClick={handleClearSearchAndFilters}
-                  className="border-stone-300 text-stone-700 hover:bg-stone-50"
-                >
-                  Clear search
-                </Button>
+              <div className="min-w-[140px]">
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200">
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All countries</SelectItem>
+                    {countries.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              <div className="min-w-[140px]">
+                <Select value={selectedState} onValueChange={setSelectedState} disabled={selectedCountry === "all"}>
+                  <SelectTrigger className={`${selectedCountry === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                    <SelectValue placeholder="State/Province" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All states/regions</SelectItem>
+                    {states.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="min-w-[140px]">
+                <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all"}>
+                  <SelectTrigger className={`${selectedState === "all" ? "bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed" : "bg-stone-50 border-stone-300 focus:border-rose-300 focus:ring-rose-200"}`}>
+                    <SelectValue placeholder="City" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All cities</SelectItem>
+                    {cities.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={handleSearch} className="bg-stone-800 hover:bg-stone-900 text-white shrink-0">
+                Find
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleClearSearchAndFilters}
+                className="border-stone-300 text-stone-700 hover:bg-stone-50 shrink-0"
+              >
+                Reset
+              </Button>
             </div>
           </div>
         </div>
@@ -610,7 +643,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                       stores={filteredStores}
                       libraries={filteredLibraries}
                       events={mapEvents}
-                      searchQuery={debouncedSearchQuery}
+                      searchQuery={activeSearchQuery}
                       onLocationSelect={handleLocationSelect}
                       onMapReady={handleMapReady}
                     />
@@ -716,7 +749,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           </Link>
                         ) : (
                           <Button 
-                            onClick={() => setSearchQuery("")}
+                            onClick={handleClearSearchAndFilters}
                             variant="outline"
                             className="border-stone-300 text-stone-700 hover:bg-stone-50"
                           >
@@ -862,7 +895,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           </Link>
                         ) : (
                           <Button 
-                            onClick={() => setSearchQuery("")}
+                            onClick={handleClearSearchAndFilters}
                             variant="outline"
                             className="border-stone-300 text-stone-700 hover:bg-stone-50"
                           >
@@ -1031,7 +1064,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           </Link>
                         ) : (
                           <Button 
-                            onClick={() => setSearchQuery("")}
+                            onClick={handleClearSearchAndFilters}
                             variant="outline"
                             className="border-stone-300 text-stone-700 hover:bg-stone-50"
                           >

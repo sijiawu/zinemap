@@ -174,6 +174,20 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
   }, [])
 
+  useEffect(() => {
+    (window as any).__zinemap_fitBounds = (coords: [number, number][]) => {
+      if (!map.current || coords.length === 0) return
+      const lngs = coords.map(c => c[0])
+      const lats = coords.map(c => c[1])
+      const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)]
+      const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)]
+      if (sw[0] === ne[0]) { sw[0] -= 0.01; ne[0] += 0.01 }
+      if (sw[1] === ne[1]) { sw[1] -= 0.01; ne[1] += 0.01 }
+      map.current.fitBounds([sw, ne], { padding: 50, maxZoom: 14, duration: 1000 })
+    }
+    return () => { delete (window as any).__zinemap_fitBounds }
+  }, [])
+
   // Zoom functions
   const zoomIn = () => {
     if (map.current) {
@@ -643,8 +657,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${savedPinsMode ? 'h-full min-h-[384px]' : 'h-[600px]'}`}>
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
+      {/* Zoom Controls - hidden on mobile */}
+      <div className="hidden lg:block absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
         <div className="flex flex-col">
           <button
             onClick={zoomIn}
