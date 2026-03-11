@@ -865,136 +865,18 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 </div>
               </CardHeader>
               <CardContent>
-                {showNoteForm && (
-                  <form onSubmit={handleSubmitNote} className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-sm">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-stone-700 flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 text-green-600" />
-                          Your Note
-                        </label>
-                        <Textarea
-                          value={noteText}
-                          onChange={(e) => setNoteText(e.target.value)}
-                          placeholder="Share anything about this event! Your plans, tips, what you're excited about..."
-                          rows={3}
-                          className="mt-2 bg-white border-stone-300 focus:border-green-400 focus:ring-green-200 transition-all duration-200"
-                        />
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="anonymous"
-                          checked={isAnonymous}
-                          onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-                          className="text-green-600 border-stone-300"
-                        />
-                        <label htmlFor="anonymous" className="text-sm text-stone-700">
-                          Post anonymously
-                        </label>
-                      </div>
-
-                      {noteError && (
-                        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
-                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                          {noteError}
-                        </div>
-                      )}
-
-                      <div className="flex gap-3">
-                        <Button type="submit" size="sm" className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200">
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Submit Note
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowNoteForm(false)}
-                          className="border-stone-300 text-stone-700 hover:bg-stone-50 transition-all duration-200"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                )}
-
-                {noteSubmitted && (
-                  <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 rounded-xl text-sm flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span className="font-medium">Your note has been submitted successfully!</span>
-                  </div>
-                )}
-
-                {userHasNote && (
-                  <div className="mb-6 p-4 bg-stone-100 border border-stone-200 rounded-lg">
-                    <p className="text-stone-600 text-sm">You've already added a community note for this place. Feel free to edit it if anything's changed.</p>
-                  </div>
-                )}
-
-                {notes.length === 0 ? (
-                  <div className="text-center py-12">
+                {notes.length === 0 && !showNoteForm && (
+                  <div className="text-center py-12 mb-6">
                     <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <MessageSquare className="h-8 w-8 text-stone-400" />
                     </div>
-                    <p className="text-stone-500 text-lg font-medium mb-6">No community notes yet</p>
-                    
-                    {!user ? (
-                      <div className="space-y-3">
-                        <Link href="/login">
-                          <Button
-                            size="sm"
-                            className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                          >
-                            Sign in to add a note
-                          </Button>
-                        </Link>
-                      </div>
-                    ) : !userHasNote && (
-                      <Button
-                        onClick={() => setShowNoteForm(true)}
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                      >
-                        Add a note
-                      </Button>
-                    )}
+                    <p className="text-stone-500 text-lg font-medium mb-2">No community notes yet</p>
+                    <p className="text-stone-400 text-sm">Be the first to share your experience at this event!</p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {!user ? (
-                      <div className="text-center py-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
-                        <div className="flex flex-col items-center gap-3">
-                          <MessageSquare className="h-6 w-6 text-green-600" />
-                          <p className="text-stone-700 font-medium">Want to share what you know about this event?</p>
-                          <Link href="/login">
-                            <Button
-                              size="sm"
-                              className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
-                            >
-                              Sign in to add a note
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ) : !userHasNote && !showNoteForm && (
-                      <div className="text-center py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
-                        <div className="flex flex-col items-center gap-3">
-                          <MessageSquare className="h-5 w-5 text-green-600" />
-                          <p className="text-stone-700 font-medium">Want to share what you know about this event?</p>
-                          <Button
-                            onClick={() => setShowNoteForm(true)}
-                            size="sm"
-                            className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
-                          >
-                            Add a note
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                )}
+
+                {notes.length > 0 && (
+                  <div className="space-y-4 mb-6">
                     {notes.map((note) => (
                       <div key={note.id} className="group p-5 bg-white rounded-xl border border-stone-200 hover:border-green-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-white">
                         {editingNote?.id === note.id ? (
@@ -1127,6 +1009,93 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {noteSubmitted ? (
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 rounded-xl text-sm flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                    <span className="font-medium">Your note has been submitted successfully!</span>
+                  </div>
+                ) : userHasNote ? (
+                  <div className="p-4 bg-stone-100 border border-stone-200 rounded-lg">
+                    <p className="text-stone-600 text-sm">You&apos;ve already added a community note for this place. Feel free to edit it if anything&apos;s changed.</p>
+                  </div>
+                ) : showNoteForm ? (
+                  <form onSubmit={handleSubmitNote} className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-sm">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-stone-700 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-green-600" />
+                          Your Note
+                        </label>
+                        <Textarea
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          placeholder="Share anything about this event! Your plans, tips, what you're excited about..."
+                          rows={3}
+                          className="mt-2 bg-white border-stone-300 focus:border-green-400 focus:ring-green-200 transition-all duration-200"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="anonymous"
+                          checked={isAnonymous}
+                          onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                          className="text-green-600 border-stone-300"
+                        />
+                        <label htmlFor="anonymous" className="text-sm text-stone-700">
+                          Post anonymously
+                        </label>
+                      </div>
+
+                      {noteError && (
+                        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          {noteError}
+                        </div>
+                      )}
+
+                      <div className="flex gap-3">
+                        <Button type="submit" size="sm" className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Submit Note
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowNoteForm(false)}
+                          className="border-stone-300 text-stone-700 hover:bg-stone-50 transition-all duration-200"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                ) : !user ? (
+                  <div className="text-center">
+                    <Link href="/login">
+                      <Button
+                        size="sm"
+                        className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
+                      >
+                        sign in to share your experience
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Button
+                      onClick={() => setShowNoteForm(true)}
+                      size="sm"
+                      className="bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md transition-all duration-200 font-gloria"
+                    >
+                      share your experience
+                    </Button>
                   </div>
                 )}
               </CardContent>
