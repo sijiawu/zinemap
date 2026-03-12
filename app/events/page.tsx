@@ -13,7 +13,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -632,6 +632,14 @@ export default function EventsPage() {
                           {event.recurrence_frequency && (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                               Recurring
+                            </Badge>
+                          )}
+                          {isPastEvent(event) && (
+                            <Badge 
+                              variant="outline"
+                              className="text-xs bg-stone-100 text-stone-500 border-stone-300"
+                            >
+                              Past Event
                             </Badge>
                           )}
                           <div className="flex items-center text-xs text-stone-500">
