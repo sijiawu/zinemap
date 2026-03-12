@@ -43,6 +43,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [editAnonymous, setEditAnonymous] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
+  const [showPosterModal, setShowPosterModal] = useState(false)
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -642,10 +643,10 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 overflow-hidden">
           <div className="mb-4">
-            <Link href="/">
+            <Link href="/events">
               <Button variant="ghost" size="sm" className="text-stone-600 hover:text-stone-800 hover:bg-stone-100">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to map
+                Back to events
               </Button>
             </Link>
           </div>
@@ -654,13 +655,16 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
             <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:gap-6">
               {event.poster_image && (
                 <div className="flex-shrink-0">
-                  <div className="w-40 sm:w-48 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 shadow-sm">
+                  <button
+                    onClick={() => setShowPosterModal(true)}
+                    className="w-40 sm:w-48 bg-stone-100 rounded-lg overflow-hidden border border-stone-200 shadow-sm cursor-zoom-in hover:shadow-md transition-shadow"
+                  >
                     <img
                       src={event.poster_image}
                       alt={`${event.name} poster`}
                       className="w-full h-auto"
                     />
-                  </div>
+                  </button>
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -1296,6 +1300,27 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showPosterModal && event?.poster_image && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 cursor-zoom-out"
+          onClick={() => setShowPosterModal(false)}
+        >
+          <button
+            onClick={() => setShowPosterModal(false)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl font-bold leading-none z-10"
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <img
+            src={event.poster_image}
+            alt={`${event.name} poster`}
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
