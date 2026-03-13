@@ -835,9 +835,15 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
               </div>
               {'start_date' in selectedLocation && selectedLocation.start_date && (
                 <p className="text-xs text-gray-500 mt-1">
-                  {formatDateReadable(selectedLocation.start_date)}
-                  {formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}
-                  {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && ` – ${formatDateReadable(selectedLocation.end_date)}`}
+                  {'recurrence_frequency' in selectedLocation && selectedLocation.recurrence_frequency ? (
+                    <>Next: {formatDateReadable(selectedLocation.start_date)}{formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}</>
+                  ) : (
+                    <>
+                      {formatDateReadable(selectedLocation.start_date)}
+                      {formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}
+                      {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && ` – ${formatDateReadable(selectedLocation.end_date)}`}
+                    </>
+                  )}
                   {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {
                     const today = new Date(); const deadlineDate = new Date(selectedLocation.application_deadline);
                     today.setHours(0, 0, 0, 0); deadlineDate.setHours(0, 0, 0, 0);

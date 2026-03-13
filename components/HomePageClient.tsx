@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, isPastEvent } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, formatTimeRange } from "@/lib/utils"
 import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -442,7 +442,9 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
       } else if (eventTimeFilter === "past") {
         filtered = filtered.filter(occ => occ.occurrence_end < today)
       }
-      return filtered.map(occ => occurrenceToDisplayEvent(occ))
+      // List & map: show only next occurrence per recurring event (avoid clutter)
+      const nextOnly = occurrencesToNextOnly(filtered)
+      return nextOnly.map(occ => occurrenceToDisplayEvent(occ))
     }
 
     setFilteredStores(filterItems(stores))
@@ -1147,8 +1149,15 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                             )}
                             <div className="flex items-center text-xs text-stone-500">
                               <Calendar className="h-3 w-3 mr-1" />
-                              {formatDateReadable(event.start_date)}
-                              {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                              {event.recurrence_frequency ? (
+                                <>Next: {formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                              ) : (
+                                <>
+                                  {formatDateReadable(event.start_date)}
+                                  {formatTimeRange(event.start_time, event.end_time)}
+                                  {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
+                                </>
+                              )}
                             </div>
                             {event.category === "festival" && event.application_deadline && (() => {
                               const today = new Date();

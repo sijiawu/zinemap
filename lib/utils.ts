@@ -420,9 +420,11 @@ export function getOrdinalAndWeekdayFromDate(dateString: string): { ordinal: num
 }
 
 /**
- * Human-readable recurrence description (e.g. "Every 2 weeks", "3rd Sunday of every month")
+ * Human-readable recurrence description (e.g. "Weekly on Tuesday", "3rd Sunday of every month")
+ * Derives ordinal/weekday from start_date when not stored.
  */
 export function formatRecurrenceDescription(event: {
+  start_date?: string
   recurrence_frequency?: string | null
   recurrence_interval?: number
   recurrence_until?: string | null
@@ -434,8 +436,17 @@ export function formatRecurrenceDescription(event: {
 
   const interval = event.recurrence_interval ?? 1
   const until = event.recurrence_until
-  const ordinal = event.recurrence_ordinal
-  const weekday = event.recurrence_weekday
+  let ordinal = event.recurrence_ordinal
+  let weekday = event.recurrence_weekday
+
+  // Derive from start_date when missing (e.g. older events)
+  if (event.start_date) {
+    const parsed = getOrdinalAndWeekdayFromDate(event.start_date)
+    if (parsed) {
+      if (weekday == null) weekday = parsed.weekday
+      if (ordinal == null && freq === 'monthly') ordinal = parsed.ordinal
+    }
+  }
 
   let intervalText: string
   if (freq === 'monthly' && ordinal && ordinal >= 1 && ordinal <= 5 && weekday != null) {

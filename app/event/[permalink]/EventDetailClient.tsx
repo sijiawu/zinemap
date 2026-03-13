@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
-import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent, formatRecurrenceDescription } from "@/lib/utils"
+import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent, formatRecurrenceDescription, getNextOccurrenceDate, formatTimeRange } from "@/lib/utils"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 
@@ -732,17 +732,29 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-stone-600">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {event.start_date === event.end_date 
-                    ? formatDateReadable(event.start_date)
-                    : `${formatDateReadable(event.start_date)} - ${formatDateReadable(event.end_date)}`
-                  }
-                </div>
-                {event.recurrence_frequency && (
-                  <div className="flex items-center text-green-700">
-                    <Repeat className="h-4 w-4 mr-2" />
-                    {formatRecurrenceDescription(event)}
+                {event.recurrence_frequency ? (
+                  <>
+                    <div className="flex items-center text-green-700">
+                      <Repeat className="h-4 w-4 mr-2" />
+                      {formatRecurrenceDescription(event)}
+                    </div>
+                    {(() => {
+                      const next = getNextOccurrenceDate(event)
+                      return next ? (
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Next: {formatDateReadable(next)}{formatTimeRange(event.start_time, event.end_time)}
+                        </div>
+                      ) : null
+                    })()}
+                  </>
+                ) : (
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {event.start_date === event.end_date
+                      ? formatDateReadable(event.start_date)
+                      : `${formatDateReadable(event.start_date)} - ${formatDateReadable(event.end_date)}`}
+                    {formatTimeRange(event.start_time, event.end_time)}
                   </div>
                 )}
                 <div className="flex items-center">

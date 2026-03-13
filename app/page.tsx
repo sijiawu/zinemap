@@ -6,7 +6,7 @@ export const revalidate = 60
 
   const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
   const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
-  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website,poster_image'
+  const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,start_time,end_time,application_deadline,website,poster_image,recurrence_frequency,recurrence_interval,recurrence_until,recurrence_ordinal,recurrence_weekday'
 
 export default async function HomePage() {
   const supabase = createClient(
