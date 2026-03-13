@@ -460,7 +460,7 @@ export default function StoresPage() {
                   ) : (
                     <div className="w-full h-96 lg:h-full">
                       <StoreMap 
-                        stores={stores}
+                        stores={filteredStores}
                         libraries={[]}
                         events={[]}
                         searchQuery={debouncedSearchQuery}

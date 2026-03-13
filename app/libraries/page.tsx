@@ -427,7 +427,7 @@ export default function LibrariesPage() {
                     <div className="w-full h-96 lg:h-full">
                       <StoreMap 
                         stores={[]}
-                        libraries={libraries}
+                        libraries={filteredLibraries}
                         events={[]}
                         searchQuery={debouncedSearchQuery}
                         hideFilterBar={true}
