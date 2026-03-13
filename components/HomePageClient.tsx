@@ -347,14 +347,11 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
   }
 
   const today = new Date().toISOString().split('T')[0]
-  const isPastOccurrence = (occ: { occurrence_end: string }) => occ.occurrence_end < today
 
-  // Calculate event counts for subtabs (based on expanded occurrences, search and location filters)
-  const getEventCounts = () => {
+  // Event counts = what's displayed (same filter pipeline as filteredEvents)
+  const eventCounts = useMemo(() => {
     if (!events.length) return { all: 0, upcoming: 0, past: 0 }
-
     const occurrences = expandRecurringEvents(events)
-
     const matchesLocation = (occ: { event: Event }) => {
       const e = occ.event
       if (activeCountry !== "all" && e.country !== activeCountry) return false
@@ -362,34 +359,22 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
       if (activeCity !== "all" && e.city !== activeCity) return false
       return true
     }
-
     const matchesSearch = (occ: { event: Event }, query: string) => {
       if (!query) return true
-      const lowerQuery = query.toLowerCase()
+      const q = query.toLowerCase()
       const e = occ.event
-      return (
-        e.name.toLowerCase().includes(lowerQuery) ||
-        (!!e.notes && e.notes.toLowerCase().includes(lowerQuery)) ||
-        e.country.toLowerCase().includes(lowerQuery) ||
-        (!!e.state && e.state.toLowerCase().includes(lowerQuery)) ||
-        e.city.toLowerCase().includes(lowerQuery)
-      )
+      return e.name.toLowerCase().includes(q) || (!!e.notes && e.notes.toLowerCase().includes(q)) ||
+        e.country.toLowerCase().includes(q) || (!!e.state && e.state.toLowerCase().includes(q)) || e.city.toLowerCase().includes(q)
     }
-
-    const filtered = occurrences.filter(occ => {
-      if (!matchesLocation(occ)) return false
-      if (activeSearchQuery.trim()) return matchesSearch(occ, activeSearchQuery.trim())
-      return true
-    })
-
-    return {
-      all: filtered.length,
-      upcoming: filtered.filter(occ => !isPastOccurrence(occ)).length,
-      past: filtered.filter(occ => isPastOccurrence(occ)).length
+    const base = occurrences.filter(occ => matchesLocation(occ) && (!activeSearchQuery.trim() || matchesSearch(occ, activeSearchQuery.trim())))
+    const run = (timeFilter: "all" | "upcoming" | "past") => {
+      let f = base
+      if (timeFilter === "upcoming") f = f.filter(occ => occ.occurrence_end >= today)
+      else if (timeFilter === "past") f = f.filter(occ => occ.occurrence_end < today)
+      return occurrencesToNextOnly(f).length
     }
-  }
-
-  const eventCounts = getEventCounts()
+    return { all: run("all"), upcoming: run("upcoming"), past: run("past") }
+  }, [events, activeSearchQuery, activeCountry, activeState, activeCity, today])
 
   // Dedupe events for map (one marker per event/venue)
   const mapEvents = useMemo(
