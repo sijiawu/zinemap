@@ -77,6 +77,21 @@ export default function RootLayout({
             `,
           }}
         />
+        <Script
+          id="mouseflow"
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window._mfq = window._mfq || [];
+              (function() {
+                var mf = document.createElement("script");
+                mf.type = "text/javascript"; mf.defer = true;
+                mf.src = "//cdn.mouseflow.com/projects/77b216ba-4cd5-46e6-a109-e8811cdf10d9.js";
+                document.getElementsByTagName("head")[0].appendChild(mf);
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <noscript>
