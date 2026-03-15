@@ -78,19 +78,14 @@ export default function RootLayout({
           }}
         />
         <Script
+          id="mouseflow-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: "window._mfq = window._mfq || [];" }}
+        />
+        <Script
           id="mouseflow"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window._mfq = window._mfq || [];
-              (function() {
-                var mf = document.createElement("script");
-                mf.type = "text/javascript"; mf.defer = true;
-                mf.src = "https://cdn.mouseflow.com/projects/77b216ba-4cd5-46e6-a109-e8811cdf10d9.js";
-                document.getElementsByTagName("head")[0].appendChild(mf);
-              })();
-            `,
-          }}
+          strategy="beforeInteractive"
+          src="https://cdn.mouseflow.com/projects/77b216ba-4cd5-46e6-a109-e8811cdf10d9.js"
         />
       </head>
       <body>
