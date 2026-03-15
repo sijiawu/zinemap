@@ -1,7 +1,8 @@
 "use client"
 
-import { Search, BookOpen, User, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, BookOpen, User, Calendar, ChevronLeft, ChevronRight, Shuffle } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,10 +17,20 @@ interface ZineWithAuthor extends Zine {
   profiles: UserProfile
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+  const result = [...array]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
 
 export default function ZinesPage() {
   const [zines, setZines] = useState<ZineWithAuthor[]>([])
   const [filteredZines, setFilteredZines] = useState<ZineWithAuthor[]>([])
+  const [displayZines, setDisplayZines] = useState<ZineWithAuthor[] | null>(null)
+  const [loadingShuffle, setLoadingShuffle] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
@@ -256,6 +267,11 @@ export default function ZinesPage() {
     }
   }, [zines, debouncedSearchQuery])
 
+  // Reset shuffle when search, author filter, or page changes
+  useEffect(() => {
+    setDisplayZines(null)
+  }, [debouncedSearchQuery, selectedCreator, currentPage])
+
   // Handle author filtering using database joins
   useEffect(() => {
     if (selectedCreator === "all") {
@@ -322,6 +338,61 @@ export default function ZinesPage() {
   }, [selectedCreator, debouncedSearchQuery])
 
 
+  // Fetch 20 random zines from all zines
+  const handleShuffle = async () => {
+    try {
+      setLoadingShuffle(true)
+
+      const { data: allIds, error: idsError } = await supabase
+        .from('zines')
+        .select('id')
+        .eq('is_public', true)
+
+      if (idsError || !allIds?.length) {
+        setDisplayZines([])
+        return
+      }
+
+      const shuffledIds = shuffleArray([...allIds]).slice(0, 20).map((r) => r.id)
+
+      const { data: zinesData, error: zinesError } = await supabase
+        .from('zines')
+        .select('*')
+        .in('id', shuffledIds)
+        .eq('is_public', true)
+
+      if (zinesError) {
+        console.error('Error fetching random zines:', zinesError)
+        return
+      }
+
+      const userIds = [...new Set(zinesData?.map((z) => z.user_id) || [])]
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, profile_image, permalink')
+        .in('id', userIds)
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError)
+        return
+      }
+
+      const zinesWithAuthors = (zinesData || []).map((zine) => ({
+        ...zine,
+        profiles: profilesData?.find((p) => p.id === zine.user_id) || null,
+      }))
+
+      const orderMap = Object.fromEntries(shuffledIds.map((id, i) => [id, i]))
+      zinesWithAuthors.sort((a, b) => orderMap[a.id] - orderMap[b.id])
+
+      setDisplayZines(zinesWithAuthors)
+    } catch (error) {
+      console.error('Error shuffling zines:', error)
+    } finally {
+      setLoadingShuffle(false)
+    }
+  }
+
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -359,6 +430,8 @@ export default function ZinesPage() {
     )
   }
 
+  const zinesToDisplay = displayZines ?? filteredZines
+
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
       {/* Header */}
@@ -394,6 +467,34 @@ export default function ZinesPage() {
                   />
                 </div>
               </div>
+
+              {/* Shuffle - hidden when author selected or search active */}
+              {selectedCreator === "all" && !debouncedSearchQuery.trim() && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    onClick={handleShuffle}
+                    disabled={loadingShuffle || totalZines === 0}
+                    className="shrink-0 bg-white border-stone-300 hover:bg-stone-50 hover:border-purple-300 text-stone-700"
+                  >
+                    <Shuffle className="h-4 w-4" />
+                    {loadingShuffle ? 'Shuffling…' : 'Shuffle'}
+                  </Button>
+
+                  {/* View all - only when in shuffle mode */}
+                  {displayZines && (
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={() => setDisplayZines(null)}
+                      className="shrink-0 bg-white border-stone-300 hover:bg-stone-50 hover:border-purple-300 text-stone-700"
+                    >
+                      View all
+                    </Button>
+                  )}
+                </>
+              )}
               
               {/* Author Filter */}
               <div className="sm:w-64">
@@ -417,7 +518,7 @@ export default function ZinesPage() {
 
         {/* Zines Grid - Desktop */}
         <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredZines.length === 0 ? (
+          {zinesToDisplay.length === 0 ? (
             <div className="col-span-full">
               <Card className="bg-white border-stone-200 shadow-sm rounded-lg">
                 <CardContent className="p-12 text-center">
@@ -435,7 +536,7 @@ export default function ZinesPage() {
               </Card>
             </div>
           ) : (
-            filteredZines.map((zine) => (
+            zinesToDisplay.map((zine) => (
               <Card key={zine.id} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                 <CardContent className="p-0">
                   {/* Cover Image */}
@@ -513,7 +614,7 @@ export default function ZinesPage() {
 
         {/* Zines List - Mobile */}
         <div className="md:hidden">
-          {filteredZines.length === 0 ? (
+          {zinesToDisplay.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
               <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines found</h3>
@@ -523,7 +624,7 @@ export default function ZinesPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredZines.map((zine) => (
+              {zinesToDisplay.map((zine) => (
                 <div
                   key={zine.id}
                   className="flex items-center gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50 cursor-pointer"
@@ -596,7 +697,7 @@ export default function ZinesPage() {
         </div>
 
         {/* Pagination Controls */}
-        {!debouncedSearchQuery.trim() && selectedCreator === "all" && totalPages > 1 && (
+        {!displayZines && !debouncedSearchQuery.trim() && selectedCreator === "all" && totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <div className="flex items-center gap-2">
               {/* Previous Button */}
