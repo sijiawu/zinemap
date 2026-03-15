@@ -285,9 +285,11 @@ export function EventsCalendarView({
                         )}
                         <span className="flex items-center text-xs text-stone-500">
                           <CalendarIcon className="h-3 w-3 mr-0.5 flex-shrink-0" />
-                          {formatDateReadable(event.start_date)}
-                          {formatTimeRange(event.start_time, event.end_time)}
-                          {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
+                          {event.start_date !== event.end_date ? (
+                            <>{formatDateReadable(event.start_date)} – {formatDateReadable(event.end_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                          ) : (
+                            <>{formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                          )}
                         </span>
                         <span className="text-xs text-stone-500">
                           {event.city}

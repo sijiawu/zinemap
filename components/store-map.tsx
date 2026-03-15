@@ -839,9 +839,11 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                     <>Next: {formatDateReadable(selectedLocation.start_date)}{formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}</>
                   ) : (
                     <>
-                      {formatDateReadable(selectedLocation.start_date)}
-                      {formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}
-                      {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date && ` – ${formatDateReadable(selectedLocation.end_date)}`}
+                      {'end_date' in selectedLocation && selectedLocation.end_date && selectedLocation.start_date !== selectedLocation.end_date ? (
+                        <>{formatDateReadable(selectedLocation.start_date)} – {formatDateReadable(selectedLocation.end_date)}{formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}</>
+                      ) : (
+                        <>{formatDateReadable(selectedLocation.start_date)}{formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}</>
+                      )}
                     </>
                   )}
                   {'category' in selectedLocation && selectedLocation.category === "festival" && 'application_deadline' in selectedLocation && selectedLocation.application_deadline && (() => {

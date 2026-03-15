@@ -1138,9 +1138,11 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                                 <>Next: {formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
                               ) : (
                                 <>
-                                  {formatDateReadable(event.start_date)}
-                                  {formatTimeRange(event.start_time, event.end_time)}
-                                  {event.start_date !== event.end_date && ` – ${formatDateReadable(event.end_date)}`}
+                                  {event.start_date !== event.end_date ? (
+                                    <>{formatDateReadable(event.start_date)} – {formatDateReadable(event.end_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                                  ) : (
+                                    <>{formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
+                                  )}
                                 </>
                               )}
                             </div>
