@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Slider } from "@/components/ui/slider"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia, sortSplitTagsByCreatorPercentage } from "@/lib/utils"
+import { formatSocialMedia } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -26,6 +27,7 @@ export default function StoresPage() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [noMaxPrice, setNoMaxPrice] = useState(false)
+  const [creatorSplitMin, setCreatorSplitMin] = useState(45)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   
   // Map height tracking for list view min-height
@@ -69,21 +71,14 @@ export default function StoresPage() {
           console.error('Error fetching stores:', storesError)
         }
 
-        // Fetch store tags only (all categories except 'service' and 'access')
+        // Fetch store tags (exclude service, access, and split — split is handled by the slider)
         const { data: tagsData, error: tagsError } = await supabase
           .from('tags')
           .select('*')
-          .not('category', 'in', '(service,access)')
+          .not('category', 'in', '(service,access,split)')
           .order('label')
         
-        // Sort split tags by creator percentage (smallest to largest)
-        let sortedTags = tagsData || []
-        if (tagsData) {
-          const splitTags = tagsData.filter(tag => tag.category === 'split')
-          const otherTags = tagsData.filter(tag => tag.category !== 'split')
-          const sortedSplitTags = sortSplitTagsByCreatorPercentage(splitTags)
-          sortedTags = [...sortedSplitTags, ...otherTags]
-        }
+        const sortedTags = tagsData || []
 
         if (tagsError) {
           console.error('Error fetching tags:', tagsError)
@@ -223,8 +218,20 @@ export default function StoresPage() {
       })
     }
 
+    // Apply creator split filter (45 = default = show all)
+    if (creatorSplitMin !== 45) {
+      filtered = filtered.filter(store => {
+        const splitTags = store.store_tags?.filter(st => st.tag?.category === 'split') || []
+        if (splitTags.length === 0) return false
+        return splitTags.some(st => {
+          const match = st.tag_id.match(/^(\d+)/)
+          return match ? parseInt(match[1], 10) >= creatorSplitMin : false
+        })
+      })
+    }
+
     setFilteredStores(filtered)
-  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, noMaxPrice])
+  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, noMaxPrice, creatorSplitMin])
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 
@@ -251,6 +258,7 @@ export default function StoresPage() {
     clearLocationFilters()
     setSelectedTags([])
     setNoMaxPrice(false)
+    setCreatorSplitMin(45)
   }
 
   // Track map height for list view min-height
@@ -395,6 +403,32 @@ export default function StoresPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* Creator Split Slider */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="text-sm font-medium text-stone-700">Creator Split</h3>
+                    <span className="text-xs text-stone-400 tabular-nums">
+                      {creatorSplitMin === 45 ? 'all' : creatorSplitMin === 100 ? '100%' : `≥ ${creatorSplitMin}%`}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[creatorSplitMin]}
+                    onValueChange={([v]) => setCreatorSplitMin(v)}
+                    min={45}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                    trackClassName="h-[3px] bg-stone-200"
+                    rangeClassName="bg-stone-400"
+                    thumbClassName="h-3.5 w-3.5 border border-stone-300 bg-white shadow-sm"
+                  />
+                  <div className="flex justify-between text-[10px] text-stone-300">
+                    <span>45%</span>
+                    <span>70%</span>
+                    <span>100%</span>
                   </div>
                 </div>
 
