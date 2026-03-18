@@ -421,8 +421,8 @@ export default function StoresPage() {
                     max={100}
                     step={5}
                     className="w-full"
-                    trackClassName="h-[3px] bg-stone-200"
-                    rangeClassName="bg-stone-400"
+                    trackClassName="h-[3px] bg-stone-400"
+                    rangeClassName="bg-stone-200"
                     thumbClassName="h-3.5 w-3.5 border border-stone-300 bg-white shadow-sm"
                   />
                   <div className="flex justify-between text-[10px] text-stone-300">
