@@ -9,6 +9,10 @@ import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
+
+/** Above any stack-ordered pin z-index so the selected pin stays on top */
+const MAP_MARKER_ACTIVE_Z = 999_999
+
 interface StoreMapProps {
   stores: Store[]
   libraries: Library[]
@@ -452,6 +456,32 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         )
       : validEvents
 
+    // Z-order: newer created_at stacks above older (Mapbox markers share one layer; z-index breaks ties)
+    const stackEntries: { key: string; created_at: string }[] = []
+    if (mapView === 'stores' || mapView === 'all') {
+      filteredStores.forEach((s) =>
+        stackEntries.push({ key: `store:${s.id}`, created_at: s.created_at })
+      )
+    }
+    if (mapView === 'libraries' || mapView === 'all') {
+      filteredLibraries.forEach((l) =>
+        stackEntries.push({ key: `library:${l.id}`, created_at: l.created_at })
+      )
+    }
+    if (mapView === 'events' || mapView === 'all') {
+      filteredEvents.forEach((e) =>
+        stackEntries.push({ key: `event:${e.id}`, created_at: e.created_at })
+      )
+    }
+    stackEntries.sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+    const stackZByKey = new Map<string, number>()
+    let stackZi = 2
+    for (const row of stackEntries) {
+      stackZByKey.set(row.key, stackZi++)
+    }
+
     // Add store markers (rose) if stores should be shown
     if (mapView === 'stores' || mapView === 'all') {
       filteredStores.forEach((store) => {
@@ -463,11 +493,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         markerEl.innerHTML = createPinMarker('#e11d48', 'store', isActive)
         markerEl.setAttribute('data-location-id', store.id)
         markerEl.setAttribute('data-location-type', 'store')
+        const baseZStore = stackZByKey.get(`store:${store.id}`) ?? 2
+        markerEl.setAttribute('data-stack-z', String(baseZStore))
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
-          markerEl.style.zIndex = '5'
+          markerEl.style.zIndex = String(MAP_MARKER_ACTIVE_Z)
         } else {
-          markerEl.style.zIndex = '1'
+          markerEl.style.zIndex = String(baseZStore)
         }
 
         markerEl.addEventListener("click", () => {
@@ -511,11 +543,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         markerEl.innerHTML = createPinMarker('#3b82f6', 'library', isActive)
         markerEl.setAttribute('data-location-id', library.id)
         markerEl.setAttribute('data-location-type', 'library')
+        const baseZLibrary = stackZByKey.get(`library:${library.id}`) ?? 2
+        markerEl.setAttribute('data-stack-z', String(baseZLibrary))
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
-          markerEl.style.zIndex = '5'
+          markerEl.style.zIndex = String(MAP_MARKER_ACTIVE_Z)
         } else {
-          markerEl.style.zIndex = '1'
+          markerEl.style.zIndex = String(baseZLibrary)
         }
 
         markerEl.addEventListener("click", () => {
@@ -559,11 +593,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         markerEl.innerHTML = createPinMarker('#009035', 'event', isActive)
         markerEl.setAttribute('data-location-id', event.id)
         markerEl.setAttribute('data-location-type', 'event')
+        const baseZEvent = stackZByKey.get(`event:${event.id}`) ?? 2
+        markerEl.setAttribute('data-stack-z', String(baseZEvent))
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
-          markerEl.style.zIndex = '5'
+          markerEl.style.zIndex = String(MAP_MARKER_ACTIVE_Z)
         } else {
-          markerEl.style.zIndex = '1'
+          markerEl.style.zIndex = String(baseZEvent)
         }
 
         markerEl.addEventListener("click", () => {
@@ -641,13 +677,13 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         // Update marker HTML with active/inactive state
         markerEl.innerHTML = createPinMarker(color, markerType, isActive)
         
-        // Update data attributes and z-index
+        const stackZ = markerEl.getAttribute('data-stack-z') ?? '2'
         if (isActive) {
           markerEl.setAttribute('data-active', 'true')
-          markerEl.style.zIndex = '5'
+          markerEl.style.zIndex = String(MAP_MARKER_ACTIVE_Z)
         } else {
           markerEl.removeAttribute('data-active')
-          markerEl.style.zIndex = '1'
+          markerEl.style.zIndex = stackZ
         }
       }
     })
@@ -655,7 +691,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
   return (
     <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${savedPinsMode ? 'h-full min-h-[384px]' : 'h-[600px]'}`}>
-      <div ref={mapContainer} className="w-full h-full" />
+      {/* isolate + z-0: keep marker z-index from competing with sibling overlays (z-10) */}
+      <div ref={mapContainer} className="isolate z-0 h-full w-full" />
 
       {/* Zoom Controls - hidden on mobile */}
       <div className="hidden lg:block absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
