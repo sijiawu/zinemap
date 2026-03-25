@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Wrench, Megaphone, MessageCircle, Handshake } from 'lucide-react';
@@ -53,9 +54,16 @@ export default function SupportZineMapPage() {
               </div>
               <CardTitle className="text-xl font-gloria">Spread the word</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent className="text-center space-y-4">
               <p className="text-muted-foreground">
                 Share ZineMap with your local zine community and zine making friends! A post, a link, or even a mention in your zine's back page goes a long way.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Writing about ZineMap? See the{' '}
+                <Link href="/media-kit" className="text-blue-600 hover:text-blue-800 underline font-medium">
+                  media kit
+                </Link>{' '}
+                for logos, a short description, and contact details.
               </p>
             </CardContent>
           </Card>
