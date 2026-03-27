@@ -12,7 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay } from "@/lib/utils"
+import {
+  expandRecurringEvents,
+  formatDateReadable,
+  formatRecurrenceDescription,
+  getEventCategoryDisplay,
+} from "@/lib/utils"
 
 export default function AdminPage() {
   const { user, loading } = useSupabaseUser()
@@ -937,7 +942,14 @@ export default function AdminPage() {
               </Card>
             ) : (
               <div className="space-y-6">
-                {unapprovedEvents.map((event) => (
+                {unapprovedEvents.map((event) => {
+                  const today = new Date().toISOString().split("T")[0]
+                  const futureOccurrenceDates = event.recurrence_frequency
+                    ? expandRecurringEvents([event])
+                        .filter((o) => o.occurrence_start >= today)
+                        .map((o) => o.occurrence_start)
+                    : []
+                  return (
                   <Card key={event.id} className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
@@ -959,6 +971,12 @@ export default function AdminPage() {
                             {getEventCategoryDisplay(event.category)} • {new Date(event.start_date).toLocaleDateString()}
                             {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString()}`}
                           </div>
+                          {event.recurrence_frequency && (
+                            <div className="text-stone-500 text-sm mb-2 pl-0">
+                              <span className="font-medium text-stone-600">Recurring: </span>
+                              {formatRecurrenceDescription(event)}
+                            </div>
+                          )}
                           <div className="flex items-center text-stone-500 text-sm mb-3">
                             <User className="h-4 w-4 mr-1" />
                             Submitted by: {event.submitted_by ? 'User ID: ' + event.submitted_by.slice(0, 8) + '...' : 'Unknown user'}
@@ -1014,6 +1032,23 @@ export default function AdminPage() {
                           )}
                         </div>
 
+                        {event.recurrence_frequency && (
+                          <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-4">
+                            <strong className="text-stone-700 text-sm">Upcoming dates</strong>
+                            {futureOccurrenceDates.length > 0 ? (
+                              <ul className="mt-2 text-sm text-stone-600 list-disc list-inside space-y-1">
+                                {futureOccurrenceDates.map((d) => (
+                                  <li key={d}>{formatDateReadable(d)}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-stone-500 text-sm mt-2">
+                                No upcoming dates in the expanded series (check start date and recurrence settings).
+                              </p>
+                            )}
+                          </div>
+                        )}
+
                         {/* Notes */}
                         {event.notes && (
                           <div>
@@ -1045,7 +1080,8 @@ export default function AdminPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  )
+                })}
               </div>
             )}
           </TabsContent>
