@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import HomePageClient from '@/components/HomePageClient'
 import { Store, Library, Event } from '@/lib/types'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
   const storeColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_stocked_before,website'
   const libraryColumns = 'id,name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,has_visited_before,website'
