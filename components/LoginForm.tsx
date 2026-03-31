@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 function validateEmail(email: string) {
@@ -8,11 +9,21 @@ function validateEmail(email: string) {
 }
 
 export default function AuthForm() {
+  const searchParams = useSearchParams()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'signup') {
+      setMode('signup')
+    } else if (modeParam === 'login') {
+      setMode('login')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

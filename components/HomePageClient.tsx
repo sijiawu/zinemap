@@ -110,7 +110,6 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
     }
   }, [isAddMenuOpen])
 
-
   // Load enhanced data (tags and user profiles) in background
   useEffect(() => {
     if (!phase1Complete) return
