@@ -27,10 +27,15 @@ export default function LibrariesPage() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [hashTarget, setHashTarget] = useState<string | null>(null)
+  const [selectedLibraryId, setSelectedLibraryId] = useState<string | null>(null)
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
+  const listContainerRef = useRef<HTMLDivElement>(null)
   const [mapHeight, setMapHeight] = useState(0)
+  const libraryCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const lastHandledHashRef = useRef<string | null>(null)
 
   // Use location filters hook
   const {
@@ -53,6 +58,26 @@ export default function LibrariesPage() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Read deep-link target from URL hash and keep in sync.
+  useEffect(() => {
+    const readHashTarget = () => {
+      const rawHash = window.location.hash.replace(/^#/, "").trim()
+      if (!rawHash) {
+        setHashTarget(null)
+        return
+      }
+      try {
+        setHashTarget(decodeURIComponent(rawHash))
+      } catch {
+        setHashTarget(rawHash)
+      }
+    }
+
+    readHashTarget()
+    window.addEventListener("hashchange", readHashTarget)
+    return () => window.removeEventListener("hashchange", readHashTarget)
+  }, [])
 
   // Fetch data
   useEffect(() => {
@@ -222,6 +247,7 @@ export default function LibrariesPage() {
   }
 
   const handleCardClick = (library: Library) => {
+    setSelectedLibraryId(library.id)
     // When a card is clicked, select it on the map
     if ((window as any).selectMapLocation) {
       (window as any).selectMapLocation(library, 'library')
@@ -272,6 +298,52 @@ export default function LibrariesPage() {
       resizeObserver.disconnect()
     }
   }, [loading])
+
+  // Hash deep-link selection: filter-independent (no filter resets).
+  useEffect(() => {
+    if (!hashTarget || !filteredLibraries.length) return
+    if (lastHandledHashRef.current === hashTarget) return
+
+    const normalizedTarget = hashTarget.toLowerCase()
+    const matchedLibrary = filteredLibraries.find((library) => {
+      const permalink = (library.permalink || "").toLowerCase()
+      const id = (library.id || "").toLowerCase()
+      return permalink === normalizedTarget || id === normalizedTarget
+    })
+
+    // If currently filtered out, do nothing.
+    if (!matchedLibrary) return
+
+    let attempts = 0
+    const maxAttempts = 20
+    const timerId = window.setInterval(() => {
+      attempts += 1
+      const selector = (window as any).selectMapLocation
+      if (typeof selector === "function") {
+        selector(matchedLibrary, "library")
+        setSelectedLibraryId(matchedLibrary.id)
+
+        const cardEl = libraryCardRefs.current.get(matchedLibrary.id)
+        const listEl = listContainerRef.current
+        if (cardEl && listEl) {
+          const cardTopInContainer = cardEl.offsetTop - listEl.offsetTop
+          listEl.scrollTo({
+            top: Math.max(0, cardTopInContainer),
+            behavior: "smooth",
+          })
+        } else if (listEl) {
+          listEl.scrollTo({ top: 0, behavior: "smooth" })
+        }
+
+        lastHandledHashRef.current = hashTarget
+        window.clearInterval(timerId)
+      } else if (attempts >= maxAttempts) {
+        window.clearInterval(timerId)
+      }
+    }, 100)
+
+    return () => window.clearInterval(timerId)
+  }, [hashTarget, filteredLibraries])
 
   if (loading) {
     return (
@@ -458,6 +530,7 @@ export default function LibrariesPage() {
               </div>
               
               <div 
+                ref={listContainerRef}
                 className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8 lg:min-h-[900px]"
                 style={{
                   maxHeight: mapHeight > 0 
@@ -499,7 +572,14 @@ export default function LibrariesPage() {
                   filteredLibraries.map((library) => (
                     <Card
                       key={library.id}
-                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                      ref={(el) => {
+                        if (el) {
+                          libraryCardRefs.current.set(library.id, el)
+                        } else {
+                          libraryCardRefs.current.delete(library.id)
+                        }
+                      }}
+                      className={`bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer ${selectedLibraryId === library.id ? "ring-2 ring-inset ring-blue-400 border-blue-300" : ""}`}
                       onClick={() => handleCardClick(library)}
                     >
                       <CardHeader className="p-4 pb-2">
