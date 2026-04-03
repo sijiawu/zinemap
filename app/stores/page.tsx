@@ -29,10 +29,15 @@ export default function StoresPage() {
   const [noMaxPrice, setNoMaxPrice] = useState(false)
   const [creatorSplitMin, setCreatorSplitMin] = useState(45)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [hashTarget, setHashTarget] = useState<string | null>(null)
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
+  const listContainerRef = useRef<HTMLDivElement>(null)
   const [mapHeight, setMapHeight] = useState(0)
+  const storeCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const lastHandledHashRef = useRef<string | null>(null)
 
   // Use location filters hook
   const {
@@ -55,6 +60,26 @@ export default function StoresPage() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Read deep-link target from URL hash and keep in sync.
+  useEffect(() => {
+    const readHashTarget = () => {
+      const rawHash = window.location.hash.replace(/^#/, "").trim()
+      if (!rawHash) {
+        setHashTarget(null)
+        return
+      }
+      try {
+        setHashTarget(decodeURIComponent(rawHash))
+      } catch {
+        setHashTarget(rawHash)
+      }
+    }
+
+    readHashTarget()
+    window.addEventListener("hashchange", readHashTarget)
+    return () => window.removeEventListener("hashchange", readHashTarget)
+  }, [])
 
   // Fetch data
   useEffect(() => {
@@ -247,6 +272,7 @@ export default function StoresPage() {
   }
 
   const handleCardClick = (store: Store) => {
+    setSelectedStoreId(store.id)
     // When a card is clicked, select it on the map
     if ((window as any).selectMapLocation) {
       (window as any).selectMapLocation(store, 'store')
@@ -299,6 +325,49 @@ export default function StoresPage() {
       resizeObserver.disconnect()
     }
   }, [loading])
+
+  // Hash deep-link selection: filter-independent (no filter resets).
+  useEffect(() => {
+    if (!hashTarget || !filteredStores.length) return
+    if (lastHandledHashRef.current === hashTarget) return
+
+    const normalizedTarget = hashTarget.toLowerCase()
+    const matchedStore = filteredStores.find((store) => {
+      const permalink = (store.permalink || "").toLowerCase()
+      const id = (store.id || "").toLowerCase()
+      return permalink === normalizedTarget || id === normalizedTarget
+    })
+
+    // If currently filtered out, do nothing.
+    if (!matchedStore) return
+
+    let attempts = 0
+    const maxAttempts = 20
+    const timerId = window.setInterval(() => {
+      attempts += 1
+      const selector = (window as any).selectMapLocation
+      if (typeof selector === "function") {
+        selector(matchedStore, "store")
+        setSelectedStoreId(matchedStore.id)
+
+        const cardEl = storeCardRefs.current.get(matchedStore.id)
+        const listEl = listContainerRef.current
+        if (cardEl && listEl) {
+          const cardTopInContainer = cardEl.offsetTop - listEl.offsetTop
+          listEl.scrollTo({ top: Math.max(0, cardTopInContainer), behavior: "smooth" })
+        } else if (listEl) {
+          listEl.scrollTo({ top: 0, behavior: "smooth" })
+        }
+
+        lastHandledHashRef.current = hashTarget
+        window.clearInterval(timerId)
+      } else if (attempts >= maxAttempts) {
+        window.clearInterval(timerId)
+      }
+    }, 100)
+
+    return () => window.clearInterval(timerId)
+  }, [hashTarget, filteredStores])
 
   if (loading) {
     return (
@@ -525,6 +594,7 @@ export default function StoresPage() {
               </div>
               
               <div 
+                ref={listContainerRef}
                 className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8 lg:min-h-[900px]"
                 style={{
                   maxHeight: mapHeight > 0 
@@ -566,7 +636,14 @@ export default function StoresPage() {
                   filteredStores.map((store) => (
                     <Card
                       key={store.id}
-                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer"
+                      ref={(el) => {
+                        if (el) {
+                          storeCardRefs.current.set(store.id, el)
+                        } else {
+                          storeCardRefs.current.delete(store.id)
+                        }
+                      }}
+                      className={`bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer ${selectedStoreId === store.id ? "ring-2 ring-inset ring-rose-400 border-rose-300" : ""}`}
                       onClick={() => handleCardClick(store)}
                     >
                       <CardHeader className="p-4 pb-2">

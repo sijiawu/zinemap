@@ -36,10 +36,15 @@ export default function EventsPage() {
   )
   const [calendarFilteredEvents, setCalendarFilteredEvents] = useState<Event[]>([])
   const [calendarEvents, setCalendarEvents] = useState<Event[]>([])
+  const [hashTarget, setHashTarget] = useState<string | null>(null)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
+  const listContainerRef = useRef<HTMLDivElement>(null)
   const [mapHeight, setMapHeight] = useState(0)
+  const eventCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const lastHandledHashRef = useRef<string | null>(null)
 
   // Use location filters hook
   const {
@@ -64,6 +69,26 @@ export default function EventsPage() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Read deep-link target from URL hash and keep in sync.
+  useEffect(() => {
+    const readHashTarget = () => {
+      const rawHash = window.location.hash.replace(/^#/, "").trim()
+      if (!rawHash) {
+        setHashTarget(null)
+        return
+      }
+      try {
+        setHashTarget(decodeURIComponent(rawHash))
+      } catch {
+        setHashTarget(rawHash)
+      }
+    }
+
+    readHashTarget()
+    window.addEventListener("hashchange", readHashTarget)
+    return () => window.removeEventListener("hashchange", readHashTarget)
+  }, [])
 
   // Fetch data
   useEffect(() => {
@@ -225,6 +250,7 @@ export default function EventsPage() {
   }
 
   const handleCardClick = (event: Event) => {
+    setSelectedEventId(event.id)
     // When a card is clicked, select it on the map
     if ((window as any).selectMapLocation) {
       (window as any).selectMapLocation(event, 'event')
@@ -290,6 +316,49 @@ export default function EventsPage() {
       resizeObserver.disconnect()
     }
   }, [loading])
+
+  // Hash deep-link selection: filter-independent (no filter resets).
+  useEffect(() => {
+    if (!hashTarget || !filteredEvents.length) return
+    if (lastHandledHashRef.current === hashTarget) return
+
+    const normalizedTarget = hashTarget.toLowerCase()
+    const matchedEvent = filteredEvents.find((event) => {
+      const permalink = (event.permalink || "").toLowerCase()
+      const id = (event.id || "").toLowerCase()
+      return permalink === normalizedTarget || id === normalizedTarget
+    })
+
+    // If currently filtered out, do nothing.
+    if (!matchedEvent) return
+
+    let attempts = 0
+    const maxAttempts = 20
+    const timerId = window.setInterval(() => {
+      attempts += 1
+      const selector = (window as any).selectMapLocation
+      if (typeof selector === "function") {
+        selector(matchedEvent, "event")
+        setSelectedEventId(matchedEvent.id)
+
+        const cardEl = eventCardRefs.current.get(matchedEvent.id)
+        const listEl = listContainerRef.current
+        if (viewMode === "list" && cardEl && listEl) {
+          const cardTopInContainer = cardEl.offsetTop - listEl.offsetTop
+          listEl.scrollTo({ top: Math.max(0, cardTopInContainer), behavior: "smooth" })
+        } else if (viewMode === "list" && listEl) {
+          listEl.scrollTo({ top: 0, behavior: "smooth" })
+        }
+
+        lastHandledHashRef.current = hashTarget
+        window.clearInterval(timerId)
+      } else if (attempts >= maxAttempts) {
+        window.clearInterval(timerId)
+      }
+    }, 100)
+
+    return () => window.clearInterval(timerId)
+  }, [hashTarget, filteredEvents, viewMode])
 
   if (loading) {
     return (
@@ -533,6 +602,7 @@ export default function EventsPage() {
               
               {viewMode === "list" ? (
               <div 
+                ref={listContainerRef}
                 className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-2 pt-[5px] pb-8 lg:min-h-[900px]"
                 style={{
                   maxHeight: mapHeight > 0 
@@ -574,7 +644,14 @@ export default function EventsPage() {
                   filteredEvents.map((event) => (
                     <Card
                       key={`${event.id}-${event.start_date}-${event.end_date}`}
-                      className="bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer overflow-hidden"
+                      ref={(el) => {
+                        if (el) {
+                          eventCardRefs.current.set(event.id, el)
+                        } else {
+                          eventCardRefs.current.delete(event.id)
+                        }
+                      }}
+                      className={`bg-white border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg cursor-pointer overflow-hidden ${selectedEventId === event.id ? "ring-2 ring-inset ring-green-500 border-green-400" : ""}`}
                       onClick={() => handleCardClick(event)}
                     >
                       <CardHeader className="p-4 pb-2 relative">
