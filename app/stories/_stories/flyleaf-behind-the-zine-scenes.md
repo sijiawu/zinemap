@@ -1,16 +1,16 @@
 ---
 title: "Behind the Zine Scenes #4: FLYLEAF Book and Zine Festival"
-date: 2026-03-28
+date: 2026-04-02
 tags:
   - Behind the Zine Scenes
   - Festivals
   - Events
+  - Germany
 author: CJ Wu
 author_permalink: cjmakescomics
-thumbnail: "flyleaf/flyleaf2025-outside.jpg"
+thumbnail: "flyleaf/fireside-2025-2.jpg"
 slug: flyleaf-behind-the-zine-scenes
-password: flyleaf2026
-excerpt: In this interview, April talks about her background in independent publishing and the ideas behind FLYLEAF, a Berlin festival spread across three nearby venues. We discuss care, conversation, collaboration, and what kind of space FLYLEAF has created within the city’s publishing scene.
+excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Festival in Berlin, about building an international festival for independent publishing that makes room for conversation, collaboration, and connection.
 ---
 
 <Callout>When [**April**](http://aprilgertler.com) added [**FLYLEAF Book and Zine Festival**](https://zinemap.com/event/flyleaf-book-and-zine-festival-berlin) to ZineMap, I was immediately intrigued by the format of this 4-day festival in Berlin: how it unfolds across three spaces within walking distance of one another. I wrote that it sounded almost like a pub crawl but for zines, to which she replied, "It's funny you are making the comparison to a pub crawl — in a way you are totally right! Instead each station has a cake!" <br><br> In preparing for our conversation, I realized that very little about [**FLYLEAF**](https://flyleaf-festival.org) is incidental. As a co-host to the festival (her collaborative partner is Stefan Maneval from Flaschrum Books), April brings to it over a decade of experience in organizing residencies, gatherings, and socially engaged events, and that depth shows in the way the whole festival is composed: the walk, the atmosphere, the opportunities for conversation, even the cake. And I wanted to understand how it all came to be.
@@ -97,8 +97,8 @@ excerpt: In this interview, April talks about her background in independent publ
 
 <ImageWithCaption
   src="flyleaf/fireside-2025-2.jpg"
-  alt="Kristen Mallia presenting at FLYLEAF 2025 fireside chat"
-  caption="Anton from Vertwea presents his project at FLYLEAF 2025 fireside chat with a projected fire. Photo by Piotr Pietrus.
+  alt="Anton from [vertwen](vertwen.com) presents his project at FLYLEAF 2025 fireside chat with a projected fire."
+  caption="Anton from [vertwen](vertwen.com) presents his project at FLYLEAF 2025 fireside chat with a projected fire. Photo by Piotr Pietrus.
 "
 />
 
