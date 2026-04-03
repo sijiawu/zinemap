@@ -13,7 +13,8 @@ password: flyleaf2026
 excerpt: In this interview, April talks about her background in independent publishing and the ideas behind FLYLEAF, a Berlin festival spread across three nearby venues. We discuss care, conversation, collaboration, and what kind of space FLYLEAF has created within the city’s publishing scene.
 ---
 
-<Callout>When [**April**](http://aprilgertler.com) added [**FLYLEAF Book and Zine Festival**](https://zinemap.com/event/flyleaf-book-and-zine-festival-berlin) to ZineMap, I was immediately intrigued by the format of this 4-day festival in Berlin: how it unfolds across three spaces within walking distance of one another. I wrote that it sounded almost like a pub crawl but for zines, to which she replied, "It's funny you are making the comparison to a pub crawl — in a way you are totally right! Each station has cake though!" <br><br> In preparing for our conversation, I realized that very little about [**FLYLEAF**](https://flyleaf-festival.org) is incidental. April brings to it over a decade of experience organizing residencies, gatherings, and socially engaged events, and that depth shows in the way the whole festival is composed: the walk, the atmosphere, the opportunities for conversation, even the cake. And I wanted to understand how it all came to be.</Callout>
+<Callout>When [**April**](http://aprilgertler.com) added [**FLYLEAF Book and Zine Festival**](https://zinemap.com/event/flyleaf-book-and-zine-festival-berlin) to ZineMap, I was immediately intrigued by the format of this 4-day festival in Berlin: how it unfolds across three spaces within walking distance of one another. I wrote that it sounded almost like a pub crawl but for zines, to which she replied, "It's funny you are making the comparison to a pub crawl — in a way you are totally right! Instead each station has a cake!" <br><br> In preparing for our conversation, I realized that very little about [**FLYLEAF**](https://flyleaf-festival.org) is incidental. As a co-host to the festival (her collaborative partner is Stefan Maneval from Flaschrum Books), April brings to it over a decade of experience in organizing residencies, gatherings, and socially engaged events, and that depth shows in the way the whole festival is composed: the walk, the atmosphere, the opportunities for conversation, even the cake. And I wanted to understand how it all came to be.
+</Callout>
 
 **CJ:** Before we dive into this festival, could you share a little bit about your background? What drew you to working in independent publishing?
 
@@ -35,14 +36,15 @@ excerpt: In this interview, April talks about her background in independent publ
 
 <ImageWithCaption
   src="flyleaf/buchstabensalat.jpg"
-  alt="Inside Buchstabensalat, Berlin, 2023"
-  caption="Inside Buchstabensalat, the first book fair April organized in 2023 · Photo by []"
+  alt="Inside Buchstabensalat, the first book fair April co-organized with Idalia Sautto from Pitzilein Books (MX) in 2023"
+  caption="Inside Buchstabensalat, the first book fair April co-organized with Idalia Sautto from Pitzilein Books (MX) in 2023 · Photo by Alex Tapia"
 />
 
 <ImageWithCaption
   src="flyleaf/buchstabensalat-street.jpg"
-  alt="Street view of Buchstabensalat, Berlin, 2023"
-  caption="A view of Buchstabensalat from the street · Photo by []"
+  alt="A view of Buchstabensalat from the street"
+  caption="A view of Buchstabensalat from the street · Photo by April Gertler
+"
 />
 
 **April:** Then at Miss Read, Idalia had a stand there, and we went to all of those publishers’ tables and continued the conversation. We said, hey, thanks for coming, we wanted to see what you do now — tell us what you're up to. It was this wonderful moment of building the foundation, I think, for FLYLEAF.
@@ -65,14 +67,14 @@ excerpt: In this interview, April talks about her background in independent publ
 
 <ImageWithCaption
   src="flyleaf/flyleaf2025-outside.jpg"
-  alt="Outside Falschrum Books during FLYLEAF 2025"
-  caption="Outside of Falschrum Books for FLYLEAF 2025 · Photo by Piotr Pietrus"
+  alt="Outside of Falschrum Books, FLYLEAF 2025"
+  caption="Outside of Falschrum Books, FLYLEAF 2025 · Photo by Piotr Pietrus"
 />
 
 <ImageWithCaption
   src="flyleaf/flyleaf2024-outside.jpg"
-  alt="Outside WIRWIR during FLYLEAF 2024"
-  caption="Outside of WIRWIR during FLYLEAF 2024 · Photo by Piotr Pietrus"
+  alt="Outside of WIRWIR, FLYLEAF 2024"
+  caption="Outside of WIRWIR, FLYLEAF 2024 · Photo by Piotr Pietrus"
 />
 
 <ImageWithCaption
@@ -96,7 +98,8 @@ excerpt: In this interview, April talks about her background in independent publ
 <ImageWithCaption
   src="flyleaf/fireside-2025-2.jpg"
   alt="Kristen Mallia presenting at FLYLEAF 2025 fireside chat"
-  caption="Kristen Mallia presents her project Field Notes at the FLYLEAF 2025 fireside chat with a projected fire · Photo by Piotr Pietrus"
+  caption="Anton from Vertwea presents his project at FLYLEAF 2025 fireside chat with a projected fire. Photo by Piotr Pietrus.
+"
 />
 
 <ImageWithCaption
@@ -137,7 +140,7 @@ excerpt: In this interview, April talks about her background in independent publ
 
 **CJ:** I love how it adds another layer to the whole festival experience.
 
-**April:** Yes, absolutely. On the first night of the festival we also do a party for all the publishers. We gather at WIRWIR and then consciously walk together as a group over to Stefan’s space, Falschrum Books. For the last two years we have done the party at his space. And that’s really lovely because again, lots of wonderful conversations come around, and Stefan has food for everybody over there as well. We also have a bit of programming and some music. So it’s really nice and a great chance for the publishers to meet each other.
+**April:** Yes, absolutely. On the first night of the festival we also do a party for all the publishers. We gather at WIRWIR and then consciously walk together as a group over to Stefan’s space, Falschrum Books. For the last two years we have done the party at his space. And that’s really lovely because again, lots of wonderful conversations come around, and Stefan has organized food for everybody over there as well. We also have a bit of programming and some music. So it’s really nice and a great chance for the publishers to meet each other.
 
 **CJ:** What kind of space do you think FLYLEAF creates within Berlin’s independent publishing scene?
 
@@ -182,6 +185,12 @@ excerpt: In this interview, April talks about her background in independent publ
 **CJ:** I also wanted to ask whether co-organizing FLYLEAF has influenced your own creative practice and your own relationship to publishing.
 
 **April:** I'd put it a little differently — FLYLEAF has been folded into the way that I work in terms of creating socially engaged events. My work as a visual artist is very much about creating socially engaged experiences where people can come together and have conversations. FLYLEAF fits very naturally into that approach. It has helped me recognize that what I am doing makes sense for others, that it supports people, and that makes me feel like I’m going in the right direction. And in terms of publishing, it has introduced me to many small press publishers. I’ve made so many beautiful connections, and I’m constantly inspired by the people I meet and by the conversations I have about publishing, about idea generation, about craft, and about how people make things and do things, and that’s been really exciting. It’s information that I take and really enjoy sharing with my students. I’ve also built up a library of publications from what I’ve gathered and traded with other publishers. My partner even built a special rolling shelf for it. It has different compartments for different sizes of publications, and there are probably a few hundred in it by now. It’s incredibly inspiring to explore all the different formats, sizes, and ways of making a zine.
+
+<ImageWithCaption
+  src="flyleaf/shelf.jpeg"
+  alt="Mobile book trolley built by Adrian Schiesser that currently holds April’s zine collection, with Nikita the cat supervising."
+  caption="Mobile book trolley built by Adrian Schiesser that currently holds April’s zine collection, with Nikita the cat supervising · Photo by April Gertler"
+/>
 
 **CJ:** Especially given that you also run a small press yourself.
 

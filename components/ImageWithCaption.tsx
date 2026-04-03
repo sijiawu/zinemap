@@ -93,7 +93,7 @@ export function ImageWithCaption({
         )}
       </div>
       {caption != null && caption !== '' && (
-        <figcaption className="mt-3 text-center text-sm text-stone-600 font-serif italic">
+        <figcaption className="mt-3 mx-auto max-w-prose px-2 text-center text-sm text-stone-600 font-serif italic">
           {parseCaptionWithLinks(caption)}
         </figcaption>
       )}
