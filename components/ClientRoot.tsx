@@ -15,6 +15,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   const [showModal, setShowModal] = useState(false);
   const [profileChecked, setProfileChecked] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const welcomeModalSeenKey = 'zinemap_welcome_modal_seen_this_session';
 
   const welcomeModalPaths = ['/', '/shops', '/stores', '/libraries', '/events', '/zines', '/stories'];
   const shouldShowWelcomeOnPath = welcomeModalPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -74,7 +75,20 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (loading) return;
-    setShowWelcomeModal(!user && shouldShowWelcomeOnPath);
+    if (user || !shouldShowWelcomeOnPath) {
+      setShowWelcomeModal(false);
+      return;
+    }
+
+    const alreadySeen = window.sessionStorage.getItem(welcomeModalSeenKey) === '1';
+    if (alreadySeen) {
+      setShowWelcomeModal(false);
+      return;
+    }
+
+    // Strictly once per browser session for logged-out users.
+    setShowWelcomeModal(true);
+    window.sessionStorage.setItem(welcomeModalSeenKey, '1');
   }, [loading, user, shouldShowWelcomeOnPath]);
 
   const handleOnboardingComplete = () => {
