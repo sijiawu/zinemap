@@ -1214,8 +1214,8 @@ export default function ProfilePage() {
                                 {getEventCategoryDisplay(event.category)}
                               </Badge>
                               <span className="text-xs text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                {formatDateReadable(event.start_date)}
+                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
                               </span>
                             </div>
                             <p className="text-xs text-stone-600 line-clamp-1">
@@ -1269,8 +1269,8 @@ export default function ProfilePage() {
                                 {getEventCategoryDisplay(event.category)}
                               </Badge>
                               <span className="text-xs text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                {formatDateReadable(event.start_date)}
+                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
                               </span>
                             </div>
                             <p className="text-xs text-stone-600 line-clamp-1">

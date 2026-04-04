@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft, Store, Library, Pencil } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
-import { autoLinkText, isPastEvent, getEventCategoryDisplay } from '@/lib/utils'
+import { autoLinkText, isPastEvent, getEventCategoryDisplay, formatDateReadable } from '@/lib/utils'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -572,8 +572,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                                 {getEventCategoryDisplay(event.category)}
                               </Badge>
                               <span className="text-xs text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                {formatDateReadable(event.start_date)}
+                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
                               </span>
                             </div>
                             <p className="text-xs text-stone-600 line-clamp-1">
@@ -626,8 +626,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                                 {getEventCategoryDisplay(event.category)}
                               </Badge>
                               <span className="text-xs text-stone-500">
-                                {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                {event.start_date !== event.end_date && ` - ${new Date(event.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                {formatDateReadable(event.start_date)}
+                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
                               </span>
                             </div>
                             <p className="text-xs text-stone-600 line-clamp-1">
