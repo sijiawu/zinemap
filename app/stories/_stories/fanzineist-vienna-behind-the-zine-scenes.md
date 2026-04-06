@@ -26,7 +26,7 @@ When I moved the event to Vienna in 2019, it evolved into the Fanzineist Vienna 
 <ImageWithCaption
   src="fanzineist-vienna/istanbul.jpg"
   alt="Exhibitors at FanzineIST Festival in Istanbul, April 2016"
-  caption="Exhibitors at FanzineIST Festival — Zine Fest of Istanbul, April 2016. Photo: fanzinest.com"
+  caption="Exhibitors at FanzineIST Festival — Zine Fest of Istanbul, April 2016. Photo: [**fanzineist.com**](https://fanzineist.com)"
 />
 
 **CJ:** What was it like to start the first edition in Istanbul?
