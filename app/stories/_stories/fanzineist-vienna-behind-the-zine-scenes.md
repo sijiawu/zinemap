@@ -112,7 +112,7 @@ We will even be exhibiting a zine by a seven-year-old from Indonesia — and it'
 <ImageWithCaption
   src="fanzineist-vienna/mail.jpg"
   alt="First batch of zines received via mail for Fanzineist Vienna 2026"
-  caption="The first batch of zines received via mail for Fanzineist Vienna 2026 from France, Italy, Serbia, UK and Australia. Photo: instagram.com/fanzineistvienna"
+  caption="The first batch of zines received via mail for Fanzineist Vienna 2026 from France, Italy, Serbia, UK and Australia. Photo: [**instagram.com/fanzineistvienna**](instagram.com/fanzineistvienna)"
 />
 
 **Deniz:** Last year, we received more than 400 packages, including over 1,000 zines and art books from 50 countries — and we exhibited all of them.
