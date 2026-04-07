@@ -12,15 +12,19 @@ export default function SupportZineMapPage() {
           <h1 className="text-4xl font-bold text-foreground mb-8 font-gloria text-center">Support ZineMap</h1>
           <div className="max-w-3xl mx-auto space-y-6 text-foreground leading-relaxed text-justify">
             <p>
-              Hi, I'm CJ! I used to be a backend developer (so if the site isn't especially pretty, that's why) but these days I mostly make autobiographical comics and translate children's books.
+              Hi, I'm CJ! I am a backend developer (so if the site isn't especially pretty, that's why) and cartoonist making autobiographical comics.
             </p>
             <p>
-              ZineMap started as a personal project while I was attending the <a href="https://www.recurse.com/" target="_blank" rel="noopener" className="text-blue-600 hover:text-blue-800 underline">Recurse Center</a> in July 2025 (which happened to be International Zine Month). I built it to find and keep track of places that might stock my comic zines - and then I thought, maybe other indie creators would find it useful too!
+              ZineMap started as a personal project while I was attending the <a href="https://www.recurse.com/" target="_blank" rel="noopener" className="text-blue-600 hover:text-blue-800 underline">Recurse Center</a> in July 2025 (which happened to be International Zine Month). I built it because I was trying to find shops to stock my own comic zines, and I kept running into the same problem: a lot of this knowledge exists, but it’s often scattered, outdated, hard to search, or passed around only by word of mouth. If you’re trying to find places that carry zines, figure out where to submit your work, discover a scene while traveling, or understand how people are building small-press culture in different places, it can take a lot of digging.
             </p>
             <p>
-            It’s since grown into a full-scale map connecting zinesters, shops, libraries, and events around the world. These days it’s a highly involved one-person operation: I code, design, plan features, schedule releases, and keep the data healthy as the site scales. There are a lot of moving parts and quiet fixes behind the scenes, but I care about every piece. ZineMap is built on that care, and sustained by the belief that independent publishing deserves to be visible, and by the joy of seeing zine worlds connect across distance. </p>
+              It’s since grown into something much bigger: a collaborative map of the global zine ecosystem, shaped by hundreds of contributors around the world. It helps people find shops that stock zines, libraries with zine and small-press collections, festivals and workshops, and other zinesters to connect with, and learn through interviews and stories about how small-press culture is built and sustained in different places.
+            </p>
             <p>
-            If you’d like to help keep ZineMap running (and growing), here are a few ways to do that:
+              ZineMap is still a highly involved one-person operation. A lot of my time goes not only into the site itself, but into the surrounding work that gives it shape: research, moderation, contributor support, outreach, documentation, writing, interviews, follow-ups, and the ongoing effort to make the map feel trustworthy, active, and genuinely helpful to the people using it.
+            </p>
+            <p>
+               If you’d like to support ZineMap, here are some meaningful ways to do that:
             </p>
           </div>
         </div>
@@ -56,7 +60,7 @@ export default function SupportZineMapPage() {
             </CardHeader>
             <CardContent className="text-center space-y-4">
               <p className="text-muted-foreground">
-                Share ZineMap with your local zine community and zine making friends! A post, a link, or even a mention in your zine's back page goes a long way.
+                Share ZineMap with your local zine community and zine making friends! A post, a link, or a mention in a resource page, newsletter, or even the back of a zine goes a long way!
               </p>
               <p className="text-muted-foreground text-sm">
                 Writing about ZineMap? See the{' '}
