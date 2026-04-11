@@ -74,6 +74,7 @@ async function fetchLiveMapStats() {
 const PROMO_LABELS: Record<string, string> = {
   'zinemap-flyer.jpg': 'ZineMap flyer (JPG)',
   'zinemap-card.png': 'ZineMap card (PNG)',
+  'riso-card-qr.png': 'Riso print card with QR (PNG)',
   'the-zinemap-zine-EN.pdf': 'The ZineMap zine (English)',
   'the-zinemap-zine-PL.pdf': 'The ZineMap zine (po polsku)',
 };
@@ -83,12 +84,14 @@ const PROMO_DETAIL: Record<string, string> = {
   'the-zinemap-zine-EN.pdf': 'A Zine about a Map for Zines. English version. Dimensions: 210 × 297 mm (A4).',
   'the-zinemap-zine-PL.pdf': 'Zine o mapie zinów. Polska wersja. Dimensions: 210 × 297 mm (A4).',
   'zinemap-card.png': 'Dimensions: 65 x 100 mm.',
+  'riso-card-qr.png': 'Card design by Pizzeria Press.',
 };
 
 const PROMO_FALLBACK = [
   'the-zinemap-zine-EN.pdf',
   'the-zinemap-zine-PL.pdf',
   'zinemap-card.png',
+  'riso-card-qr.png',
   'zinemap-flyer.jpg',
 ] as const;
 
