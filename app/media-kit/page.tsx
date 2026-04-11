@@ -74,7 +74,7 @@ async function fetchLiveMapStats() {
 const PROMO_LABELS: Record<string, string> = {
   'zinemap-flyer.jpg': 'ZineMap flyer (JPG)',
   'zinemap-card.png': 'ZineMap card (PNG)',
-  'riso-card-qr.png': 'Riso print card with QR (PNG)',
+  'riso-card-qr.png': 'Riso print card with QR Code',
   'the-zinemap-zine-EN.pdf': 'The ZineMap zine (English)',
   'the-zinemap-zine-PL.pdf': 'The ZineMap zine (po polsku)',
 };
@@ -91,8 +91,8 @@ const PROMO_FALLBACK = [
   'the-zinemap-zine-EN.pdf',
   'the-zinemap-zine-PL.pdf',
   'zinemap-card.png',
-  'riso-card-qr.png',
   'zinemap-flyer.jpg',
+  'riso-card-qr.png',
 ] as const;
 
 function promoLabelFallback(filename: string) {
