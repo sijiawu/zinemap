@@ -486,8 +486,7 @@ export default function AddLibraryPage() {
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Library to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know a great library with zines or independent publications? Help fellow zinesters discover it! Share the details and we'll
-            add it to our community map.
+            Know a great library with zines or independent publications? Help fellow zinesters discover it!.
           </p>
         </div>
 
