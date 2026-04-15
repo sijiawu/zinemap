@@ -78,6 +78,8 @@ type ModerationHistoryItem = {
   email?: string | null
   website?: string | null
   notes?: string | null
+  start_date?: string | null
+  end_date?: string | null
   moderated_at?: string | null
   moderated_by?: string | null
   review_action?: ReviewAction | null
@@ -382,9 +384,15 @@ export default function AdminPage() {
     const sevenDaysAgoIso = sevenDaysAgo.toISOString()
 
     const buildHistoryQuery = (table: "stores" | "libraries" | "events") => {
+      const baseSelect = "id, name, city, state, country, address, email, website, notes, permalink, moderated_at, moderated_by, review_action, admin_note, created_at"
+      const selectColumns =
+        table === "events"
+          ? `${baseSelect}, start_date, end_date`
+          : baseSelect
+
       let query = supabase
         .from(table)
-        .select("id, name, city, state, country, address, email, website, notes, permalink, moderated_at, moderated_by, review_action, admin_note, created_at")
+        .select(selectColumns)
         .eq("moderation_status", status)
         .order("moderated_at", { ascending: false })
 
@@ -1595,6 +1603,14 @@ export default function AdminPage() {
                           {item.city}
                           {item.state ? `, ${item.state}` : ""}, {item.country}
                         </p>
+                        {item.listingType === "event" && item.start_date && (
+                          <p className="text-sm text-stone-600 mt-1">
+                            Dates: {new Date(item.start_date).toLocaleDateString()}
+                            {item.end_date && item.end_date !== item.start_date
+                              ? ` to ${new Date(item.end_date).toLocaleDateString()}`
+                              : ""}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right text-sm text-stone-600">
                         <p>Action: {item.review_action || "approve"}</p>
