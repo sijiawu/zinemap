@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export default function NavBar() {
   const { user, loading } = useSupabaseUser();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -24,6 +25,29 @@ export default function NavBar() {
       .eq('id', user.id)
       .single()
       .then(({ data }) => setProfileImage(data?.profile_image || null));
+  }, [user?.id]);
+
+  useEffect(() => {
+    const loadAdminRole = async () => {
+      if (!user?.id) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Failed to fetch admin role:", error);
+        setIsAdmin(false);
+        return;
+      }
+      setIsAdmin(Boolean(data?.is_admin));
+    };
+
+    loadAdminRole();
   }, [user?.id]);
   const router = useRouter();
   const pathname = usePathname();
@@ -144,7 +168,7 @@ export default function NavBar() {
           <div className="flex items-center gap-2">
             {!loading && user && (
               <>
-                {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                {isAdmin && (
                   <Link href="/admin" className="text-stone-700 hover:text-rose-600 font-gloria text-lg transition-all duration-200 hover:scale-105">Admin</Link>
                 )}
                 <Link href="/profile" className="rounded-full transition-all duration-200 hover:scale-105 hover:shadow-md" aria-label="My profile">
@@ -297,7 +321,7 @@ export default function NavBar() {
                 {/* User Actions */}
                 {!loading && user && (
                   <>
-                    {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                    {isAdmin && (
                       <Link 
                         href="/admin" 
                         onClick={() => setMobileMenuOpen(false)}

@@ -30,6 +30,11 @@ export interface Store {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  moderation_status?: 'pending' | 'approved' | 'flagged'
+  admin_note?: string | null
+  moderated_by?: string | null
+  moderated_at?: string | null
+  review_action?: 'approve' | 'quick_fix' | 'flag' | null
 }
 
 export interface Library {
@@ -55,6 +60,11 @@ export interface Library {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  moderation_status?: 'pending' | 'approved' | 'flagged'
+  admin_note?: string | null
+  moderated_by?: string | null
+  moderated_at?: string | null
+  review_action?: 'approve' | 'quick_fix' | 'flag' | null
 }
 
 /** Recurrence frequency for recurring events. Yearly is not supported. */
@@ -107,6 +117,11 @@ export interface Event {
   last_edit_user_permalink?: string
   /** Optional poster image URL (similar to zine cover) */
   poster_image?: string | null
+  moderation_status?: 'pending' | 'approved' | 'flagged'
+  admin_note?: string | null
+  moderated_by?: string | null
+  moderated_at?: string | null
+  review_action?: 'approve' | 'quick_fix' | 'flag' | null
 }
 
 export interface StoreTag {
@@ -197,6 +212,7 @@ export interface UserProfile {
   bio: string | null
   permalink: string | null
   profile_image: string | null
+  is_admin?: boolean
   created_at: string
   // Add other profile properties as needed
 }
