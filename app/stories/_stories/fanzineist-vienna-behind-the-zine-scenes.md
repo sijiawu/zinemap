@@ -8,6 +8,7 @@ tags:
   - Austria
 author: CJ Wu
 author_permalink: cjmakescomics
+thumbnail: "fanzineist-vienna/busy.jpeg"
 slug: fanzineist-vienna-behind-the-zine-scenes
 excerpt: A conversation with Deniz Beşer, organizer of Fanzineist Vienna, about how this international small-press festival has evolved over the years, what it takes to keep it going, and what to look forward to in this year’s edition.
 ---
