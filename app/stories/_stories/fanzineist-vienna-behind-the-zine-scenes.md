@@ -8,9 +8,8 @@ tags:
   - Austria
 author: CJ Wu
 author_permalink: cjmakescomics
-password: fanzineist
 slug: fanzineist-vienna-behind-the-zine-scenes
-excerpt: A conversation with Deniz Beser about building Fanzineist Vienna Art Book & Zine Fair into a global, community-driven platform for independent publishing, music, and cross-border exchange.
+excerpt: A conversation with Deniz Beşer, organizer of Fanzineist Vienna, about how this international small-press festival has evolved over the years, what it takes to keep it going, and what to look forward to in this year’s edition.
 ---
 
 <Callout>[**Fanzineist Vienna Art Book & Zine Fair**](https://fanzineist.com) was one of the first things that came up when I started looking into the Vienna zine scene, so I was excited to talk to its organizer, [**Deniz Beser**](https://denizbeser.com), for this series. I was passing through Vienna in early December and had hoped we might be able to meet in person, but Deniz was just heading to Tokyo for Tokyo Art Book Fair. As it turned out, for a brief moment we were both in Vienna International Airport, though at opposite ends of it! <br><br>
