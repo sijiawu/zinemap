@@ -80,7 +80,7 @@ It made me realize how expansive this kind of event could be. This year, for exa
 />
 
 <Callout variant="highlight">
-"It's really important to break borders in this kind of crazy contemporary times. This is what we need."
+"We're trying to break down borders, and in times like these, that feels more important than ever."
 </Callout>
 
 **CJ:** One thing that really stands out for the festival is the remote participation option — the idea that even people who can't physically be there can still be part of it. How did that option come about?
