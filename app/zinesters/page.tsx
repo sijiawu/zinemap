@@ -6,7 +6,8 @@ import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { supabase } from '@/lib/supabaseClient'
 import { HomePin } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Minus } from 'lucide-react'
+import { Plus, Minus, LocateFixed } from 'lucide-react'
+import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from '@/lib/mapGeolocate'
 import { useRouter } from 'next/navigation'
 import {
   Dialog,
@@ -44,6 +45,7 @@ export default function ZinestersPage() {
     country: string
   } | null>(null)
   const [isGeocoding, setIsGeocoding] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
 
   // Count pins for current user only
   const userPinCount = user ? pins.filter(pin => pin.user_email === user.email).length : 0
@@ -361,6 +363,23 @@ export default function ZinestersPage() {
       }
       // Fallback to center zoom if no valid pin or error occurred
       map.current.zoomTo(newZoom, { duration: 300 })
+    }
+  }
+
+  const panToMyLocation = async () => {
+    if (!map.current || isLocating) return
+    setIsLocating(true)
+    try {
+      await panMapToUserLocation(map.current)
+      syncMapboxHtmlMarkers(markersRef.current)
+    } catch (error) {
+      toast({
+        title: 'Location unavailable',
+        description: geolocationErrorMessage(error),
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLocating(false)
     }
   }
 
@@ -792,23 +811,39 @@ export default function ZinestersPage() {
             )}
           </div>
 
-          {/* Zoom Controls - Hidden on mobile */}
-          <div className="hidden sm:block absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-            <div className="flex flex-col">
-              <button
-                onClick={zoomIn}
-                className="p-2 hover:bg-gray-50 transition-colors border-b border-gray-200 rounded-t-lg"
-                title="Zoom in"
-              >
-                <Plus className="h-4 w-4 text-gray-700" />
-              </button>
-              <button
-                onClick={zoomOut}
-                className="p-2 hover:bg-gray-50 transition-colors rounded-b-lg"
-                title="Zoom out"
-              >
-                <Minus className="h-4 w-4 text-gray-700" />
-              </button>
+          {/* Locate (+ zoom from sm): top-right */}
+          <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={panToMyLocation}
+              disabled={!mapReady || isLocating}
+              className="cursor-pointer rounded-lg border border-gray-200 bg-white p-2 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Go to my location"
+              aria-label="Go to my location"
+            >
+              <LocateFixed className="h-4 w-4 text-gray-700" />
+            </button>
+            <div className="hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md sm:block">
+              <div className="flex flex-col divide-y divide-gray-200">
+                <button
+                  type="button"
+                  onClick={zoomIn}
+                  className="cursor-pointer p-2 transition-colors hover:bg-gray-50"
+                  title="Zoom in"
+                  aria-label="Zoom in"
+                >
+                  <Plus className="h-4 w-4 text-gray-700" />
+                </button>
+                <button
+                  type="button"
+                  onClick={zoomOut}
+                  className="cursor-pointer p-2 transition-colors hover:bg-gray-50"
+                  title="Zoom out"
+                  aria-label="Zoom out"
+                >
+                  <Minus className="h-4 w-4 text-gray-700" />
+                </button>
+              </div>
             </div>
           </div>
 

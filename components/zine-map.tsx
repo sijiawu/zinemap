@@ -2,7 +2,9 @@
 
 import "mapbox-gl/dist/mapbox-gl.css"
 import { useEffect, useRef, useState } from "react"
-import { MapPin, BookOpen } from "lucide-react"
+import { BookOpen, LocateFixed } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from "@/lib/mapGeolocate"
 
 interface ZineStore {
   id: string
@@ -24,11 +26,30 @@ interface ZineMapProps {
 }
 
 export default function ZineMap({ stores }: ZineMapProps) {
+  const { toast } = useToast()
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const [selectedStore, setSelectedStore] = useState<ZineStore | null>(null)
   const [mapReady, setMapReady] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
+
+  const panToMyLocation = async () => {
+    if (!map.current || isLocating) return
+    setIsLocating(true)
+    try {
+      await panMapToUserLocation(map.current)
+      syncMapboxHtmlMarkers(markersRef.current)
+    } catch (error) {
+      toast({
+        title: "Location unavailable",
+        description: geolocationErrorMessage(error),
+        variant: "destructive",
+      })
+    } finally {
+      setIsLocating(false)
+    }
+  }
 
 
   useEffect(() => {
@@ -66,26 +87,28 @@ export default function ZineMap({ stores }: ZineMapProps) {
     }
   }, [])
 
-  // Update markers when stores change
+  // Update markers when stores change. Uses cancellation: `await import("mapbox-gl")` previously
+  // allowed a second run to interleave so markers were cleared then re-added twice → phantom pins.
   useEffect(() => {
-    const updateMarkers = async () => {
-      if (!map.current || !mapReady) return
+    if (!map.current || !mapReady) return
 
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.remove())
+    let cancelled = false
+
+    const run = async () => {
+      const mapboxgl = await import("mapbox-gl")
+      if (cancelled || !map.current) return
+
+      markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
 
-      const mapboxgl = await import("mapbox-gl")
+      for (const store of stores) {
+        if (!store.latitude || !store.longitude) continue
+        if (cancelled || !map.current) return
 
-      // Add markers for each store
-      stores.forEach((store) => {
-        if (!store.latitude || !store.longitude) return
-      
         const markerEl = document.createElement("div")
         markerEl.style.cursor = "pointer"
-        
+
         if (store.zine_cover) {
-          // Create marker with zine cover
           markerEl.innerHTML = `
             <div style="
               width: 60px; 
@@ -111,7 +134,6 @@ export default function ZineMap({ stores }: ZineMapProps) {
             </div>
           `
         } else {
-          // Fallback to book icon
           markerEl.innerHTML = `
             <div style="
               background: #8b5cf6; 
@@ -144,24 +166,29 @@ export default function ZineMap({ stores }: ZineMapProps) {
           .addTo(map.current)
 
         markersRef.current.push(marker)
-      })
+      }
 
-      // Fit map to show all markers
-      if (stores.length > 0) {
+      if (cancelled || !map.current) return
+
+      const withCoords = stores.filter((s) => s.latitude && s.longitude)
+      if (withCoords.length > 0) {
         const bounds = new mapboxgl.LngLatBounds()
-        stores.forEach(store => {
-          if (store.latitude && store.longitude) {
-            bounds.extend([store.longitude, store.latitude])
-          }
+        withCoords.forEach((store) => {
+          bounds.extend([store.longitude!, store.latitude!])
         })
-        
-        if (bounds.isEmpty() === false) {
+        if (!bounds.isEmpty()) {
           map.current.fitBounds(bounds, { padding: 50 })
         }
       }
     }
 
-    updateMarkers()
+    void run()
+
+    return () => {
+      cancelled = true
+      markersRef.current.forEach((marker) => marker.remove())
+      markersRef.current = []
+    }
   }, [stores, mapReady])
 
   return (
@@ -177,6 +204,19 @@ export default function ZineMap({ stores }: ZineMapProps) {
           <div className="text-stone-500">Loading map...</div>
         </div>
       )}
+
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          type="button"
+          onClick={panToMyLocation}
+          disabled={!mapReady || isLocating}
+          className="cursor-pointer rounded-lg border border-stone-200 bg-white p-2 shadow-md transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Go to my location"
+          aria-label="Go to my location"
+        >
+          <LocateFixed className="h-4 w-4 text-stone-700" />
+        </button>
+      </div>
       
       {/* Selected Store Info */}
       {selectedStore && (

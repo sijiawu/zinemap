@@ -2,7 +2,9 @@
 
 import "mapbox-gl/dist/mapbox-gl.css"
 import { useEffect, useRef, useState } from "react"
-import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe } from "lucide-react"
+import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe, LocateFixed } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from "@/lib/mapGeolocate"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/lib/utils"
@@ -26,8 +28,10 @@ interface StoreMapProps {
 }
 
 export function StoreMap({ stores, libraries, events, searchQuery = "", onLocationSelect, onMapReady, hideFilterBar = false, savedPinsMode = false, onUnsave }: StoreMapProps) {
+  const { toast } = useToast()
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
+  const mapboxglRef = useRef<typeof import("mapbox-gl") | null>(null)
   const markersRef = useRef<any[]>([])
   const lastDataRef = useRef<string>('')
   const initialFitDoneRef = useRef(false)
@@ -38,6 +42,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
   const [locationType, setLocationType] = useState<'store' | 'library' | 'event'>('store')
   const [mapView, setMapView] = useState<'stores' | 'libraries' | 'events' | 'all'>('all')
   const [mapReady, setMapReady] = useState(false)
+  const [isLocating, setIsLocating] = useState(false)
 
   // Function to get responsive offset for flyTo based on screen size
   const getResponsiveOffset = () => {
@@ -111,9 +116,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           transform: translateX(-50%);
           width: ${groundShadowSize};
           height: ${groundShadowSize};
-          background: rgba(0, 0, 0, 0.25);
+          background: rgba(0, 0, 0, 0.22);
           border-radius: 50%;
-          filter: blur(${groundShadowBlur});
+          box-shadow: 0 0 ${groundShadowBlur} rgba(0, 0, 0, 0.35);
           pointer-events: none;
         "></div>
         <!-- Pin body -->
@@ -313,6 +318,23 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
   }
 
+  const panToMyLocation = async () => {
+    if (!map.current || isLocating) return
+    setIsLocating(true)
+    try {
+      await panMapToUserLocation(map.current)
+      syncMapboxHtmlMarkers(markersRef.current)
+    } catch (error) {
+      toast({
+        title: "Location unavailable",
+        description: geolocationErrorMessage(error),
+        variant: "destructive",
+      })
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
   // Initialize map (only once)
   useEffect(() => {
     const initMap = async () => {
@@ -320,7 +342,8 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       
       try {
         const mapboxgl = await import("mapbox-gl")
-        
+        mapboxglRef.current = mapboxgl
+
         if (!mapContainer.current) return
 
         map.current = new mapboxgl.Map({
@@ -364,6 +387,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     initMap()
 
     return () => {
+      mapboxglRef.current = null
       if (map.current) {
         map.current.remove()
         map.current = null
@@ -418,6 +442,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
 
     lastDataRef.current = dataSignature
+
+    const mapboxgl = mapboxglRef.current
+    if (!mapboxgl) return
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove())
@@ -486,8 +513,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     if (mapView === 'stores' || mapView === 'all') {
       filteredStores.forEach((store) => {
 
-        const mapboxgl = require("mapbox-gl")
-        
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === store.id && locationType === 'store'
         markerEl.innerHTML = createPinMarker('#e11d48', 'store', isActive)
@@ -525,7 +550,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         })
 
         const marker = new mapboxgl.Marker(markerEl)
-          .setLngLat([store.longitude, store.latitude])
+          .setLngLat([store.longitude!, store.latitude!])
           .addTo(map.current)
 
         markersRef.current.push(marker)
@@ -536,8 +561,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     if (mapView === 'libraries' || mapView === 'all') {
       filteredLibraries.forEach((library) => {
 
-        const mapboxgl = require("mapbox-gl")
-        
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === library.id && locationType === 'library'
         markerEl.innerHTML = createPinMarker('#3b82f6', 'library', isActive)
@@ -575,7 +598,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         })
 
         const marker = new mapboxgl.Marker(markerEl)
-          .setLngLat([library.longitude, library.latitude])
+          .setLngLat([library.longitude!, library.latitude!])
           .addTo(map.current)
 
         markersRef.current.push(marker)
@@ -586,8 +609,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     if (mapView === 'events' || mapView === 'all') {
       filteredEvents.forEach((event) => {
 
-        const mapboxgl = require("mapbox-gl")
-        
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === event.id && locationType === 'event'
         markerEl.innerHTML = createPinMarker('#009035', 'event', isActive)
@@ -625,7 +646,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         })
 
         const marker = new mapboxgl.Marker(markerEl)
-          .setLngLat([event.longitude, event.latitude])
+          .setLngLat([event.longitude!, event.latitude!])
           .addTo(map.current)
 
         markersRef.current.push(marker)
@@ -691,26 +712,42 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
   return (
     <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${savedPinsMode ? 'h-full min-h-[384px]' : 'h-[600px]'}`}>
-      {/* isolate + z-0: keep marker z-index from competing with sibling overlays (z-10) */}
-      <div ref={mapContainer} className="isolate z-0 h-full w-full" />
+      {/* Avoid CSS isolation/filters on the map root — they can break Mapbox HTML marker transforms (stuck pins on the viewport edge). Overlays use z-10+. */}
+      <div ref={mapContainer} className="z-0 h-full w-full min-h-0" />
 
-      {/* Zoom Controls - hidden on mobile */}
-      <div className="hidden lg:block absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
-        <div className="flex flex-col">
-          <button
-            onClick={zoomIn}
-            className="p-2 hover:bg-stone-50 transition-colors border-b border-stone-200 rounded-t-lg"
-            title="Zoom in"
-          >
-            <Plus className="h-4 w-4 text-stone-700" />
-          </button>
-          <button
-            onClick={zoomOut}
-            className="p-2 hover:bg-stone-50 transition-colors rounded-b-lg"
-            title="Zoom out"
-          >
-            <Minus className="h-4 w-4 text-stone-700" />
-          </button>
+      {/* Google Maps–style: separate locate pill, then zoom cluster (desktop only) */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+        <button
+          type="button"
+          onClick={panToMyLocation}
+          disabled={!mapReady || isLocating}
+          className="cursor-pointer rounded-lg border border-stone-200 bg-white p-2 shadow-md transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Go to my location"
+          aria-label="Go to my location"
+        >
+          <LocateFixed className="h-4 w-4 text-stone-700" />
+        </button>
+        <div className="hidden overflow-hidden rounded-lg border border-stone-200 bg-white shadow-md lg:block">
+          <div className="flex flex-col divide-y divide-stone-200">
+            <button
+              type="button"
+              onClick={zoomIn}
+              className="cursor-pointer p-2 transition-colors hover:bg-stone-50"
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              <Plus className="h-4 w-4 text-stone-700" />
+            </button>
+            <button
+              type="button"
+              onClick={zoomOut}
+              className="cursor-pointer p-2 transition-colors hover:bg-stone-50"
+              title="Zoom out"
+              aria-label="Zoom out"
+            >
+              <Minus className="h-4 w-4 text-stone-700" />
+            </button>
+          </div>
         </div>
       </div>
 
