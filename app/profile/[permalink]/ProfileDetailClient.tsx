@@ -58,20 +58,43 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
     }
   }, [profileId])
 
-  // Fetch user's contributions (stores, libraries, community notes) - parallelized
+  // Fetch user's contributions (stores, libraries, community notes) — public profile only counts approved listings and notes on approved venues
   const fetchContributions = async (userId: string) => {
     try {
-      const [storesRes, librariesRes, eventsRes, notesRes] = await Promise.all([
-        supabase.from('stores').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('libraries').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('events').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
-        supabase.from('community_notes').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      const [storesRes, librariesRes, eventsRes, notesRowsRes] = await Promise.all([
+        supabase.from('stores').select('id', { count: 'exact', head: true }).eq('submitted_by', userId).eq('moderation_status', 'approved'),
+        supabase.from('libraries').select('id', { count: 'exact', head: true }).eq('submitted_by', userId).eq('moderation_status', 'approved'),
+        supabase.from('events').select('id', { count: 'exact', head: true }).eq('submitted_by', userId).eq('moderation_status', 'approved'),
+        supabase.from('community_notes').select('id, store_id, library_id, event_id, anonymous').eq('user_id', userId),
       ])
+
+      const noteRows = (notesRowsRes.data || []).filter((n: { anonymous?: boolean }) => !n.anonymous)
+      const noteStoreIds = [...new Set(noteRows.map((n) => n.store_id).filter(Boolean) as string[])]
+      const noteLibraryIds = [...new Set(noteRows.map((n) => n.library_id).filter(Boolean) as string[])]
+      const noteEventIds = [...new Set(noteRows.map((n) => n.event_id).filter(Boolean) as string[])]
+
+      const [noteStoresR, noteLibsR, noteEvsR] = await Promise.all([
+        noteStoreIds.length ? supabase.from('stores').select('id').in('id', noteStoreIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] as { id: string }[] }),
+        noteLibraryIds.length ? supabase.from('libraries').select('id').in('id', noteLibraryIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] as { id: string }[] }),
+        noteEventIds.length ? supabase.from('events').select('id').in('id', noteEventIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] as { id: string }[] }),
+      ])
+
+      const approvedNoteStores = new Set((noteStoresR.data || []).map((r) => r.id))
+      const approvedNoteLibraries = new Set((noteLibsR.data || []).map((r) => r.id))
+      const approvedNoteEvents = new Set((noteEvsR.data || []).map((r) => r.id))
+
+      let notesCount = 0
+      for (const n of noteRows) {
+        if (n.store_id && approvedNoteStores.has(n.store_id)) notesCount++
+        else if (n.library_id && approvedNoteLibraries.has(n.library_id)) notesCount++
+        else if (n.event_id && approvedNoteEvents.has(n.event_id)) notesCount++
+      }
+
       setContributions({
         stores: storesRes.count || 0,
         libraries: librariesRes.count || 0,
         events: eventsRes.count || 0,
-        notes: notesRes.count || 0
+        notes: notesCount,
       })
     } catch (err) {
       console.error('Contributions fetch error:', err)
@@ -87,11 +110,11 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
 
       // Fetch stores, libraries, events, notes, and locale_edits in parallel
       const [storesRes, librariesRes, eventsRes, notesRes, editsRes] = await Promise.all([
-        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
+        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
+        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
+        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
         supabase.from('community_notes').select('id, store_id, library_id, event_id, text, submitted_at, anonymous').eq('user_id', userId).order('submitted_at', { ascending: false }),
-        supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at, status').eq('user_id', userId).neq('status', 'pending').order('created_at', { ascending: false }),
+        supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at, status').eq('user_id', userId).eq('status', 'approved').order('created_at', { ascending: false }),
       ])
 
       const storesData = storesRes.data || []
@@ -114,21 +137,32 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
         allActivities.push({ id: `event-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at })
       })
 
-      // Batch fetch entity names for notes (avoid N+1)
+      // Non-anonymous notes on approved listings only (do not leak pending submissions on public profile)
       const nonAnonymousNotes = notesData.filter((n: { anonymous?: boolean }) => !n.anonymous)
-      const storeIds = [...new Set(nonAnonymousNotes.filter((n: { store_id: string | null }) => n.store_id).map((n: { store_id: string | null }) => n.store_id!))]
-      const libraryIds = [...new Set(nonAnonymousNotes.filter((n: { library_id: string | null }) => n.library_id).map((n: { library_id: string | null }) => n.library_id!))]
-      const eventIds = [...new Set(nonAnonymousNotes.filter((n: { event_id: string | null }) => n.event_id).map((n: { event_id: string | null }) => n.event_id!))]
+      const rawStoreIds = [...new Set(nonAnonymousNotes.filter((n: { store_id: string | null }) => n.store_id).map((n: { store_id: string | null }) => n.store_id!))]
+      const rawLibraryIds = [...new Set(nonAnonymousNotes.filter((n: { library_id: string | null }) => n.library_id).map((n: { library_id: string | null }) => n.library_id!))]
+      const rawEventIds = [...new Set(nonAnonymousNotes.filter((n: { event_id: string | null }) => n.event_id).map((n: { event_id: string | null }) => n.event_id!))]
 
-      const [storesForNotes, libsForNotes, evsForNotes] = await Promise.all([
-        storeIds.length ? supabase.from('stores').select('id, name, permalink').in('id', storeIds) : Promise.resolve({ data: [] }),
-        libraryIds.length ? supabase.from('libraries').select('id, name, permalink').in('id', libraryIds) : Promise.resolve({ data: [] }),
-        eventIds.length ? supabase.from('events').select('id, name, permalink').in('id', eventIds) : Promise.resolve({ data: [] }),
+      const [storesApprovedForNotes, libsApprovedForNotes, evsApprovedForNotes] = await Promise.all([
+        rawStoreIds.length ? supabase.from('stores').select('id, name, permalink').in('id', rawStoreIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        rawLibraryIds.length ? supabase.from('libraries').select('id, name, permalink').in('id', rawLibraryIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        rawEventIds.length ? supabase.from('events').select('id, name, permalink').in('id', rawEventIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
       ])
 
-      const storeMap = new Map((storesForNotes.data || []).map((s: { id: string; name: string; permalink: string | null }) => [s.id, s]))
-      const libraryMap = new Map((libsForNotes.data || []).map((l: { id: string; name: string; permalink: string | null }) => [l.id, l]))
-      const eventMap = new Map((evsForNotes.data || []).map((e: { id: string; name: string; permalink: string | null }) => [e.id, e]))
+      const approvedStoreIdSet = new Set((storesApprovedForNotes.data || []).map((s: { id: string }) => s.id))
+      const approvedLibraryIdSet = new Set((libsApprovedForNotes.data || []).map((l: { id: string }) => l.id))
+      const approvedEventIdSet = new Set((evsApprovedForNotes.data || []).map((e: { id: string }) => e.id))
+
+      const nonAnonymousNotesPublic = nonAnonymousNotes.filter((n: { store_id?: string | null; library_id?: string | null; event_id?: string | null }) => {
+        if (n.store_id) return approvedStoreIdSet.has(n.store_id)
+        if (n.library_id) return approvedLibraryIdSet.has(n.library_id)
+        if (n.event_id) return approvedEventIdSet.has(n.event_id)
+        return false
+      })
+
+      const storeMap = new Map((storesApprovedForNotes.data || []).map((s: { id: string; name: string; permalink: string | null }) => [s.id, s]))
+      const libraryMap = new Map((libsApprovedForNotes.data || []).map((l: { id: string; name: string; permalink: string | null }) => [l.id, l]))
+      const eventMap = new Map((evsApprovedForNotes.data || []).map((e: { id: string; name: string; permalink: string | null }) => [e.id, e]))
 
       const activityByEntityId = new Map<string, Activity>()
       for (const a of allActivities) {
@@ -136,7 +170,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
         if (m) activityByEntityId.set(`${m[1]}-${m[2]}`, a)
       }
 
-      for (const n of nonAnonymousNotes) {
+      for (const n of nonAnonymousNotesPublic) {
         let entityName = ''
         let entityUrl = ''
         let entityType: 'shop' | 'library' | 'event' = 'shop'
@@ -182,9 +216,9 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
       const editEventIds = editsData.filter((e: { event_id: string | null }) => e.event_id).map((e: { event_id: string | null }) => e.event_id!)
 
       const [editStoresRes, editLibsRes, editEvsRes] = await Promise.all([
-        editStoreIds.length ? supabase.from('stores').select('id, name, permalink').in('id', editStoreIds) : Promise.resolve({ data: [] }),
-        editLibraryIds.length ? supabase.from('libraries').select('id, name, permalink').in('id', editLibraryIds) : Promise.resolve({ data: [] }),
-        editEventIds.length ? supabase.from('events').select('id, name, permalink').in('id', editEventIds) : Promise.resolve({ data: [] }),
+        editStoreIds.length ? supabase.from('stores').select('id, name, permalink').in('id', editStoreIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        editLibraryIds.length ? supabase.from('libraries').select('id, name, permalink').in('id', editLibraryIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        editEventIds.length ? supabase.from('events').select('id, name, permalink').in('id', editEventIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
       ])
 
       const editStoreMap = new Map((editStoresRes.data || []).map((s: { id: string; name: string; permalink: string | null }) => [s.id, s]))
@@ -198,20 +232,23 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
         let sectionUrl = ''
         if (edit.store_id) {
           const s = editStoreMap.get(edit.store_id)
-          entityName = s?.name || 'a shop'
-          entityUrl = `/store/${s?.permalink || edit.store_id}`
+          if (!s) continue
+          entityName = s.name
+          entityUrl = `/store/${s.permalink || edit.store_id}`
           sectionLabel = 'Shops'
           sectionUrl = '/stores'
         } else if (edit.library_id) {
           const l = editLibraryMap.get(edit.library_id)
-          entityName = l?.name || 'a library'
-          entityUrl = `/library/${l?.permalink || edit.library_id}`
+          if (!l) continue
+          entityName = l.name
+          entityUrl = `/library/${l.permalink || edit.library_id}`
           sectionLabel = 'Libraries'
           sectionUrl = '/libraries'
         } else if (edit.event_id) {
           const e = editEventMap.get(edit.event_id)
-          entityName = e?.name || 'an event'
-          entityUrl = `/event/${e?.permalink || edit.event_id}`
+          if (!e) continue
+          entityName = e.name
+          entityUrl = `/event/${e.permalink || edit.event_id}`
           sectionLabel = 'Events'
           sectionUrl = '/events'
         }
@@ -445,9 +482,14 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                     <span className="text-sm text-stone-600">Contributions</span>
                   </div>
                   <div className="relative group">
-                    <span className="text-lg font-semibold text-stone-800 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab('contributions')}
+                      className="text-lg font-semibold text-stone-800 cursor-pointer rounded px-1 -mx-1 hover:bg-stone-100 hover:text-stone-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2"
+                      aria-label="View contributions"
+                    >
                       {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
-                    </span>
+                    </button>
                     {/* Hover tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       <div className="text-center">

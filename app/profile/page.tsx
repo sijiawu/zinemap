@@ -189,9 +189,9 @@ export default function ProfilePage() {
       const eventColumns = 'id,name,venue_name,city,state,country,address,notes,permalink,latitude,longitude,submitted_by,created_at,updated_at,category,start_date,end_date,application_deadline,website'
 
       const [savedStoresRes, savedLibrariesRes, savedEventsRes, storeTagsRes, libraryTagsRes] = await Promise.all([
-        storeIds.length ? supabase.from('stores').select(storeColumns).in('id', storeIds).eq('approved', true) : Promise.resolve({ data: [] }),
-        libraryIds.length ? supabase.from('libraries').select(libraryColumns).in('id', libraryIds).eq('approved', true) : Promise.resolve({ data: [] }),
-        eventIds.length ? supabase.from('events').select(eventColumns).in('id', eventIds).eq('approved', true) : Promise.resolve({ data: [] }),
+        storeIds.length ? supabase.from('stores').select(storeColumns).in('id', storeIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        libraryIds.length ? supabase.from('libraries').select(libraryColumns).in('id', libraryIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
+        eventIds.length ? supabase.from('events').select(eventColumns).in('id', eventIds).eq('moderation_status', 'approved') : Promise.resolve({ data: [] }),
         storeIds.length ? supabase.from('store_tags').select('id, store_id, tag_id, tags!inner(id, label, category)').in('store_id', storeIds) : Promise.resolve({ data: [] }),
         libraryIds.length ? supabase.from('library_tags').select('id, library_id, tag_id, tags!inner(id, label, category)').in('library_id', libraryIds) : Promise.resolve({ data: [] }),
       ])
@@ -278,15 +278,16 @@ export default function ProfilePage() {
       const allActivities: { id: string; type: 'store' | 'library' | 'event' | 'note' | 'edit'; entityType: 'shop' | 'library' | 'event' | 'edit'; entityName: string; entityUrl: string; sectionLabel: string; sectionUrl: string; note?: string; createdAt: string; pending?: boolean }[] = []
       const entityIdsByUser = { stores: new Set<string>(), libraries: new Set<string>(), events: new Set<string>() }
 
+      const awaitingStatuses = ['pending', 'flagged'] as const
       const [storesRes, librariesRes, eventsRes, notesRes, editsRes, storesPendingRes, librariesPendingRes, eventsPendingRes] = await Promise.all([
-        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', true).order('created_at', { ascending: false }),
+        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
+        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
+        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('moderation_status', 'approved').order('created_at', { ascending: false }),
         supabase.from('community_notes').select('id, store_id, library_id, event_id, text, submitted_at, anonymous').eq('user_id', userId).order('submitted_at', { ascending: false }),
         supabase.from('locale_edits').select('id, store_id, library_id, event_id, created_at, status').eq('user_id', userId).order('created_at', { ascending: false }),
-        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
-        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
-        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).eq('approved', false).order('created_at', { ascending: false }),
+        supabase.from('stores').select('id, name, permalink, created_at').eq('submitted_by', userId).in('moderation_status', awaitingStatuses).order('created_at', { ascending: false }),
+        supabase.from('libraries').select('id, name, permalink, created_at').eq('submitted_by', userId).in('moderation_status', awaitingStatuses).order('created_at', { ascending: false }),
+        supabase.from('events').select('id, name, permalink, created_at').eq('submitted_by', userId).in('moderation_status', awaitingStatuses).order('created_at', { ascending: false }),
       ])
 
       const storesData = storesRes.data || []
@@ -1027,9 +1028,14 @@ export default function ProfilePage() {
                     <span className="text-sm text-stone-600">Contributions</span>
                       </div>
                   <div className="relative group">
-                    <span className="text-lg font-semibold text-stone-800 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab('contributions')}
+                      className="text-lg font-semibold text-stone-800 cursor-pointer rounded px-1 -mx-1 hover:bg-stone-100 hover:text-stone-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2"
+                      aria-label="View contributions"
+                    >
                       {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
-                    </span>
+                    </button>
                     {/* Hover tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       <div className="text-center">
