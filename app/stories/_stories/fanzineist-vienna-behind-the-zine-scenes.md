@@ -1,6 +1,6 @@
 ---
 title: "Behind the Zine Scenes #5: Fanzineist Vienna Art Book & Zine Fair"
-date: 2026-04-04
+date: 2026-04-17
 tags:
   - Behind the Zine Scenes
   - Festivals

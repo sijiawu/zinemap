@@ -1,6 +1,6 @@
 ---
 title: "Behind the Zine Scenes #4: FLYLEAF Book and Zine Festival"
-date: 2026-04-02
+date: 2026-04-07
 tags:
   - Behind the Zine Scenes
   - Festivals
