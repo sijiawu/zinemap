@@ -71,11 +71,14 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         title={story.metadata.title}
         date={story.metadata.date}
         tags={story.metadata.tags}
+        thumbnail={story.metadata.thumbnail}
         author={story.metadata.author}
         authorPermalink={story.metadata.author_permalink}
         contentTranslation={story.contentTranslation}
         translationLang={story.translationLang}
         primaryLang={story.primaryLang}
+        titleHeading={story.metadata.title_heading}
+        bodyFont={story.metadata.body_font}
       >
         {story.content}
       </ArticleLayout>

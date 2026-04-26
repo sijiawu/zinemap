@@ -266,4 +266,20 @@
   .prose hr {
     @apply border-stone-200 my-8;
   }
+
+  /* Lucida stack (e.g. archived newsletter) — .prose above sets font-serif; this must override it */
+  .prose.prose-lucida,
+  .prose.prose-lucida h2,
+  .prose.prose-lucida h3,
+  .prose.prose-lucida h4,
+  .prose.prose-lucida h5,
+  .prose.prose-lucida p,
+  .prose.prose-lucida li,
+  .prose.prose-lucida blockquote {
+    font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+  }
+
+  .prose.prose-lucida figcaption {
+    font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+  }
 }

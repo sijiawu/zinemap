@@ -19,6 +19,9 @@ type MdastRoot = any
 
 export type TranslationLang = 'pl' | 'en' | 'fr'
 
+export type StoryTitleHeading = 'h1' | 'h2' | 'h3'
+export type StoryBodyFont = 'default' | 'lucida'
+
 export interface StoryMetadata {
   title: string
   date: string
@@ -30,6 +33,10 @@ export interface StoryMetadata {
   thumbnail?: string
   password?: string
   primary_lang?: TranslationLang  // Language of main content; defaults to 'en' if not set
+  /** Page title element; default h1 */
+  title_heading?: StoryTitleHeading
+  /** Body font stack; `lucida` matches the newsletter email styles */
+  body_font?: StoryBodyFont
 }
 
 export interface Story {
@@ -375,6 +382,13 @@ export function parseStory(markdownContent: string, slug: string): Story {
   const rawThumbnail = data.thumbnail ? String(data.thumbnail) : extractFirstImage(content)
   const thumbnail = rawThumbnail ? getStoryImageUrl(rawThumbnail) : undefined
 
+  const titleHeadingRaw = data.title_heading ? String(data.title_heading).toLowerCase() : 'h1'
+  const title_heading: StoryTitleHeading =
+    titleHeadingRaw === 'h2' || titleHeadingRaw === 'h3' ? titleHeadingRaw : 'h1'
+
+  const bodyFontRaw = data.body_font ? String(data.body_font).toLowerCase() : 'default'
+  const body_font: StoryBodyFont = bodyFontRaw === 'lucida' ? 'lucida' : 'default'
+
   const metadata: StoryMetadata = {
     title: String(data.title),
     date: dateStr,
@@ -385,6 +399,8 @@ export function parseStory(markdownContent: string, slug: string): Story {
     excerpt: String(data.excerpt),
     thumbnail: thumbnail,
     password: data.password ? String(data.password) : undefined,
+    title_heading,
+    body_font,
   }
 
   // Check for inline translation: <!-- TRANSLATION_XX --> ... <!-- /TRANSLATION_XX --> (XX = pl, en, fr)
