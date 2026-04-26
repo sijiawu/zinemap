@@ -9,7 +9,7 @@ author: CJ Wu
 author_permalink: cjmakescomics
 thumbnail: "newsletter/04232026/the_loot.jpg"
 slug: notes-from-inside-zinemap-newsletter-04232026
-excerpt: Web archive of the first email—new interviews, Strange Folds, a talk, user research, site updates, map stats, and thank yous.
+excerpt: "The web version of the first ZineMap newsletter: what’s been happening around ZineMap lately, both out in the world and behind the scenes."
 title_heading: h3
 body_font: lucida
 ---
