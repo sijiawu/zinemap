@@ -36,10 +36,13 @@ export function syncMapboxHtmlMarkers(
 }
 
 export function geolocationErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message === "Location requires a secure context (HTTPS).") {
+    return "Location requires HTTPS. Open the secure site URL and try again."
+  }
   if (error && typeof error === "object" && "code" in error) {
     const code = (error as GeolocationPositionError).code
     if (code === 1) {
-      return "Location access was denied. Enable location permission for this site in your browser settings."
+      return "Location access was denied. Enable location permission for this site and browser in your device settings."
     }
     if (code === 2) {
       return "Your position could not be determined. Try again or check device location services."
@@ -52,6 +55,29 @@ export function geolocationErrorMessage(error: unknown): string {
     return error.message
   }
   return "Could not get your location."
+}
+
+/** Phones often time out with high accuracy + no cache; desktop devtools "mobile" does not mimic that. */
+function prefersRelaxedGeolocationDefaults(): boolean {
+  if (typeof navigator === "undefined" || typeof window === "undefined") return false
+  if (navigator.maxTouchPoints > 0) return true
+  try {
+    return window.matchMedia("(pointer: coarse)").matches
+  } catch {
+    return false
+  }
+}
+
+function requestCurrentPosition(options: PositionOptions): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options)
+  })
+}
+
+function canRetryWithRelaxedDefaults(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("code" in error)) return false
+  const code = (error as GeolocationPositionError).code
+  return code === 2 || code === 3
 }
 
 export function panMapToUserLocation(
@@ -71,11 +97,18 @@ export function panMapToUserLocation(
 ): Promise<void> {
   const {
     duration = 900,
-    enableHighAccuracy = true,
-    timeout = 15000,
-    maximumAge = 0,
     minLocateZoom = 7,
   } = options ?? {}
+
+  const hasExplicitGeoOptions =
+    options?.enableHighAccuracy !== undefined ||
+    options?.timeout !== undefined ||
+    options?.maximumAge !== undefined
+
+  const relaxed = prefersRelaxedGeolocationDefaults()
+  const enableHighAccuracy = options?.enableHighAccuracy ?? !relaxed
+  const timeout = options?.timeout ?? (relaxed ? 25_000 : 15_000)
+  const maximumAge = options?.maximumAge ?? (relaxed ? 120_000 : 0)
 
   return new Promise((resolve, reject) => {
     if (!map) {
@@ -86,8 +119,34 @@ export function panMapToUserLocation(
       reject(new Error("Geolocation is not supported in this browser."))
       return
     }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      reject(new Error("Location requires a secure context (HTTPS)."))
+      return
+    }
 
-    navigator.geolocation.getCurrentPosition(
+    const primaryOptions: PositionOptions = {
+      enableHighAccuracy,
+      timeout,
+      maximumAge,
+    }
+    const relaxedOptions: PositionOptions = {
+      enableHighAccuracy: false,
+      timeout: Math.max(timeout, 30_000),
+      maximumAge: Math.max(maximumAge, 300_000),
+    }
+
+    const locate = async (): Promise<GeolocationPosition> => {
+      try {
+        return await requestCurrentPosition(primaryOptions)
+      } catch (error) {
+        if (hasExplicitGeoOptions || !canRetryWithRelaxedDefaults(error)) {
+          throw error
+        }
+        return requestCurrentPosition(relaxedOptions)
+      }
+    }
+
+    void locate().then(
       (position) => {
         const { longitude, latitude } = position.coords
         if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
@@ -125,8 +184,7 @@ export function panMapToUserLocation(
       },
       (err) => {
         reject(err)
-      },
-      { enableHighAccuracy, timeout, maximumAge }
+      }
     )
   })
 }

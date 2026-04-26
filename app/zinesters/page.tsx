@@ -736,8 +736,8 @@ export default function ZinestersPage() {
             </div>
           )}
           
-          {/* Add Pin Button */}
-          <div className="absolute top-4 right-4 sm:right-16 flex flex-col gap-2 z-30">
+          {/* Map controls: add pin / login, then locate + zoom — single column so locate isn’t under a higher z-index on small screens */}
+          <div className="absolute top-4 right-4 sm:right-16 z-30 flex flex-col items-end gap-2">
             {user ? (
               <>
                 {/* Color Picker */}
@@ -809,15 +809,12 @@ export default function ZinestersPage() {
                 Log in to add your pin
               </a>
             )}
-          </div>
 
-          {/* Locate (+ zoom from sm): top-right */}
-          <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
             <button
               type="button"
               onClick={panToMyLocation}
               disabled={!mapReady || isLocating}
-              className="cursor-pointer rounded-lg border border-gray-200 bg-white p-2 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-lg border border-gray-200 bg-white p-2 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Go to my location"
               aria-label="Go to my location"
             >
