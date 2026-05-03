@@ -343,7 +343,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
+      <div className="min-h-screen bg-stone-50 font-sans flex items-center justify-center">
         <div className="text-stone-500 text-lg">Loading...</div>
       </div>
     )
@@ -351,9 +351,9 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
+      <div className="min-h-screen bg-stone-50 font-sans flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-stone-800 mb-4">Profile Not Found</h1>
+          <h1 className="text-2xl font-semibold tracking-normal text-stone-800 mb-4">Profile Not Found</h1>
           <p className="text-stone-600 mb-6">{error || 'The requested profile could not be found.'}</p>
           <Link href="/">
             <Button>Go Home</Button>
@@ -364,7 +364,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-sans">
       <Tabs value={profileTab} onValueChange={setProfileTab} className="w-full">
       {/* Header with back button and tabs */}
       <div className="bg-white border-b border-stone-200 shadow-sm">
@@ -450,7 +450,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                         <div className="mt-3 flex flex-wrap gap-2">
                           {profile.roles.map((item) => (
                             <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                              {item}
+                              {item.toLocaleLowerCase()}
                             </Badge>
                           ))}
                         </div>
@@ -474,7 +474,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                         <div className="flex flex-wrap gap-2">
                           {profile.open_to.map((item) => (
                             <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                              {item}
+                              {item.toLocaleLowerCase()}
                             </Badge>
                           ))}
                         </div>
@@ -912,7 +912,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                 
                 {/* Zine Details */}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-stone-800 mb-4">{selectedZine.title}</h2>
+                  <h2 className="text-2xl font-semibold tracking-normal text-stone-800 mb-4">{selectedZine.title}</h2>
                   
                   {selectedZine.description && (
                     <div className="mb-4">

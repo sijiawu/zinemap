@@ -754,7 +754,7 @@ export default function ZinestersPage() {
                         backgroundColor: hexToRgba(selectedPin.color || '#f59e0b', 0.14),
                       }}
                     >
-                      {role}
+                      {role.toLocaleLowerCase()}
                     </span>
                   ))}
                 </div>
