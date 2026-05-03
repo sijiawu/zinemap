@@ -212,6 +212,8 @@ export interface UserProfile {
   bio: string | null
   permalink: string | null
   profile_image: string | null
+  roles: string[] | null
+  open_to: string[] | null
   is_admin?: boolean
   created_at: string
   // Add other profile properties as needed
@@ -235,6 +237,7 @@ export interface HomePin {
     permalink: string | null
     profile_image?: string | null
     bio?: string | null
+    roles?: string[] | null
   }
 }
 

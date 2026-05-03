@@ -24,6 +24,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Store as StoreType, Library as LibraryType, Event as EventType } from "@/lib/types"
 
+const I_M_HERE_AS_OPTIONS = [
+  'Zine maker',
+  'Reader / collector',
+  'Shop owner / staff',
+  'Zine librarian / archivist',
+  'Event organizer',
+  'Distro runner',
+  'Publisher / press',
+  'Printer / studio',
+  'Workshop host',
+  'Researcher / writer',
+]
+
+const OPEN_TO_OPTIONS = [
+  'Trades',
+  'Collaborations',
+  'Commissions',
+  'Facilitating workshops',
+  'Interviews / features',
+  'Stocking opportunities',
+  'Meetups / zine hangs',
+]
+
 export default function ProfilePage() {
   const { user, loading: userLoading } = useSupabaseUser()
   const router = useRouter()
@@ -54,7 +77,9 @@ export default function ProfilePage() {
     display_name: '',
     site: '',
     bio: '',
-    permalink: ''
+    permalink: '',
+    roles: [] as string[],
+    open_to: [] as string[],
   })
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
@@ -97,6 +122,11 @@ export default function ProfilePage() {
   const [savedPinsTab, setSavedPinsTab] = useState<'stores' | 'libraries' | 'events'>('stores')
   const [profileTab, setProfileTab] = useState('profile')
   const [isDesktop, setIsDesktop] = useState(true)
+  const [homePins, setHomePins] = useState<{
+    id: string
+    city: string | null
+    country: string | null
+  }[]>([])
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 1024)
@@ -140,12 +170,14 @@ export default function ProfilePage() {
         display_name: profileData.display_name || '',
         site: profileData.site || '',
         bio: profileData.bio || '',
-        permalink: profileData.permalink || ''
+        permalink: profileData.permalink || '',
+        roles: profileData.roles || [],
+        open_to: profileData.open_to || [],
       })
       setProfileImagePreview(profileData.profile_image || null)
 
-      // Fetch zines, contributions, activities, attending events, and saved locations in parallel
-      const [zinesRes, , , attendingRes, savedRes] = await Promise.all([
+      // Fetch zines, contributions, activities, attending events, saved locations, and home pins in parallel
+      const [zinesRes, , , attendingRes, savedRes, homePinsRes] = await Promise.all([
         supabase.from('zines').select('id, title, description, cover_image, permalink, is_public').eq('user_id', user.id).order('created_at', { ascending: false }),
         fetchContributions(user.id),
         fetchActivities(user.id),
@@ -154,6 +186,7 @@ export default function ProfilePage() {
           events!inner(id, name, category, start_date, end_date, city, state, country, permalink)
         `).eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('saved_locations').select('entity_type, entity_id').eq('user_id', user.id),
+        supabase.from('home_pins').select('id, city, country').eq('user_email', user.email).order('created_at', { ascending: false }),
       ])
 
       if (zinesRes.error) {
@@ -177,6 +210,8 @@ export default function ProfilePage() {
         }))
         setAttendingEvents(events)
       }
+
+      setHomePins(homePinsRes.data || [])
 
       // Fetch saved locations' full entity data
       const savedData = savedRes.data || []
@@ -601,7 +636,9 @@ export default function ProfilePage() {
           site: finalSite,
           bio: formData.bio?.trim() || null,
           permalink: finalPermalink,
-          profile_image: profileImageUrl
+          profile_image: profileImageUrl,
+          roles: formData.roles,
+          open_to: formData.open_to,
         })
         .eq('id', user.id)
 
@@ -614,8 +651,25 @@ export default function ProfilePage() {
       setSuccess('Profile updated successfully!')
       setIsEditing(false)
       setFieldErrors({})
-      setProfile(prev => prev ? { ...prev, display_name: formData.display_name.trim(), site: finalSite, bio: formData.bio?.trim() || null, permalink: finalPermalink, profile_image: profileImageUrl } : null)
-      setFormData(prev => ({ ...prev, display_name: formData.display_name.trim(), site: finalSite || '', bio: formData.bio?.trim() || '', permalink: finalPermalink }))
+      setProfile(prev => prev ? ({
+        ...prev,
+        display_name: formData.display_name.trim(),
+        site: finalSite,
+        bio: formData.bio?.trim() || null,
+        permalink: finalPermalink,
+        profile_image: profileImageUrl,
+        roles: formData.roles,
+        open_to: formData.open_to,
+      }) : null)
+      setFormData(prev => ({
+        ...prev,
+        display_name: formData.display_name.trim(),
+        site: finalSite || '',
+        bio: formData.bio?.trim() || '',
+        permalink: finalPermalink,
+        roles: formData.roles,
+        open_to: formData.open_to,
+      }))
       setProfileImagePreview(profileImageUrl)
       setProfileImage(null)
 
@@ -665,11 +719,22 @@ export default function ProfilePage() {
       display_name: profile?.display_name || '',
       site: profile?.site || '',
       bio: profile?.bio || '',
-      permalink: profile?.permalink || ''
+      permalink: profile?.permalink || '',
+      roles: profile?.roles || [],
+      open_to: profile?.open_to || [],
     })
     setProfileImage(null)
     setProfileImagePreview(profile?.profile_image || null)
     setError(null)
+  }
+
+  const toggleMultiSelectValue = (key: 'roles' | 'open_to', value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(value)
+        ? prev[key].filter((item) => item !== value)
+        : [...prev[key], value],
+    }))
   }
 
 
@@ -823,12 +888,21 @@ export default function ProfilePage() {
                               href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 transition-colors"
+                              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
                               style={{ wordBreak: 'break-all' }}
                             >
                               {profile.site}
                               <ExternalLink className="h-4 w-4" />
                             </a>
+                          )}
+                          {profile.roles && profile.roles.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {profile.roles.map((item) => (
+                                <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                                  {item}
+                                </Badge>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -864,6 +938,21 @@ export default function ProfilePage() {
                       </p>
                     </div>
                   )}
+
+                  {profile.open_to?.length ? (
+                    <div className="px-6 pb-6 space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-stone-700 mb-2">Reach out for:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {profile.open_to.map((item) => (
+                            <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                              {item}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               ) : (
               <CardContent className="pt-6 overflow-hidden">
@@ -985,7 +1074,57 @@ export default function ProfilePage() {
                         Maximum 1000 characters. {formData.bio.length}/1000
                       </p>
                     </div>
-                    
+
+                    <div>
+                      <Label className="text-sm font-medium text-stone-700">How I&apos;m involved</Label>
+                      <p className="text-xs text-stone-500 mt-1 mb-2">Select all that apply.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {I_M_HERE_AS_OPTIONS.map((option) => {
+                          const selected = formData.roles.includes(option)
+                          return (
+                            <Badge
+                              key={option}
+                              variant={selected ? "default" : "outline"}
+                              className={`cursor-pointer transition-all ${
+                                selected
+                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                              }`}
+                              onClick={() => toggleMultiSelectValue('roles', option)}
+                            >
+                              {option}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium text-stone-700">Reach out for:</Label>
+                      <p className="text-xs text-stone-500 mt-1 mb-2">
+                        Select all that apply. Make sure to keep your contact info updated in your link or bio!
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {OPEN_TO_OPTIONS.map((option) => {
+                          const selected = formData.open_to.includes(option)
+                          return (
+                            <Badge
+                              key={option}
+                              variant={selected ? "default" : "outline"}
+                              className={`cursor-pointer transition-all ${
+                                selected
+                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+                              }`}
+                              onClick={() => toggleMultiSelectValue('open_to', option)}
+                            >
+                              {option}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    </div>
+
                     <div className="flex gap-3 pt-4">
                       <Button onClick={handleSave} disabled={saving}>
                         {saving ? 'Saving...' : 'Save Changes'}
@@ -998,10 +1137,276 @@ export default function ProfilePage() {
                 </CardContent>
               )}
             </Card>
+
+            {/* Zines Section */}
+            <div className="mb-6 sm:mb-8">
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <CardTitle className="flex items-center gap-2 font-gloria">
+                    <BookOpen className="h-5 w-5" />
+                    My Zines
+                  </CardTitle>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingZine(null)
+                        setShowZineModal(true)
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      Add Zine
+                    </Button>
+                    <Link href="/dashboard" className="w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {zines.length === 0 ? (
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                      <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
+                      <p className="text-stone-600 mb-4">Start adding your first zine!</p>
+                      <Button
+                        onClick={() => {
+                          setEditingZine(null)
+                          setShowZineModal(true)
+                        }}
+                      >
+                        Add Zine
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 sm:space-y-4">
+                      {zines.map((zine) => (
+                        <div
+                          key={zine.id}
+                          className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
+                        >
+                          {/* Cover Image */}
+                          <div className="flex-shrink-0">
+                            {zine.cover_image ? (
+                              <img
+                                src={zine.cover_image}
+                                alt={`${zine.title} cover`}
+                                className="w-16 h-20 object-cover rounded border border-stone-200"
+                              />
+                            ) : (
+                              <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
+                                <BookOpen className="h-8 w-8 text-stone-400" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Zine Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="mb-2">
+                              <h3 className="font-semibold text-stone-800">{zine.title}</h3>
+                            </div>
+                            {zine.description && (
+                              <p className="text-sm text-stone-600 line-clamp-3">
+                                {zine.description}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={zine.is_public}
+                                onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
+                              />
+                              <span className="text-sm text-stone-600">
+                                {zine.is_public ? 'Public' : 'Private'}
+                              </span>
+                            </div>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingZine(zine)
+                                setShowZineModal(true)
+                              }}
+                              className="w-full sm:w-auto"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Events Section - Upcoming + Past */}
+            <div className="space-y-6">
+              {/* Upcoming Events */}
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 font-gloria">
+                    <Calendar className="h-5 w-5" />
+                    Events I&apos;m Going To
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const upcomingEvents = attendingEvents.filter(event => !isPastEvent(event))
+                    return upcomingEvents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                        <h3 className="text-lg font-semibold text-stone-800 mb-2">No upcoming events</h3>
+                        <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
+                        <Link href="/events">
+                          <Button>Explore events</Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {upcomingEvents.map((event) => (
+                          <Link
+                            key={event.id}
+                            href={`/event/${event.permalink || event.id}`}
+                            className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
+                                  {event.name}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                  <Badge
+                                    className="text-xs bg-green-50 text-[#009035] border-green-200"
+                                  >
+                                    {getEventCategoryDisplay(event.category)}
+                                  </Badge>
+                                  <span className="text-xs text-stone-500">
+                                    {formatDateReadable(event.start_date)}
+                                    {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-stone-600 line-clamp-1">
+                                  {event.city}{event.state && `, ${event.state}`}, {event.country}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Past Events */}
+              <Card className="bg-white border-stone-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 font-gloria">
+                    <Calendar className="h-5 w-5" />
+                    Events I Went To
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const pastEvents = attendingEvents.filter(event => isPastEvent(event))
+                    return pastEvents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
+                        <h3 className="text-lg font-semibold text-stone-800 mb-2">No past events</h3>
+                        <p className="text-stone-600">Events you've attended will appear here.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {pastEvents.map((event) => (
+                          <Link
+                            key={event.id}
+                            href={`/event/${event.permalink || event.id}`}
+                            className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
+                                  {event.name}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                  <Badge
+                                    className="text-xs bg-stone-50 text-stone-600 border-stone-200"
+                                  >
+                                    {getEventCategoryDisplay(event.category)}
+                                  </Badge>
+                                  <span className="text-xs text-stone-500">
+                                    {formatDateReadable(event.start_date)}
+                                    {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-stone-600 line-clamp-1">
+                                  {event.city}{event.state && `, ${event.state}`}, {event.country}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
                       </div>
                       
           {/* Sidebar */}
           <div className="lg:col-span-1">
+            <Card className="bg-white border-stone-200 shadow-sm mb-4 sm:mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-stone-800">
+                  Part of the scene in:
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {homePins.length > 0 ? (
+                  <div className="space-y-2">
+                    {homePins.map((pin) => {
+                      const city = pin.city?.trim()
+                      const country = pin.country?.trim()
+                      const locationLabel = [city, country].filter(Boolean).join(', ')
+                      return (
+                        <a
+                          key={pin.id}
+                          href={`/zinesters?pin=${pin.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-700 hover:border-stone-300 hover:bg-stone-50 transition-colors"
+                        >
+                          <MapPin className="h-4 w-4 text-stone-500 shrink-0" />
+                          <span className="group-hover:text-stone-900">
+                            {locationLabel || 'Unknown location'}
+                          </span>
+                        </a>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-stone-600">
+                      Add yourself to the map to share where you're part of the scene!
+                    </p>
+                    <a href="/zinesters" className="inline-flex">
+                      <Button size="sm" variant="outline">Join the directory</Button>
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             <Card className="bg-white border-stone-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-stone-800">Profile Stats</CardTitle>
@@ -1068,230 +1473,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Zines Section - Full Width */}
-        <div className="mt-8 mb-6 sm:mb-8">
-            <Card className="bg-white border-stone-200 shadow-sm">
-              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                <CardTitle className="flex items-center gap-2 font-gloria">
-                  <BookOpen className="h-5 w-5" />
-                  My Zines
-                </CardTitle>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingZine(null)
-                      setShowZineModal(true)
-                    }}
-                    className="w-full sm:w-auto"
-                  >
-                    Add Zine
-                  </Button>
-                  <Link href="/dashboard" className="w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {zines.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines yet</h3>
-                    <p className="text-stone-600 mb-4">Start adding your first zine!</p>
-                    <Button
-                      onClick={() => {
-                        setEditingZine(null)
-                        setShowZineModal(true)
-                      }}
-                    >
-                      Add Zine
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3 sm:space-y-4">
-                    {zines.map((zine) => (
-                      <div
-                        key={zine.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border border-stone-200 rounded-lg hover:bg-stone-50"
-                      >
-                        {/* Cover Image */}
-                        <div className="flex-shrink-0">
-                          {zine.cover_image ? (
-                            <img
-                              src={zine.cover_image}
-                              alt={`${zine.title} cover`}
-                              className="w-16 h-20 object-cover rounded border border-stone-200"
-                            />
-                          ) : (
-                            <div className="w-16 h-20 rounded border border-stone-200 bg-stone-100 flex items-center justify-center">
-                              <BookOpen className="h-8 w-8 text-stone-400" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Zine Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-2">
-                            <h3 className="font-semibold text-stone-800">{zine.title}</h3>
-                          </div>
-                          {zine.description && (
-                            <p className="text-sm text-stone-600 line-clamp-3">
-                              {zine.description}
-                            </p>
-                          )}
-                        </div>
-                        
-                        {/* Actions */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={zine.is_public}
-                              onCheckedChange={() => toggleZinePublic(zine.id, zine.is_public)}
-                            />
-                            <span className="text-sm text-stone-600">
-                              {zine.is_public ? 'Public' : 'Private'}
-                            </span>
-                          </div>
-                          
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setEditingZine(zine)
-                              setShowZineModal(true)
-                            }}
-                            className="w-full sm:w-auto"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-        </div>
-
-        {/* Events Section - Upcoming + Past */}
-        <div className="space-y-6">
-          {/* Upcoming Events */}
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <Calendar className="h-5 w-5" />
-                Events I'm Going To
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const upcomingEvents = attendingEvents.filter(event => !isPastEvent(event))
-                return upcomingEvents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No upcoming events</h3>
-                    <p className="text-stone-600 mb-4">Start exploring events and mark yourself as attending!</p>
-                    <Link href="/events">
-                      <Button>Explore events</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {upcomingEvents.map((event) => (
-                      <Link
-                        key={event.id}
-                        href={`/event/${event.permalink || event.id}`}
-                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
-                      >
-                        <div className="flex items-start gap-2">
-                          <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
-                              {event.name}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                              <Badge 
-                                className="text-xs bg-green-50 text-[#009035] border-green-200"
-                              >
-                                {getEventCategoryDisplay(event.category)}
-                              </Badge>
-                              <span className="text-xs text-stone-500">
-                                {formatDateReadable(event.start_date)}
-                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                              </span>
-                            </div>
-                            <p className="text-xs text-stone-600 line-clamp-1">
-                              {event.city}{event.state && `, ${event.state}`}, {event.country}
-                            </p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )
-              })()}
-            </CardContent>
-          </Card>
-
-          {/* Past Events */}
-          <Card className="bg-white border-stone-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 font-gloria">
-                <Calendar className="h-5 w-5" />
-                Events I Went To
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const pastEvents = attendingEvents.filter(event => isPastEvent(event))
-                return pastEvents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-                    <h3 className="text-lg font-semibold text-stone-800 mb-2">No past events</h3>
-                    <p className="text-stone-600">Events you've attended will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {pastEvents.map((event) => (
-                      <Link
-                        key={event.id}
-                        href={`/event/${event.permalink || event.id}`}
-                        className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
-                      >
-                        <div className="flex items-start gap-2">
-                          <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
-                              {event.name}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                              <Badge 
-                                className="text-xs bg-stone-50 text-stone-600 border-stone-200"
-                              >
-                                {getEventCategoryDisplay(event.category)}
-                              </Badge>
-                              <span className="text-xs text-stone-500">
-                                {formatDateReadable(event.start_date)}
-                                {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                              </span>
-                            </div>
-                            <p className="text-xs text-stone-600 line-clamp-1">
-                              {event.city}{event.state && `, ${event.state}`}, {event.country}
-                            </p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )
-              })()}
-            </CardContent>
-          </Card>
-        </div>
           </TabsContent>
 
           <TabsContent value="contributions">

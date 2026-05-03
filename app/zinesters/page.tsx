@@ -85,6 +85,32 @@ export default function ZinestersPage() {
       
       setPins(transformedData)
       setPinsLoaded(true)
+
+      // Support deep-linking from profiles: /zinesters?pin=<home_pin_id>
+      if (typeof window !== 'undefined') {
+        const targetPinId = new URLSearchParams(window.location.search).get('pin')
+        if (targetPinId) {
+          const targetPin = transformedData.find(pin => pin.id === targetPinId)
+          if (targetPin) {
+            setSelectedPin(targetPin)
+
+            if (map.current) {
+              const currentZoom = map.current.getZoom()
+              map.current.easeTo({
+                center: [targetPin.longitude, targetPin.latitude],
+                zoom: currentZoom,
+                duration: 1500,
+                offset: getResponsiveOffset()
+              })
+            }
+
+            const fullProfile = await fetchFullProfile(targetPin.user_email)
+            if (fullProfile) {
+              setSelectedPin(prev => prev?.id === targetPin.id ? { ...targetPin, user: fullProfile } : prev)
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching pins:', error)
       toast({
@@ -188,7 +214,7 @@ export default function ZinestersPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name, email, permalink, profile_image, bio')
+        .select('id, display_name, email, permalink, profile_image, bio, roles')
         .eq('email', userEmail)
         .single()
 
@@ -201,6 +227,21 @@ export default function ZinestersPage() {
       console.error('Error fetching full profile:', error)
       return null
     }
+  }
+
+  const hexToRgba = (hex: string, alpha: number) => {
+    const sanitized = hex.replace('#', '')
+    const normalized = sanitized.length === 3
+      ? sanitized.split('').map((char) => char + char).join('')
+      : sanitized
+
+    const value = Number.parseInt(normalized, 16)
+    if (Number.isNaN(value)) return `rgba(245, 158, 11, ${alpha})`
+
+    const r = (value >> 16) & 255
+    const g = (value >> 8) & 255
+    const b = value & 255
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
 
   // Function to get responsive offset for flyTo based on screen size
@@ -698,6 +739,24 @@ export default function ZinestersPage() {
                   <p className="text-sm text-gray-600">
                     📍 {[selectedPin.city, selectedPin.state, selectedPin.country].filter(Boolean).join(', ')}
                   </p>
+                </div>
+              )}
+
+              {!loadingProfile && selectedPin.user?.roles && selectedPin.user.roles.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {selectedPin.user.roles.map((role, index) => (
+                    <span
+                      key={`${role}-${index}`}
+                      className="rounded-full border px-2 py-0.5 text-xs font-medium"
+                      style={{
+                        color: selectedPin.color || '#f59e0b',
+                        borderColor: selectedPin.color || '#f59e0b',
+                        backgroundColor: hexToRgba(selectedPin.color || '#f59e0b', 0.14),
+                      }}
+                    >
+                      {role}
+                    </span>
+                  ))}
                 </div>
               )}
 
