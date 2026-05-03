@@ -439,7 +439,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                           href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                          className="inline-flex items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
                           style={{ wordBreak: 'break-all' }}
                         >
                           {profile.site}
@@ -449,8 +449,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                       {profile.roles && profile.roles.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {profile.roles.map((item) => (
-                            <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                              {item.toLocaleLowerCase()}
+                            <Badge key={item} variant="outline" className="border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29]">
+                              {item}
                             </Badge>
                           ))}
                         </div>
@@ -473,8 +473,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                         <p className="text-sm font-semibold text-stone-700 mb-2">Reach out for:</p>
                         <div className="flex flex-wrap gap-2">
                           {profile.open_to.map((item) => (
-                            <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                              {item.toLocaleLowerCase()}
+                            <Badge key={item} variant="outline" className="border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29]">
+                              {item}
                             </Badge>
                           ))}
                         </div>

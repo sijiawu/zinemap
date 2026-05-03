@@ -23,32 +23,34 @@ import { StoreMap } from "@/components/store-map"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Store as StoreType, Library as LibraryType, Event as EventType } from "@/lib/types"
+import { useToast } from '@/hooks/use-toast'
 
-const I_M_HERE_AS_OPTIONS = [
-  'Zine maker',
-  'Reader / collector',
-  'Shop owner / staff',
-  'Zine librarian / archivist',
-  'Event organizer',
-  'Distro runner',
-  'Publisher / press',
-  'Printer / studio',
-  'Workshop host',
-  'Researcher / writer',
+const ROLES = [
+  'zine maker',
+  'reader / collector',
+  'distro runner',
+  'shop owner / staff',
+  'zine librarian / archivist',
+  'publisher / press',
+  'printer / print studio',
+  'event organizer',
+  'educator / teacher',
+  'researcher / writer',
 ]
 
 const OPEN_TO_OPTIONS = [
-  'Trades',
-  'Collaborations',
-  'Commissions',
-  'Facilitating workshops',
-  'Interviews / features',
-  'Stocking opportunities',
-  'Meetups / zine hangs',
+  'trades',
+  'collaborations',
+  'stocking requests',
+  'workshop facilitation',
+  'speaking / panels',
+  'interviews / features',
+  'feedback / beta readers',
 ]
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useSupabaseUser()
+  const { toast } = useToast()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [zines, setZines] = useState<{
@@ -127,6 +129,22 @@ export default function ProfilePage() {
     city: string | null
     country: string | null
   }[]>([])
+  const [showTagSuggestion, setShowTagSuggestion] = useState<{ roles: boolean; open_to: boolean }>({
+    roles: false,
+    open_to: false,
+  })
+  const [tagSuggestionInput, setTagSuggestionInput] = useState<{ roles: string; open_to: string }>({
+    roles: '',
+    open_to: '',
+  })
+  const [submittingTagSuggestion, setSubmittingTagSuggestion] = useState<{ roles: boolean; open_to: boolean }>({
+    roles: false,
+    open_to: false,
+  })
+  const [tagSuggestionThanks, setTagSuggestionThanks] = useState<{ roles: boolean; open_to: boolean }>({
+    roles: false,
+    open_to: false,
+  })
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 1024)
@@ -737,6 +755,63 @@ export default function ProfilePage() {
     }))
   }
 
+  const submitTagSuggestion = async (field: 'roles' | 'open_to') => {
+    if (!user) return
+
+    const suggestion = tagSuggestionInput[field].trim()
+    if (!suggestion) {
+      toast({
+        title: 'Suggestion required',
+        description: 'Please type a tag suggestion first.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (suggestion.length > 60) {
+      toast({
+        title: 'Suggestion too long',
+        description: 'Keep suggestions to 60 characters or fewer.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setSubmittingTagSuggestion((prev) => ({ ...prev, [field]: true }))
+
+      const { error: insertError } = await supabase
+        .from('profile_tag_suggestions')
+        .insert({
+          user_id: user.id,
+          field_type: field,
+          suggestion,
+        })
+
+      if (insertError) throw insertError
+
+      setTagSuggestionInput((prev) => ({ ...prev, [field]: '' }))
+      setShowTagSuggestion((prev) => ({ ...prev, [field]: false }))
+      setTagSuggestionThanks((prev) => ({ ...prev, [field]: true }))
+      setTimeout(() => {
+        setTagSuggestionThanks((prev) => ({ ...prev, [field]: false }))
+      }, 3500)
+      toast({
+        title: 'Thanks for the suggestion',
+        description: 'We saved your tag suggestion for review.',
+      })
+    } catch (err) {
+      console.error('Tag suggestion insert error:', err)
+      toast({
+        title: 'Could not submit suggestion',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSubmittingTagSuggestion((prev) => ({ ...prev, [field]: false }))
+    }
+  }
+
 
 
   const toggleZinePublic = async (zineId: string, currentPublic: boolean) => {
@@ -888,7 +963,7 @@ export default function ProfilePage() {
                               href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                              className="inline-flex items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
                               style={{ wordBreak: 'break-all' }}
                             >
                               {profile.site}
@@ -898,8 +973,8 @@ export default function ProfilePage() {
                           {profile.roles && profile.roles.length > 0 && (
                             <div className="mt-3 flex flex-wrap gap-2">
                               {profile.roles.map((item) => (
-                                <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                                  {item.toLocaleLowerCase()}
+                                <Badge key={item} variant="outline" className="border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29]">
+                                  {item}
                                 </Badge>
                               ))}
                             </div>
@@ -945,8 +1020,8 @@ export default function ProfilePage() {
                         <p className="text-sm font-semibold text-stone-700 mb-2">Reach out for:</p>
                         <div className="flex flex-wrap gap-2">
                           {profile.open_to.map((item) => (
-                            <Badge key={item} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                              {item.toLocaleLowerCase()}
+                            <Badge key={item} variant="outline" className="border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29]">
+                              {item}
                             </Badge>
                           ))}
                         </div>
@@ -1079,23 +1154,70 @@ export default function ProfilePage() {
                       <Label className="text-sm font-medium text-stone-700">How I&apos;m involved</Label>
                       <p className="text-xs text-stone-500 mt-1 mb-2">Select all that apply.</p>
                       <div className="flex flex-wrap gap-2">
-                        {I_M_HERE_AS_OPTIONS.map((option) => {
+                        {ROLES.map((option) => {
                           const selected = formData.roles.includes(option)
                           return (
                             <Badge
                               key={option}
-                              variant={selected ? "default" : "outline"}
+                              variant="outline"
                               className={`cursor-pointer transition-all ${
                                 selected
-                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  ? "border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29] hover:bg-[#f3e2c8]"
                                   : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
                               }`}
                               onClick={() => toggleMultiSelectValue('roles', option)}
                             >
-                              {option.toLocaleLowerCase()}
+                              {option}
                             </Badge>
                           )
                         })}
+                      </div>
+                      <div className="mt-2">
+                        {!showTagSuggestion.roles ? (
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowTagSuggestion((prev) => ({ ...prev, roles: true }))}
+                              className="text-xs text-stone-600 hover:text-stone-800 underline underline-offset-2"
+                            >
+                              suggest a new tag
+                            </button>
+                            {tagSuggestionThanks.roles && (
+                              <span className="text-xs text-[#5b3a29]">Thanks!</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                            <Input
+                              value={tagSuggestionInput.roles}
+                              onChange={(e) => setTagSuggestionInput((prev) => ({ ...prev, roles: e.target.value }))}
+                              placeholder="Suggest a role tag"
+                              maxLength={60}
+                              className="h-8 text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => submitTagSuggestion('roles')}
+                                disabled={submittingTagSuggestion.roles}
+                              >
+                                {submittingTagSuggestion.roles ? 'Sending...' : 'Send'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowTagSuggestion((prev) => ({ ...prev, roles: false }))
+                                  setTagSuggestionInput((prev) => ({ ...prev, roles: '' }))
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1110,18 +1232,65 @@ export default function ProfilePage() {
                           return (
                             <Badge
                               key={option}
-                              variant={selected ? "default" : "outline"}
+                              variant="outline"
                               className={`cursor-pointer transition-all ${
                                 selected
-                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  ? "border-[#d8c2a3] bg-[#f8ecd8] text-[#5b3a29] hover:bg-[#f3e2c8]"
                                   : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
                               }`}
                               onClick={() => toggleMultiSelectValue('open_to', option)}
                             >
-                              {option.toLocaleLowerCase()}
+                              {option}
                             </Badge>
                           )
                         })}
+                      </div>
+                      <div className="mt-2">
+                        {!showTagSuggestion.open_to ? (
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowTagSuggestion((prev) => ({ ...prev, open_to: true }))}
+                              className="text-xs text-stone-600 hover:text-stone-800 underline underline-offset-2"
+                            >
+                              suggest a new tag
+                            </button>
+                            {tagSuggestionThanks.open_to && (
+                              <span className="text-xs text-[#5b3a29]">Thanks!</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                            <Input
+                              value={tagSuggestionInput.open_to}
+                              onChange={(e) => setTagSuggestionInput((prev) => ({ ...prev, open_to: e.target.value }))}
+                              placeholder="Suggest a reach-out tag"
+                              maxLength={60}
+                              className="h-8 text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => submitTagSuggestion('open_to')}
+                                disabled={submittingTagSuggestion.open_to}
+                              >
+                                {submittingTagSuggestion.open_to ? 'Sending...' : 'Send'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowTagSuggestion((prev) => ({ ...prev, open_to: false }))
+                                  setTagSuggestionInput((prev) => ({ ...prev, open_to: '' }))
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

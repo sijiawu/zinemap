@@ -26,6 +26,7 @@ export default function ZinestersPage() {
   const markersRef = useRef<any[]>([])
   const lastPinsRef = useRef<string>('')
   const isCreatingMarkersRef = useRef(false)
+  const suppressScalePinIdRef = useRef<string | null>(null)
   const [pins, setPins] = useState<HomePin[]>([])
   const [selectedPin, setSelectedPin] = useState<HomePin | null>(null)
   const [isAddingPin, setIsAddingPin] = useState(false)
@@ -92,6 +93,8 @@ export default function ZinestersPage() {
         if (targetPinId) {
           const targetPin = transformedData.find(pin => pin.id === targetPinId)
           if (targetPin) {
+            // Keep the deep-linked pin at normal size on initial load.
+            suppressScalePinIdRef.current = targetPin.id
             setSelectedPin(targetPin)
 
             if (map.current) {
@@ -260,6 +263,8 @@ export default function ZinestersPage() {
 
   // Handle pin click
   const handlePinClick = async (pin: HomePin) => {
+    // Manual pin interactions should restore normal active scaling behavior.
+    suppressScalePinIdRef.current = null
     setLoadingProfile(true)
     
     try {
@@ -490,8 +495,10 @@ export default function ZinestersPage() {
       
       // Create pin-shaped marker with user avatar
       const isActive = selectedPin?.id === pin.id
-        const pinSize = isActive ? '47px' : '36px' // 20% bigger: 39px*1.2=47px, 30px*1.2=36px
-        const avatarSize = isActive ? '31px' : '24px' // 20% bigger: 26px*1.2=31px, 20px*1.2=24px
+      const suppressScale = suppressScalePinIdRef.current === pin.id
+      const shouldScaleActive = isActive && !suppressScale
+      const pinSize = shouldScaleActive ? '47px' : '36px' // 20% bigger: 39px*1.2=47px, 30px*1.2=36px
+      const avatarSize = shouldScaleActive ? '31px' : '24px' // 20% bigger: 26px*1.2=31px, 20px*1.2=24px
       const zIndex = isActive ? '10' : '1'
       
       el.innerHTML = `
@@ -754,7 +761,7 @@ export default function ZinestersPage() {
                         backgroundColor: hexToRgba(selectedPin.color || '#f59e0b', 0.14),
                       }}
                     >
-                      {role.toLocaleLowerCase()}
+                      {role}
                     </span>
                   ))}
                 </div>
