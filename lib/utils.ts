@@ -481,26 +481,62 @@ export function formatRecurrenceDescription(event: {
  * @returns React elements with URLs converted to links
  */
 export function autoLinkText(text: string): React.ReactNode[] {
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.([a-zA-Z]{2,})(?:\/[^\s]*)?)/g
-  const parts = text.split(urlRegex)
-  
-  return parts.map((part, index) => {
-    // Check if this part matches the URL pattern by testing against the original regex
-    const isUrl = /^(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.([a-zA-Z]{2,})(?:\/[^\s]*)?)$/.test(part)
-    
-    if (isUrl) {
-      // Ensure URL has protocol
-      const href = part.startsWith('http') ? part : `https://${part}`
-      return React.createElement('a', {
-        key: index,
-        href: href,
-        target: '_blank',
-        rel: 'noopener noreferrer',
-        className: 'text-blue-600 hover:text-blue-800 underline'
-      }, part)
+  // Order matters: email first so domains inside emails aren't linkified separately.
+  const linkRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|https?:\/\/[^\s]+|www\.[^\s]+|\b[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}(?:\/[^\s]*)?\b)/g
+  const nodes: React.ReactNode[] = []
+
+  let lastIndex = 0
+  let key = 0
+
+  for (const match of text.matchAll(linkRegex)) {
+    const fullMatch = match[0]
+    const matchIndex = match.index ?? 0
+
+    if (matchIndex > lastIndex) {
+      nodes.push(text.slice(lastIndex, matchIndex))
     }
-    return part
-  })
+
+    // Avoid linkifying domains that are only the domain part of an email.
+    if (!fullMatch.includes('@') && matchIndex > 0 && text[matchIndex - 1] === '@') {
+      nodes.push(fullMatch)
+      lastIndex = matchIndex + fullMatch.length
+      continue
+    }
+
+    // Keep trailing punctuation outside the clickable link.
+    const punctuationMatch = fullMatch.match(/[),.!?:;]+$/)
+    const trailingPunctuation = punctuationMatch?.[0] ?? ''
+    const cleanMatch = trailingPunctuation ? fullMatch.slice(0, -trailingPunctuation.length) : fullMatch
+
+    const isEmail = /^[a-zA-Z0-9._%+-]+@/.test(cleanMatch)
+    const href = isEmail
+      ? `mailto:${cleanMatch}`
+      : cleanMatch.startsWith('http')
+        ? cleanMatch
+        : `https://${cleanMatch}`
+
+    nodes.push(
+      React.createElement('a', {
+        key: key++,
+        href,
+        target: isEmail ? undefined : '_blank',
+        rel: isEmail ? undefined : 'noopener noreferrer',
+        className: 'text-blue-600 hover:text-blue-800 underline'
+      }, cleanMatch)
+    )
+
+    if (trailingPunctuation) {
+      nodes.push(trailingPunctuation)
+    }
+
+    lastIndex = matchIndex + fullMatch.length
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex))
+  }
+
+  return nodes
 }
 
 /**
