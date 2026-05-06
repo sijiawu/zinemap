@@ -33,7 +33,7 @@ export default function ZinesPage() {
   const [loadingShuffle, setLoadingShuffle] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("")
   const [selectedZine, setSelectedZine] = useState<ZineWithAuthor | null>(null)
   
   // Pagination state
@@ -112,14 +112,6 @@ export default function ZinesPage() {
     fetchAuthorNames()
   }, [creatorsLoaded])
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
   // Fetch data with pagination using database joins
   useEffect(() => {
     const fetchZines = async () => {
@@ -195,7 +187,7 @@ export default function ZinesPage() {
   // Handle search using database text search with joins
   useEffect(() => {
     const fetchSearchResults = async () => {
-      if (!debouncedSearchQuery.trim()) {
+      if (!appliedSearchQuery.trim()) {
         setFilteredZines(zines)
         return
       }
@@ -234,7 +226,7 @@ export default function ZinesPage() {
         })) || []
 
         // Filter based on search query
-        const query = debouncedSearchQuery.toLowerCase()
+        const query = appliedSearchQuery.toLowerCase()
         const filtered = allZinesWithAuthors.filter(zine => 
           zine.title.toLowerCase().includes(query) ||
           zine.description?.toLowerCase().includes(query) ||
@@ -258,24 +250,24 @@ export default function ZinesPage() {
     }
 
     fetchSearchResults()
-  }, [debouncedSearchQuery])
+  }, [appliedSearchQuery])
 
   // When not searching, use paginated results
   useEffect(() => {
-    if (!debouncedSearchQuery.trim()) {
+    if (!appliedSearchQuery.trim()) {
       setFilteredZines(zines)
     }
-  }, [zines, debouncedSearchQuery])
+  }, [zines, appliedSearchQuery])
 
   // Reset shuffle when search, author filter, or page changes
   useEffect(() => {
     setDisplayZines(null)
-  }, [debouncedSearchQuery, selectedCreator, currentPage])
+  }, [appliedSearchQuery, selectedCreator, currentPage])
 
   // Handle author filtering using database joins
   useEffect(() => {
     if (selectedCreator === "all") {
-      if (!debouncedSearchQuery.trim()) {
+      if (!appliedSearchQuery.trim()) {
         setFilteredZines(zines)
       }
       return
@@ -335,7 +327,7 @@ export default function ZinesPage() {
     }
 
     fetchAuthorZines()
-  }, [selectedCreator, debouncedSearchQuery])
+  }, [selectedCreator, appliedSearchQuery])
 
 
   // Fetch 20 random zines from all zines
@@ -397,12 +389,26 @@ export default function ZinesPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     // Clear search and creator filter when changing pages
-    if (debouncedSearchQuery.trim()) {
+    if (appliedSearchQuery.trim()) {
       setSearchQuery("")
+      setAppliedSearchQuery("")
     }
     if (selectedCreator !== "all") {
       setSelectedCreator("all")
     }
+  }
+
+  const handleFind = () => {
+    setDisplayZines(null)
+    setCurrentPage(1)
+    setAppliedSearchQuery(searchQuery.trim())
+  }
+
+  const handleViewAll = () => {
+    setDisplayZines(null)
+    setSearchQuery("")
+    setAppliedSearchQuery("")
+    setCurrentPage(1)
   }
 
   if (loading) {
@@ -463,13 +469,27 @@ export default function ZinesPage() {
                     placeholder="Search zines, authors, or descriptions..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleFind()
+                      }
+                    }}
                     className="pl-10 bg-white border-stone-300 focus:border-purple-300 focus:ring-purple-200"
                   />
                 </div>
               </div>
 
+              <Button
+                variant="outline"
+                size="default"
+                onClick={handleFind}
+                className="shrink-0 bg-white border-stone-300 hover:bg-stone-50 hover:border-purple-300 text-stone-700"
+              >
+                Find
+              </Button>
+
               {/* Shuffle - hidden when author selected or search active */}
-              {selectedCreator === "all" && !debouncedSearchQuery.trim() && (
+              {selectedCreator === "all" && !appliedSearchQuery.trim() && (
                 <>
                   <Button
                     variant="outline"
@@ -482,18 +502,19 @@ export default function ZinesPage() {
                     {loadingShuffle ? 'Shuffling…' : 'Shuffle'}
                   </Button>
 
-                  {/* View all - only when in shuffle mode */}
-                  {displayZines && (
-                    <Button
-                      variant="outline"
-                      size="default"
-                      onClick={() => setDisplayZines(null)}
-                      className="shrink-0 bg-white border-stone-300 hover:bg-stone-50 hover:border-purple-300 text-stone-700"
-                    >
-                      View all
-                    </Button>
-                  )}
                 </>
+              )}
+
+              {/* View all - shown when shuffle mode or search results are active */}
+              {(displayZines || appliedSearchQuery.trim()) && (
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={handleViewAll}
+                  className="shrink-0 bg-white border-stone-300 hover:bg-stone-50 hover:border-purple-300 text-stone-700"
+                >
+                  View all
+                </Button>
               )}
               
               {/* Author Filter */}
@@ -524,10 +545,10 @@ export default function ZinesPage() {
                 <CardContent className="p-12 text-center">
                   <BookOpen className="h-16 w-16 mx-auto mb-4 text-purple-400" />
                   <h3 className="text-xl font-semibold text-stone-800 mb-2">
-                    {searchQuery ? 'No zines found' : 'No zines available'}
+                    {appliedSearchQuery ? 'No zines found' : 'No zines available'}
                   </h3>
                   <p className="text-stone-600">
-                    {searchQuery 
+                    {appliedSearchQuery 
                       ? 'Try adjusting your search terms'
                       : 'Check back later for new zines from creators'
                     }
@@ -619,7 +640,7 @@ export default function ZinesPage() {
               <BookOpen className="h-12 w-12 mx-auto mb-4 text-stone-400" />
               <h3 className="text-lg font-semibold text-stone-800 mb-2">No zines found</h3>
               <p className="text-stone-600">
-                {searchQuery ? 'Try adjusting your search terms.' : 'No zines have been published yet.'}
+                {appliedSearchQuery ? 'Try adjusting your search terms.' : 'No zines have been published yet.'}
               </p>
             </div>
           ) : (
@@ -697,7 +718,7 @@ export default function ZinesPage() {
         </div>
 
         {/* Pagination Controls */}
-        {!displayZines && !debouncedSearchQuery.trim() && selectedCreator === "all" && totalPages > 1 && (
+        {!displayZines && !appliedSearchQuery.trim() && selectedCreator === "all" && totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <div className="flex items-center gap-2">
               {/* Previous Button */}
