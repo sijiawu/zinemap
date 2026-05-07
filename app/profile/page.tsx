@@ -116,6 +116,7 @@ export default function ProfilePage() {
     note?: string
     createdAt: string
     pending?: boolean
+    suggestEditUrl?: string
   }[]>([])
   const [savedStores, setSavedStores] = useState<StoreType[]>([])
   const [savedLibraries, setSavedLibraries] = useState<LibraryType[]>([])
@@ -328,7 +329,7 @@ export default function ProfilePage() {
 
   const fetchActivities = async (userId: string) => {
     try {
-      const allActivities: { id: string; type: 'store' | 'library' | 'event' | 'note' | 'edit'; entityType: 'shop' | 'library' | 'event' | 'edit'; entityName: string; entityUrl: string; sectionLabel: string; sectionUrl: string; note?: string; createdAt: string; pending?: boolean }[] = []
+      const allActivities: { id: string; type: 'store' | 'library' | 'event' | 'note' | 'edit'; entityType: 'shop' | 'library' | 'event' | 'edit'; entityName: string; entityUrl: string; sectionLabel: string; sectionUrl: string; note?: string; createdAt: string; pending?: boolean; suggestEditUrl?: string }[] = []
       const entityIdsByUser = { stores: new Set<string>(), libraries: new Set<string>(), events: new Set<string>() }
 
       const awaitingStatuses = ['pending', 'flagged'] as const
@@ -351,25 +352,25 @@ export default function ProfilePage() {
 
       storesData.forEach((s: { id: string; name: string; permalink: string | null; created_at: string }) => {
         entityIdsByUser.stores.add(s.id)
-        allActivities.push({ id: `store-${s.id}`, type: 'store', entityType: 'shop', entityName: s.name, entityUrl: `/store/${s.permalink || s.id}`, sectionLabel: sectionByType.shop.label, sectionUrl: sectionByType.shop.url, createdAt: s.created_at })
+        allActivities.push({ id: `store-${s.id}`, type: 'store', entityType: 'shop', entityName: s.name, entityUrl: `/store/${s.permalink || s.id}`, sectionLabel: sectionByType.shop.label, sectionUrl: sectionByType.shop.url, createdAt: s.created_at, suggestEditUrl: `/store/${s.id}/suggest-edit` })
       })
       librariesData.forEach((l: { id: string; name: string; permalink: string | null; created_at: string }) => {
         entityIdsByUser.libraries.add(l.id)
-        allActivities.push({ id: `library-${l.id}`, type: 'library', entityType: 'library', entityName: l.name, entityUrl: `/library/${l.permalink || l.id}`, sectionLabel: sectionByType.library.label, sectionUrl: sectionByType.library.url, createdAt: l.created_at })
+        allActivities.push({ id: `library-${l.id}`, type: 'library', entityType: 'library', entityName: l.name, entityUrl: `/library/${l.permalink || l.id}`, sectionLabel: sectionByType.library.label, sectionUrl: sectionByType.library.url, createdAt: l.created_at, suggestEditUrl: `/library/${l.id}/suggest-edit` })
       })
       ;(eventsRes.data || []).forEach((e: { id: string; name: string; permalink: string | null; created_at: string }) => {
         entityIdsByUser.events.add(e.id)
-        allActivities.push({ id: `event-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at })
+        allActivities.push({ id: `event-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at, suggestEditUrl: `/event/${e.permalink || e.id}/suggest-edit` })
       })
 
       ;(storesPendingRes.data || []).forEach((s: { id: string; name: string; permalink: string | null; created_at: string }) => {
-        allActivities.push({ id: `store-pending-${s.id}`, type: 'store', entityType: 'shop', entityName: s.name, entityUrl: `/store/${s.permalink || s.id}`, sectionLabel: sectionByType.shop.label, sectionUrl: sectionByType.shop.url, createdAt: s.created_at, pending: true })
+        allActivities.push({ id: `store-pending-${s.id}`, type: 'store', entityType: 'shop', entityName: s.name, entityUrl: `/store/${s.permalink || s.id}`, sectionLabel: sectionByType.shop.label, sectionUrl: sectionByType.shop.url, createdAt: s.created_at, pending: true, suggestEditUrl: `/store/${s.id}/suggest-edit` })
       })
       ;(librariesPendingRes.data || []).forEach((l: { id: string; name: string; permalink: string | null; created_at: string }) => {
-        allActivities.push({ id: `library-pending-${l.id}`, type: 'library', entityType: 'library', entityName: l.name, entityUrl: `/library/${l.permalink || l.id}`, sectionLabel: sectionByType.library.label, sectionUrl: sectionByType.library.url, createdAt: l.created_at, pending: true })
+        allActivities.push({ id: `library-pending-${l.id}`, type: 'library', entityType: 'library', entityName: l.name, entityUrl: `/library/${l.permalink || l.id}`, sectionLabel: sectionByType.library.label, sectionUrl: sectionByType.library.url, createdAt: l.created_at, pending: true, suggestEditUrl: `/library/${l.id}/suggest-edit` })
       })
       ;(eventsPendingRes.data || []).forEach((e: { id: string; name: string; permalink: string | null; created_at: string }) => {
-        allActivities.push({ id: `event-pending-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at, pending: true })
+        allActivities.push({ id: `event-pending-${e.id}`, type: 'event', entityType: 'event', entityName: e.name, entityUrl: `/event/${e.permalink || e.id}`, sectionLabel: sectionByType.event.label, sectionUrl: sectionByType.event.url, createdAt: e.created_at, pending: true, suggestEditUrl: `/event/${e.permalink || e.id}/suggest-edit` })
       })
 
       const nonAnonymousNotes = notesData.filter((n: { anonymous?: boolean }) => !n.anonymous)
@@ -421,13 +422,31 @@ export default function ProfilePage() {
         if (isOnUserEntity) {
           const entityKey = n.store_id ? `store-${n.store_id}` : n.library_id ? `library-${n.library_id}` : `event-${n.event_id}`
           const existing = activityByEntityId.get(entityKey)
-          if (existing) existing.note = n.text
-          else {
-            const note: typeof allActivities[0] = { id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '' }
+          const noteSuggest =
+            n.store_id != null
+              ? `/store/${n.store_id}/suggest-edit`
+              : n.library_id != null
+                ? `/library/${n.library_id}/suggest-edit`
+                : n.event_id != null
+                  ? `/event/${eventMap.get(n.event_id)?.permalink || n.event_id}/suggest-edit`
+                  : undefined
+          if (existing) {
+            existing.note = n.text
+            if (noteSuggest) existing.suggestEditUrl = noteSuggest
+          } else {
+            const note: typeof allActivities[0] = { id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '', suggestEditUrl: noteSuggest }
             allActivities.push(note)
           }
         } else {
-          allActivities.push({ id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '' })
+          const noteSuggest =
+            n.store_id != null
+              ? `/store/${n.store_id}/suggest-edit`
+              : n.library_id != null
+                ? `/library/${n.library_id}/suggest-edit`
+                : n.event_id != null
+                  ? `/event/${eventMap.get(n.event_id)?.permalink || n.event_id}/suggest-edit`
+                  : undefined
+          allActivities.push({ id: `note-${n.id}`, type: 'note', entityType, entityName, entityUrl, sectionLabel: section[entityType].label, sectionUrl: section[entityType].url, note: n.text, createdAt: n.submitted_at || '', suggestEditUrl: noteSuggest })
         }
       }
 
@@ -450,28 +469,32 @@ export default function ProfilePage() {
         let entityUrl = ''
         let sectionLabel = ''
         let sectionUrl = ''
+        let suggestEditUrl: string | undefined
         if (edit.store_id) {
           const s = editStoreMap.get(edit.store_id)
           entityName = s?.name || 'a shop'
           entityUrl = `/store/${s?.permalink || edit.store_id}`
           sectionLabel = 'Shops'
           sectionUrl = '/stores'
+          suggestEditUrl = `/store/${edit.store_id}/suggest-edit`
         } else if (edit.library_id) {
           const l = editLibraryMap.get(edit.library_id)
           entityName = l?.name || 'a library'
           entityUrl = `/library/${l?.permalink || edit.library_id}`
           sectionLabel = 'Libraries'
           sectionUrl = '/libraries'
+          suggestEditUrl = `/library/${edit.library_id}/suggest-edit`
         } else if (edit.event_id) {
           const e = editEventMap.get(edit.event_id)
           entityName = e?.name || 'an event'
           entityUrl = `/event/${e?.permalink || edit.event_id}`
           sectionLabel = 'Events'
           sectionUrl = '/events'
+          suggestEditUrl = `/event/${e?.permalink || edit.event_id}/suggest-edit`
         }
         if (entityName) {
           const isPending = edit.status === 'pending'
-          allActivities.push({ id: `edit-${edit.id}`, type: 'edit', entityType: 'edit', entityName, entityUrl, sectionLabel, sectionUrl, createdAt: edit.created_at, pending: isPending })
+          allActivities.push({ id: `edit-${edit.id}`, type: 'edit', entityType: 'edit', entityName, entityUrl, sectionLabel, sectionUrl, createdAt: edit.created_at, pending: isPending, suggestEditUrl })
         }
       }
 
@@ -1737,6 +1760,14 @@ export default function ProfilePage() {
                         )}
                       </p>
                     </div>
+                    {activity.suggestEditUrl ? (
+                      <Button variant="outline" size="sm" className="shrink-0 self-start" asChild>
+                        <a href={activity.suggestEditUrl} target="_blank" rel="noopener noreferrer">
+                          <Edit className="h-3.5 w-3.5 mr-1" aria-hidden />
+                          Edit listing
+                        </a>
+                      </Button>
+                    ) : null}
                   </div>
                 ))}
               </div>
