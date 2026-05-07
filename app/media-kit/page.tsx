@@ -442,13 +442,13 @@ export default async function MediaKitPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <a
-                    href="https://www.instagram.com/zine.map"
+                    href="https://www.instagram.com/zinemap"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 underline"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    @zine.map
+                    @zinemap
                   </a>
                   <p className="text-xs text-muted-foreground">
                     For project updates and quick attribution.

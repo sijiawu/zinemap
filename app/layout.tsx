@@ -108,8 +108,8 @@ export default function RootLayout({
             <p style={{ color: '#78716c', marginBottom: '1.5rem', lineHeight: 1.6 }}>
               Some resources failed to load. This usually fixes itself.<br />
               If the issue persists, message us on{' '}
-              <a href="https://instagram.com/zine.map" style={{ color: '#292524', textDecoration: 'underline' }}>
-                Instagram @zine.map
+              <a href="https://www.instagram.com/zinemap" style={{ color: '#292524', textDecoration: 'underline' }}>
+                Instagram @zinemap
               </a>
             </p>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
@@ -142,8 +142,8 @@ export default function RootLayout({
             </p>
             <p style={{ color: '#78716c', lineHeight: 1.6 }}>
               If the issue persists, message us on{' '}
-              <a href="https://instagram.com/zine.map" style={{ color: '#292524', textDecoration: 'underline' }}>
-                Instagram @zine.map
+              <a href="https://www.instagram.com/zinemap" style={{ color: '#292524', textDecoration: 'underline' }}>
+                Instagram @zinemap
               </a>
             </p>
           </div>

@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="bg-white border-t border-stone-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-6 text-center flex flex-col items-center gap-3">
         <p className="text-stone-600 text-sm">
-          © 2026 ZineMap, a community-maintained map of the global zine scene. Follow <a href="https://www.instagram.com/zine.map" target="_blank" className="text-rose-500 hover:text-rose-600">@zine.map</a> for site updates.
+          © 2026 ZineMap, a community-maintained map of the global zine scene. Follow <a href="https://www.instagram.com/zinemap" target="_blank" className="text-rose-500 hover:text-rose-600">@zinemap</a> for site updates.
         </p>
         <a
           href="https://ko-fi.com/cjwu"
