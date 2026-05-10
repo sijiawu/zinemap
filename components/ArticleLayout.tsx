@@ -1,5 +1,7 @@
 import { ReactNode } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
+import { STORY_IMAGE_BLUR_DATA_URL } from '@/lib/imagePlaceholders'
 import { TranslationToggle } from '@/components/TranslationToggle'
 import type { StoryBodyFont, StoryTitleHeading } from '@/lib/storyParser'
 
@@ -91,13 +93,20 @@ export function ArticleLayout({
           .filter(Boolean)
           .join(' ')}
       >
-        {hasHeaderBackground && (
+        {hasHeaderBackground && thumbnail && (
           <>
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url("${thumbnail}")` }}
-              aria-hidden="true"
-            />
+            <div className="absolute inset-0" aria-hidden>
+              <Image
+                src={thumbnail}
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 896px) 100vw, 896px"
+                className="object-cover object-center"
+                placeholder="blur"
+                blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
+              />
+            </div>
             <div
               className="absolute inset-0 bg-white/80"
               aria-hidden="true"

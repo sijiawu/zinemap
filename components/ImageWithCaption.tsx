@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { STORY_IMAGE_BLUR_DATA_URL } from '@/lib/imagePlaceholders'
 import { getStoryImageUrl } from '@/lib/storyImages'
 
 interface ImageWithCaptionProps {
@@ -58,37 +59,30 @@ export function ImageWithCaption({
   priority = false,
 }: ImageWithCaptionProps) {
   const resolvedSrc = getStoryImageUrl(src)
-  const isExternal = resolvedSrc.startsWith('http://') || resolvedSrc.startsWith('https://')
-  const isSvg = resolvedSrc.endsWith('.svg')
+  const isSvg = /\.svg(\?|$)/i.test(resolvedSrc)
 
   return (
     <figure className="my-8 sm:my-12">
-      <div className="relative w-full max-w-xl mx-auto rounded-lg overflow-hidden bg-stone-100">
-        {isExternal ? (
-          // For external images (Supabase, etc.), use regular img tag
-          <img
-            src={resolvedSrc}
-            alt={alt}
-            className="w-full h-auto object-cover"
-            loading={priority ? 'eager' : 'lazy'}
-          />
-        ) : isSvg ? (
-          // For SVG files, use regular img tag for better control
+      <div className="relative w-full max-w-xl mx-auto rounded-lg overflow-hidden bg-stone-200/40">
+        {isSvg ? (
           <img
             src={resolvedSrc}
             alt={alt}
             className="w-full h-auto"
             loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
           />
         ) : (
-          // For same-origin images, use Next.js Image
           <Image
             src={resolvedSrc}
             alt={alt}
             width={width}
             height={height}
+            sizes="(max-width: 576px) 100vw, 576px"
             className="w-full h-auto object-cover"
             priority={priority}
+            placeholder="blur"
+            blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
           />
         )}
       </div>

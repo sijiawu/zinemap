@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { STORY_IMAGE_BLUR_DATA_URL } from '@/lib/imagePlaceholders'
 import { getAllStories } from '@/lib/getStories'
 
 export const metadata = {
@@ -79,7 +80,7 @@ export default async function StoriesPage({
         </header>
 
         <div className="space-y-8">
-          {stories.map((story) => (
+          {stories.map((story, index) => (
               <article
                 key={story.slug}
                 className="border-b border-stone-200 pb-8 last:border-b-0"
@@ -88,20 +89,26 @@ export default async function StoriesPage({
                   {story.thumbnail && (
                     <Link
                       href={`/stories/${story.slug}`}
-                      className="flex-shrink-0 w-full sm:w-48 h-48 relative rounded-lg overflow-hidden bg-stone-100 group hover:opacity-80 transition-opacity"
+                      className="flex-shrink-0 w-full sm:w-48 h-48 relative rounded-lg overflow-hidden bg-stone-200/30 group hover:opacity-80 transition-opacity"
                     >
-                      {story.thumbnail.endsWith('.svg') || story.thumbnail.startsWith('http') ? (
+                      {/\.svg(\?|$)/i.test(story.thumbnail) ? (
                         <img
                           src={story.thumbnail}
                           alt={story.title}
                           className="w-full h-full object-cover"
+                          loading={index < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
                         />
                       ) : (
                         <Image
                           src={story.thumbnail}
                           alt={story.title}
                           fill
+                          sizes="(max-width: 640px) 100vw, 192px"
                           className="object-cover"
+                          placeholder="blur"
+                          blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
+                          priority={index < 2}
                         />
                       )}
                     </Link>
