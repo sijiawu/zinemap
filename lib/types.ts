@@ -238,6 +238,7 @@ export interface HomePin {
     profile_image?: string | null
     bio?: string | null
     roles?: string[] | null
+    open_to?: string[] | null
   }
 }
 
