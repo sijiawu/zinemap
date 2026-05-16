@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat, Image as ImageIcon, X } from "lucide-react"
 import { nanoid } from "nanoid"
-import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,6 +25,142 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { EventFormData, RecurrenceFrequency } from "@/lib/types"
 import { compressImage } from "@/lib/compressImage"
+import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
+
+const ADD_EVENT_FIELD_SUMMARY_ORDER = [
+  "name",
+  "start_date",
+  "end_date",
+  "country",
+  "address",
+  "city",
+  "email",
+  "website",
+  "poster",
+] as const
+
+type AddEventFieldErrorKey = (typeof ADD_EVENT_FIELD_SUMMARY_ORDER)[number]
+
+const ADD_EVENT_FIELD_LABELS: Record<AddEventFieldErrorKey, string> = {
+  name: "Event name",
+  start_date: "Start date",
+  end_date: "End date",
+  country: "Country",
+  address: "Address",
+  city: "City",
+  email: "Contact email",
+  website: "Website",
+  poster: "Poster image",
+}
+
+const WEBSITE_FIELD_ERR_MULTI_LINE =
+  "The URL must be on a single line with no line breaks. Leave this field blank if you prefer not to add one."
+const WEBSITE_FIELD_ERR_FORMAT =
+  "Enter a conventional website URL (a domain such as organization.com or a link beginning with https://), or leave this field blank."
+
+function FieldErrorMessage({ message }: { message: string }) {
+  return <p className="mt-1.5 text-sm text-red-700">{message}</p>
+}
+
+/** Optional website field: rejects line breaks and input without a plausible hostname or URL scheme (no strict URL parsing). */
+function websiteFieldIssue(raw: string): string | null {
+  const t = raw.trim()
+  if (!t) return null
+  if (/[\r\n]/.test(raw)) return WEBSITE_FIELD_ERR_MULTI_LINE
+  if (/^[a-z][a-z0-9+.-]*:/i.test(t)) return null
+  if (/^www\./i.test(t)) return null
+  const hostish = (t.split(/[/\s?#]/)[0] ?? "").replace(/^\.+/, "")
+  if (!hostish) return WEBSITE_FIELD_ERR_FORMAT
+  if (/^localhost(:\d+)?$/i.test(hostish)) return null
+  if (/^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/i.test(hostish)) return null
+  if (/^([\p{L}\p{N}][\p{L}\p{N}\w.-]*\.)+[\p{L}]{2,63}$/u.test(hostish)) return null
+  return WEBSITE_FIELD_ERR_FORMAT
+}
+
+function computeFieldErrors(formData: EventFormData): Partial<Record<AddEventFieldErrorKey, string>> {
+  const e: Partial<Record<AddEventFieldErrorKey, string>> = {}
+
+  if (!formData.name.trim()) e.name = "Event name is required"
+  if (!formData.city.trim()) e.city = "City is required"
+  if (!formData.country.trim()) e.country = "Country is required"
+  if (!formData.address.trim()) e.address = "Address is required"
+  if (!formData.start_date) e.start_date = "Start date is required"
+
+  if (!formData.end_date) {
+    e.end_date = "End date is required"
+  } else if (formData.recurrence_frequency) {
+    if (formData.end_date !== formData.start_date) {
+      e.end_date = "Recurring events are single-day only — end date must match start date"
+    }
+  } else if (new Date(formData.end_date) < new Date(formData.start_date)) {
+    e.end_date = "End date must be on or after start date"
+  }
+
+  const emailTrim = formData.email?.trim() ?? ""
+  if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+    e.email = "Enter a valid email address or leave this blank"
+  }
+
+  const rawWebsite = formData.website ?? ""
+  const websiteIssue = websiteFieldIssue(rawWebsite)
+  if (websiteIssue) e.website = websiteIssue
+
+  return e
+}
+
+const FORM_FIELD_TO_ERROR_KEY: Partial<Record<keyof EventFormData, AddEventFieldErrorKey>> = {
+  name: "name",
+  city: "city",
+  country: "country",
+  address: "address",
+  start_date: "start_date",
+  end_date: "end_date",
+  email: "email",
+  website: "website",
+}
+
+const INITIAL_EVENT_FORM_DATA: EventFormData = {
+  name: "",
+  venue_name: "",
+  city: "",
+  state: "",
+  country: "",
+  address: "",
+  email: "",
+  website: "",
+  social: "",
+  category: "festival",
+  start_date: "",
+  end_date: "",
+  start_time: "",
+  end_time: "",
+  application_open: "",
+  application_deadline: "",
+  notes: "",
+  recurrence_frequency: "",
+  recurrence_interval: 1,
+  recurrence_until: "",
+  recurrence_ordinal: 3,
+  recurrence_weekday: 0,
+}
+
+const inputClass =
+  "bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+const inputClassPlain = "bg-stone-50 border-stone-300 font-serif"
+
+interface MapboxContext {
+  id: string
+  text: string
+  short_code?: string
+}
+
+interface AddressSuggestion {
+  id: string
+  text: string
+  fullText: string
+  coordinates: [number, number]
+  context?: MapboxContext[]
+}
 
 export default function AddEventPage() {
   const { user, loading } = useSupabaseUser()
@@ -38,33 +173,41 @@ export default function AddEventPage() {
   const [posterImage, setPosterImage] = useState<File | null>(null)
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState<EventFormData>({
-    name: "",
-    venue_name: "",
-    city: "",
-    state: "",
-    country: "",
-    address: "",
-    email: "",
-    website: "",
-    social: "",
-    category: "festival",
-    start_date: "",
-    end_date: "",
-    start_time: "",
-    end_time: "",
-    application_open: "",
-    application_deadline: "",
-    notes: "",
-    recurrence_frequency: "",
-    recurrence_interval: 1,
-    recurrence_until: "",
-    recurrence_ordinal: 3,
-    recurrence_weekday: 0
-  })
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<AddEventFieldErrorKey, string>>
+  >({})
+  const submitFeedbackRef = useRef<HTMLDivElement>(null)
+
+  const clearFieldErrors = (...keys: AddEventFieldErrorKey[]) => {
+    if (!keys.length) return
+    setFieldErrors(prev => {
+      let next = prev
+      let changed = false
+      for (const k of keys) {
+        if (!next[k]) continue
+        if (!changed) {
+          next = { ...prev }
+          changed = true
+        }
+        delete next[k]
+      }
+      return changed ? next : prev
+    })
+  }
+
+  const scrollSubmitFeedbackIntoView = () => {
+    requestAnimationFrame(() => {
+      submitFeedbackRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      })
+    })
+  }
+
+  const [formData, setFormData] = useState<EventFormData>(INITIAL_EVENT_FORM_DATA)
 
   // Address autocomplete state
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([])
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
   const [addressSuggestionsLoading, setAddressSuggestionsLoading] = useState(false)
   const addressSuggestionsRef = useRef<HTMLDivElement>(null)
@@ -137,6 +280,7 @@ export default function AddEventPage() {
 
   // Handle country selection
   const handleCountrySelect = (country: {name: string, code: string}) => {
+    clearFieldErrors("country")
     setSelectedCountry(country)
     setFormData(prev => ({ ...prev, country: country.name }))
     setCountrySuggestions([])
@@ -184,7 +328,12 @@ export default function AddEventPage() {
       )
       
       const data = await response.json()
-      const suggestions = data.features.map((feature: any) => {
+      const suggestions: AddressSuggestion[] = data.features.map((feature: {
+        id: string
+        place_name: string
+        center: [number, number]
+        context?: MapboxContext[]
+      }) => {
         // Extract just the street address part (remove city, state, country, zip)
         const addressParts = feature.place_name.split(', ')
         const streetAddress = addressParts[0] // Just the street address
@@ -210,16 +359,16 @@ export default function AddEventPage() {
   }
 
   // Handle address selection
-  const handleAddressSelect = (suggestion: any) => {
-    // Extract city from context - simple approach
-    const cityContext = suggestion.context?.find((ctx: any) => 
-      ctx.id.startsWith('place.') && !ctx.text.includes('arrondissement')
+  const handleAddressSelect = (suggestion: AddressSuggestion) => {
+    clearFieldErrors("address", "city")
+    const cityContext = suggestion.context?.find(
+      (ctx) => ctx.id.startsWith("place.") && !ctx.text.includes("arrondissement")
     )
     const city = cityContext ? cityContext.text : ''
 
     // Extract state/province from context - Mapbox provides both full name and abbreviation
-    const stateContext = suggestion.context?.find((ctx: any) => 
-      ctx.id.startsWith('region.') || ctx.id.startsWith('province.')
+    const stateContext = suggestion.context?.find(
+      (ctx) => ctx.id.startsWith("region.") || ctx.id.startsWith("province.")
     )
     
     // Use the short_code if available (abbreviation), otherwise use the full text
@@ -295,6 +444,8 @@ export default function AddEventPage() {
   }
 
   const handleInputChange = (field: keyof EventFormData, value: string) => {
+    const ek = FORM_FIELD_TO_ERROR_KEY[field]
+    if (ek) clearFieldErrors(ek)
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -305,14 +456,23 @@ export default function AddEventPage() {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image must be smaller than 5MB')
+        setFieldErrors(prev => ({
+          ...prev,
+          poster: "Image must be smaller than 5MB",
+        }))
+        setError(null)
         return
       }
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"]
       if (!allowedTypes.includes(file.type)) {
-        setError('Please select a JPG, PNG, or GIF file')
+        setFieldErrors(prev => ({
+          ...prev,
+          poster: "Please select a JPG, PNG, or GIF file",
+        }))
+        setError(null)
         return
       }
+      clearFieldErrors("poster")
       setError(null)
       setPosterImage(file)
       const reader = new FileReader()
@@ -323,6 +483,7 @@ export default function AddEventPage() {
 
   // Handle start date change
   const handleStartDateChange = (value: string) => {
+    clearFieldErrors("start_date", "end_date")
     handleInputChange("start_date", value)
     // Recurring events are single-day only: end_date = start_date
     if (formData.recurrence_frequency) {
@@ -332,59 +493,21 @@ export default function AddEventPage() {
     }
   }
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
-    // Validation
-    if (!formData.name.trim()) {
-      setError("Event name is required")
-      setIsSubmitting(false)
-      return
-    }
+    const validationErrors = computeFieldErrors(formData)
+    const mergedErrors = {
+      ...validationErrors,
+      ...(fieldErrors.poster ? { poster: fieldErrors.poster } : {}),
+    } as Partial<Record<AddEventFieldErrorKey, string>>
 
-    if (!formData.city.trim()) {
-      setError("City is required")
+    if (Object.keys(mergedErrors).length > 0) {
+      setFieldErrors(mergedErrors)
       setIsSubmitting(false)
-      return
-    }
-
-    if (!formData.country.trim()) {
-      setError("Country is required")
-      setIsSubmitting(false)
-      return
-    }
-
-    if (!formData.address.trim()) {
-      setError("Address is required")
-      setIsSubmitting(false)
-      return
-    }
-
-    if (!formData.start_date) {
-      setError("Start date is required")
-      setIsSubmitting(false)
-      return
-    }
-
-    if (!formData.end_date) {
-      setError("End date is required")
-      setIsSubmitting(false)
-      return
-    }
-
-
-    if (formData.recurrence_frequency) {
-      if (formData.end_date !== formData.start_date) {
-        setError("Recurring events are single-day only — end date must match start date")
-        setIsSubmitting(false)
-        return
-      }
-    } else if (new Date(formData.end_date) < new Date(formData.start_date)) {
-      setError("End date must be after start date")
-      setIsSubmitting(false)
+      scrollSubmitFeedbackIntoView()
       return
     }
 
@@ -460,45 +583,44 @@ export default function AddEventPage() {
         throw new Error('Failed to create event')
       }
 
-              // Insert community note if notes were provided
-        if (formData.notes && formData.notes.trim()) {
-          const { error: noteError } = await supabase
-            .from('community_notes')
-            .insert({
-              event_id: id,
-              user_id: user!.id,
-              text: formData.notes.trim(),
-              anonymous: false,
-              has_stocked_here: false
-            })
+      if (formData.notes && formData.notes.trim()) {
+        const { error: noteError } = await supabase
+          .from('community_notes')
+          .insert({
+            event_id: id,
+            user_id: user!.id,
+            text: formData.notes.trim(),
+            anonymous: false,
+            has_stocked_here: false
+          })
 
-          if (noteError) {
-            console.error('Community note insert error:', noteError)
-            // Don't throw here, event was created successfully
-          }
+        if (noteError) {
+          console.error('Community note insert error:', noteError)
         }
+      }
 
-        // Insert attendance if user checked "I am going to this event!"
-        if (isGoingToEvent) {
-          const { error: attendanceError } = await supabase
-            .from('event_attendees')
-            .insert({
-              event_id: id,
-              user_id: user!.id
-            })
+      if (isGoingToEvent) {
+        const { error: attendanceError } = await supabase
+          .from('event_attendees')
+          .insert({
+            event_id: id,
+            user_id: user!.id
+          })
 
-          if (attendanceError) {
-            console.error('Event attendance insert error:', attendanceError)
-            // Don't throw here, event was created successfully
-          }
+        if (attendanceError) {
+          console.error('Event attendance insert error:', attendanceError)
         }
+      }
 
+      setFieldErrors({})
+      setError(null)
       setIsSubmitted(true)
     } catch (error) {
       console.error('Submission error:', error)
-      if (!error) {
-        setError('An unexpected error occurred. Please try again.')
-      }
+      const msg =
+        error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
+      setError(msg)
+      scrollSubmitFeedbackIntoView()
     } finally {
       setIsSubmitting(false)
     }
@@ -529,31 +651,7 @@ export default function AddEventPage() {
                   variant="outline"
                   onClick={() => {
                     setIsSubmitted(false)
-                    setFormData({
-                      name: "",
-                      venue_name: "",
-                      city: "",
-                      state: "",
-                      country: "",
-                      address: "",
-                      email: "",
-                      website: "",
-                      social: "",
-                      category: "festival",
-                      start_date: "",
-                      end_date: "",
-                      start_time: "",
-                      end_time: "",
-                      application_open: "",
-                      application_deadline: "",
-                      notes: "",
-                      recurrence_frequency: "",
-                      recurrence_interval: 1,
-                      recurrence_until: "",
-                      recurrence_ordinal: 3,
-                      recurrence_weekday: 0
-                    })
-                    // Generate new preview ID
+                    setFormData({ ...INITIAL_EVENT_FORM_DATA })
                     window.location.reload()
                   }}
                   className="border-stone-300 text-stone-700 hover:bg-stone-50 font-gloria"
@@ -591,17 +689,11 @@ export default function AddEventPage() {
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add an Event to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-          Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
+            Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
           </p>
         </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
+        <form noValidate onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Event Info */}
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
@@ -621,11 +713,11 @@ export default function AddEventPage() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    className={inputClass}
                     placeholder="e.g. Chicago Zine Fest"
-                    required
                     autoComplete="off"
                   />
+                  {fieldErrors.name && <FieldErrorMessage message={fieldErrors.name} />}
                 </div>
 
                 {/* Event Type */}
@@ -637,7 +729,7 @@ export default function AddEventPage() {
                     value={formData.category}
                     onValueChange={(value) => handleInputChange("category", value)}
                   >
-                    <SelectTrigger className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif">
+                    <SelectTrigger className={inputClass}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -658,7 +750,7 @@ export default function AddEventPage() {
                   id="venue_name"
                   value={formData.venue_name}
                   onChange={(e) => handleInputChange("venue_name", e.target.value)}
-                  className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                  className={inputClass}
                   placeholder="e.g. Chicago Cultural Center"
                   autoComplete="off"
                 />
@@ -685,6 +777,7 @@ export default function AddEventPage() {
                         onClick={() => {
                           setPosterImage(null)
                           setPosterImagePreview(null)
+                          clearFieldErrors("poster")
                         }}
                         className="absolute top-2 right-2 h-6 w-6 p-0 bg-white/80 hover:bg-white rounded"
                       >
@@ -708,6 +801,9 @@ export default function AddEventPage() {
                     </div>
                   )}
                 </div>
+                {fieldErrors.poster && (
+                  <FieldErrorMessage message={fieldErrors.poster} />
+                )}
               </div>
 
               {/* Recurring Event */}
@@ -742,9 +838,11 @@ export default function AddEventPage() {
                         type="date"
                         value={formData.start_date}
                         onChange={(e) => handleStartDateChange(e.target.value)}
-                        className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                        required
+                        className={inputClass}
                       />
+                      {fieldErrors.start_date && (
+                        <FieldErrorMessage message={fieldErrors.start_date} />
+                      )}
                       {formData.start_date && new Date(formData.start_date) < new Date() && (
                         <p className="text-amber-600 text-sm font-medium">
                          📅 Past event detected - thanks for contributing to the archive!
@@ -761,9 +859,11 @@ export default function AddEventPage() {
                           type="date"
                           value={formData.end_date}
                           onChange={(e) => handleInputChange("end_date", e.target.value)}
-                          className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
-                          required
+                          className={inputClass}
                         />
+                        {fieldErrors.end_date && (
+                          <FieldErrorMessage message={fieldErrors.end_date} />
+                        )}
                       </div>
                     )}
                   </div>
@@ -780,7 +880,7 @@ export default function AddEventPage() {
                             type="time"
                             value={formData.start_time}
                             onChange={(e) => handleInputChange("start_time", e.target.value)}
-                            className="bg-stone-50 border-stone-300 font-serif"
+                            className={inputClassPlain}
                           />
                         </div>
                         <div className="space-y-2">
@@ -792,7 +892,7 @@ export default function AddEventPage() {
                             type="time"
                             value={formData.end_time}
                             onChange={(e) => handleInputChange("end_time", e.target.value)}
-                            className="bg-stone-50 border-stone-300 font-serif"
+                            className={inputClassPlain}
                           />
                         </div>
                       </div>
@@ -833,7 +933,7 @@ export default function AddEventPage() {
                             }
                           }}
                         >
-                          <SelectTrigger className="bg-stone-50 border-stone-300 font-serif">
+                          <SelectTrigger className={inputClassPlain}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -851,7 +951,7 @@ export default function AddEventPage() {
                             value={String(formData.recurrence_interval ?? 2)}
                             onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
                           >
-                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                            <SelectTrigger className={`${inputClassPlain} w-20`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -870,7 +970,7 @@ export default function AddEventPage() {
                             value={String(formData.recurrence_interval ?? 2)}
                             onValueChange={(v) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(v, 10) }))}
                           >
-                            <SelectTrigger className="bg-stone-50 border-stone-300 font-serif w-20">
+                            <SelectTrigger className={`${inputClassPlain} w-20`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -891,12 +991,13 @@ export default function AddEventPage() {
                           type="date"
                           value={formData.recurrence_until}
                           onChange={(e) => handleInputChange("recurrence_until", e.target.value)}
-                          className="bg-stone-50 border-stone-300 font-serif"
+                          className={inputClassPlain}
                           placeholder="No end date"
                         />
                       </div>
                       <p className="text-stone-500 text-xs">
-                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.                      </p>
+                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.
+                      </p>
                       {formData.recurrence_frequency && formData.start_date && (() => {
                         const previewEvent = {
                           id: "preview",
@@ -945,7 +1046,7 @@ export default function AddEventPage() {
                       type="date"
                       value={formData.application_open}
                       onChange={(e) => handleInputChange("application_open", e.target.value)}
-                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                      className={inputClass}
                     />
                   </div>
                   <div className="space-y-2">
@@ -957,7 +1058,7 @@ export default function AddEventPage() {
                       type="date"
                       value={formData.application_deadline}
                       onChange={(e) => handleInputChange("application_deadline", e.target.value)}
-                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                      className={inputClass}
                     />
                     {formData.application_deadline && new Date(formData.application_deadline) < new Date() && (
                       <p className="text-amber-600 text-sm font-medium">
@@ -991,18 +1092,18 @@ export default function AddEventPage() {
                       id="country"
                       value={formData.country}
                       onChange={(e) => {
-                        setFormData(prev => ({ ...prev, country: e.target.value }));
-                        handleCountrySearch(e.target.value);
+                        clearFieldErrors("country")
+                        setFormData(prev => ({ ...prev, country: e.target.value }))
+                        handleCountrySearch(e.target.value)
                       }}
                       onBlur={handleCountryBlur}
                       onFocus={() => {
                         if (formData.country.trim()) {
-                          handleCountrySearch(formData.country);
+                          handleCountrySearch(formData.country)
                         }
                       }}
-                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                      className={inputClass}
                       placeholder="e.g. United States"
-                      required
                     />
                     {showCountrySuggestions && countrySuggestions.length > 0 && (
                       <div className="absolute z-50 left-0 right-0 bg-white border border-stone-200 rounded shadow-lg mt-1 max-h-60 overflow-y-auto">
@@ -1018,6 +1119,7 @@ export default function AddEventPage() {
                       </div>
                     )}
                   </div>
+                  {fieldErrors.country && <FieldErrorMessage message={fieldErrors.country} />}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address" className="text-stone-700 font-serif font-medium">
@@ -1028,18 +1130,19 @@ export default function AddEventPage() {
                       id="address"
                       value={formData.address}
                       onChange={(e) => {
-                        setFormData(prev => ({ ...prev, address: e.target.value }));
+                        clearFieldErrors("address")
+                        setFormData(prev => ({ ...prev, address: e.target.value }))
                         if (selectedCountry) {
-                          handleAddressSearch(e.target.value);
+                          handleAddressSearch(e.target.value)
                         }
                       }}
                       onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
                       onFocus={() => {
                         if (selectedCountry && formData.address.trim()) {
-                          handleAddressSearch(formData.address);
+                          handleAddressSearch(formData.address)
                         }
                       }}
-                      className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                      className={inputClass}
                       placeholder="e.g. 123 Main St"
                       autoComplete="off"
                     />
@@ -1063,10 +1166,9 @@ export default function AddEventPage() {
                       </div>
                     )}
                   </div>
+                  {fieldErrors.address && <FieldErrorMessage message={fieldErrors.address} />}
                 </div>
               </div>
-
-              {/* City & State */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="city" className="text-stone-700 font-serif font-medium">
@@ -1077,10 +1179,10 @@ export default function AddEventPage() {
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    className={inputClass}
                     placeholder="e.g. Chicago"
-                    required
                   />
+                  {fieldErrors.city && <FieldErrorMessage message={fieldErrors.city} />}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-stone-700 font-serif font-medium">
@@ -1091,7 +1193,7 @@ export default function AddEventPage() {
                     type="text"
                     value={formData.state}
                     onChange={(e) => handleInputChange("state", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    className={inputClass}
                     placeholder="e.g. Illinois"
                   />
                 </div>
@@ -1119,9 +1221,10 @@ export default function AddEventPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    className={inputClass}
                     placeholder="contact@event.com"
                   />
+                  {fieldErrors.email && <FieldErrorMessage message={fieldErrors.email} />}
                 </div>
 
                 <div className="space-y-2">
@@ -1130,12 +1233,14 @@ export default function AddEventPage() {
                   </Label>
                   <Input
                     id="website"
-                    type="url"
+                    type="text"
+                    inputMode="url"
                     value={formData.website}
                     onChange={(e) => handleInputChange("website", e.target.value)}
-                    className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                    className={inputClass}
                     placeholder="https://event.com"
                   />
+                  {fieldErrors.website && <FieldErrorMessage message={fieldErrors.website} />}
                 </div>
               </div>
 
@@ -1147,7 +1252,7 @@ export default function AddEventPage() {
                   id="social"
                   value={formData.social}
                   onChange={(e) => handleInputChange("social", e.target.value)}
-                  className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif"
+                  className={inputClass}
                   placeholder="their handle or a link to their social"
                 />
               </div>
@@ -1169,7 +1274,7 @@ export default function AddEventPage() {
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
-                  className="bg-stone-50 border-stone-300 focus:border-green-400 focus:ring-green-200 font-serif min-h-[120px]"
+                  className={`${inputClass} min-h-[120px]`}
                   placeholder="Tell us more about this event... What makes it special? Any important details attendees should know?"
                   rows={5}
                 />
@@ -1189,7 +1294,10 @@ export default function AddEventPage() {
           </Card>
 
           {/* Submit Button */}
-          <div className="pt-6 flex justify-center">
+          <div
+            ref={submitFeedbackRef}
+            className="pt-6 flex flex-col items-center gap-4 w-full"
+          >
             <Button
               type="submit"
               disabled={isSubmitting}
@@ -1197,6 +1305,26 @@ export default function AddEventPage() {
             >
               {isSubmitting ? "Adding Event..." : "Submit"}
             </Button>
+
+            {(Object.keys(fieldErrors).length > 0 || error) && (
+              <div
+                className="w-full max-w-xl space-y-3 text-left"
+                role="alert"
+                aria-live="polite"
+              >
+                {ADD_EVENT_FIELD_SUMMARY_ORDER.map((key) => {
+                  const msg = fieldErrors[key]
+                  if (!msg) return null
+                  return (
+                    <FieldErrorMessage
+                      key={key}
+                      message={`${ADD_EVENT_FIELD_LABELS[key]}: ${msg}`}
+                    />
+                  )
+                })}
+                {error ? <FieldErrorMessage message={error} /> : null}
+              </div>
+            )}
           </div>
         </form>
       </div>
@@ -1207,8 +1335,8 @@ export default function AddEventPage() {
           <DialogHeader>
             <DialogTitle className="font-serif">Are you the organizer of this event series?</DialogTitle>
             <DialogDescription className="text-stone-600 font-serif">
-            Recurring events include multiple dates and can be trickier to manage.
-            If you're not the organizer, would you consider asking them to add it instead? Event organizers will have direct edit access to the whole series.       
+              Recurring events include multiple dates and can be trickier to manage.
+              If you&apos;re not the organizer, would you consider asking them to add it instead? Event organizers will have direct edit access to the whole series.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -1241,4 +1369,5 @@ export default function AddEventPage() {
       </Dialog>
     </div>
   )
-} 
+}
+
