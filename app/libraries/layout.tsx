@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     siteName: 'ZineMap',
     images: [
       {
-        url: '/preview-image.png',
+        url: '/preview-libraries.png',
         width: 1200,
         height: 630,
         alt: 'Libraries - ZineMap',
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Libraries - ZineMap',
     description: 'Explore libraries with zine collections worldwide.',
+    images: ['/preview-libraries.png'],
   },
 }
 

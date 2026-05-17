@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     siteName: 'ZineMap',
     images: [
       {
-        url: '/preview-image.png',
+        url: '/preview-shops.png',
         width: 1200,
         height: 630,
         alt: 'Shops - ZineMap',
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Shops - ZineMap',
     description: 'Find indie shops and bookstores that stock zines worldwide.',
+    images: ['/preview-shops.png'],
   },
 }
 
