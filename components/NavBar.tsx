@@ -8,6 +8,16 @@ import { useRouter, usePathname } from "next/navigation"
 import { useCallback, useState, useEffect } from "react"
 import { LogIn, LogOut } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function NavBar() {
   const { user, loading } = useSupabaseUser();
@@ -52,11 +62,13 @@ export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     router.refresh();
     setMobileMenuOpen(false);
+    setLogoutDialogOpen(false);
   }, [router]);
 
   const isActive = (path: string) => {
@@ -188,7 +200,8 @@ export default function NavBar() {
             )}
             {!loading && user && (
               <button
-                onClick={handleLogout}
+                type="button"
+                onClick={() => setLogoutDialogOpen(true)}
                 className="p-2 rounded-md hover:bg-stone-100 transition-colors"
                 aria-label="Log out"
               >
@@ -344,7 +357,8 @@ export default function NavBar() {
                       My profile
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      type="button"
+                      onClick={() => setLogoutDialogOpen(true)}
                       className="font-gloria text-base py-2.5 px-3 rounded-md text-left text-stone-700 hover:text-stone-900 hover:bg-stone-50 transition-all flex items-center gap-2"
                     >
                       <LogOut className="h-4 w-4" />
@@ -367,6 +381,27 @@ export default function NavBar() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <AlertDialogContent className="font-sans sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to log off?</AlertDialogTitle>
+            <AlertDialogDescription className="text-stone-600">
+              You&apos;ll need to sign in again to access your profile and submit new listings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-sans">Stay signed in</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              className="font-sans bg-white text-stone-900 border border-stone-300 hover:bg-stone-50"
+              onClick={() => void handleLogout()}
+            >
+              Log out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   )
 } 
