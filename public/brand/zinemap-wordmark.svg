@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 44" width="440" height="88" fill="none" role="img" aria-label="ZineMap wordmark">
+  <title>ZineMap wordmark</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      @font-face {
+        font-family: 'Gloria Hallelujah';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://zinemap.com/fonts/GloriaHallelujah-Regular.woff2) format('woff2');
+      }
+      .zm-wordmark {
+        font-family: 'Gloria Hallelujah', cursive;
+        font-size: 32px;
+        fill: #292524;
+      }
+    ]]></style>
+  </defs>
+  <text x="0" y="30" class="zm-wordmark">ZineMap</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32" fill="none" role="img" aria-label="ZineMap mark on light background">
+  <title>ZineMap mark (on light)</title>
+  <rect width="32" height="32" rx="4" fill="#ffffff"/>
+  <path d="M16 6L8 10L16 14L24 10L16 6Z" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 22L16 26L24 22" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 16L16 20L24 16" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" fill="none" role="img" aria-label="ZineMap square badge">
+  <title>ZineMap square badge</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      @font-face {
+        font-family: 'Gloria Hallelujah';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://zinemap.com/fonts/GloriaHallelujah-Regular.woff2) format('woff2');
+      }
+      .zm-badge-title {
+        font-family: 'Gloria Hallelujah', cursive;
+        font-size: 48px;
+        font-weight: 700;
+        fill: #292524;
+      }
+      .zm-badge-tag {
+        font-family: 'Gloria Hallelujah', cursive;
+        font-size: 26px;
+        font-style: italic;
+        fill: #57534e;
+      }
+    ]]></style>
+  </defs>
+  <rect width="400" height="400" rx="28" fill="#ffffff" stroke="#e7e5e4" stroke-width="1"/>
+  <!-- Text block: dominant upper two-thirds -->
+  <text x="200" y="118" text-anchor="middle" class="zm-badge-title">ZineMap</text>
+  <text x="200" y="188" text-anchor="middle" class="zm-badge-tag">
+    A collaborative map of the
+  </text>
+  <text x="200" y="228" text-anchor="middle" class="zm-badge-tag">
+    global zine scene.
+  </text>
+  <!-- Pin: accent at bottom (scale 2.5 × 1.3 ≈ 3.25) -->
+  <g transform="translate(161, 279) scale(3.25)">
+    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 17L12 22L22 17" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 12L12 17L22 12" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

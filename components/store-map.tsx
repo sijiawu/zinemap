@@ -11,6 +11,7 @@ import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
+import { createPinMarker, PIN_COLORS, type LocationPinType } from "@/lib/mapPins"
 
 /** Above any stack-ordered pin z-index so the selected pin stays on top */
 const MAP_MARKER_ACTIVE_Z = 999_999
@@ -58,104 +59,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
     }
   }
 
-  // Function to get icon SVG paths based on type (returns array of path strings for complex icons)
-  const getIconPaths = (type: 'store' | 'library' | 'event') => {
-    switch (type) {
-      case 'store':
-        // Store icon from lucide-react - exact paths matching the Store component
-        return [
-          'm2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7',
-          'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8',
-          'M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4',
-          'M2 7h20',
-          'M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'
-        ]
-      case 'library':
-        // BookOpen icon (open book with two pages)
-        return [
-          'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z',
-          'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'
-        ]
-      case 'event':
-        // Calendar icon
-        return [
-          'M8 2v4',
-          'M16 2v4',
-          'M3 10h18',
-          'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z'
-        ]
-      default:
-        return ['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z']
-    }
-  }
-
-  // Function to create pin-shaped marker element
-  const createPinMarker = (color: string, type: 'store' | 'library' | 'event', isActive: boolean = false) => {
-    const size = isActive ? '42px' : '29px'
-    const circleSize = isActive ? '26px' : '22px'
-    const iconSize = isActive ? '17px' : '12px'
-    const borderSize = isActive ? '3px' : '0px'
-    const groundShadowSize = isActive ? '12px' : '7px'
-    const groundShadowBlur = isActive ? '4px' : '2px'
-    const iconPaths = getIconPaths(type)
-    
-    return `
-      <div style="
-        width: ${size};
-        height: ${size};
-        position: relative;
-        cursor: pointer;
-        transform: translate(-50%, -100%);
-        z-index: ${isActive ? '5' : '1'};
-      ">
-        <!-- Ground shadow (circular shadow at base) -->
-        <div style="
-          position: absolute;
-          bottom: -${groundShadowSize};
-          left: 50%;
-          transform: translateX(-50%);
-          width: ${groundShadowSize};
-          height: ${groundShadowSize};
-          background: rgba(0, 0, 0, 0.22);
-          border-radius: 50%;
-          box-shadow: 0 0 ${groundShadowBlur} rgba(0, 0, 0, 0.35);
-          pointer-events: none;
-        "></div>
-        <!-- Pin body -->
-        <div style="
-          width: ${size};
-          height: ${size};
-          background: ${color};
-          border: ${borderSize} solid white;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        ">
-          <!-- White circle container (rotated back) -->
-          <div style="
-            transform: rotate(45deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: ${circleSize};
-            height: ${circleSize};
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-          ">
-            <!-- Icon inside circle -->
-            <svg width="${iconSize}" height="${iconSize}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-              ${iconPaths.map(path => `<path d="${path}"/>`).join('')}
-            </svg>
-          </div>
-        </div>
-      </div>
-    `
-  }
 
   // Function to programmatically select a location
   const selectLocation = (location: Store | Library | Event, type: 'store' | 'library' | 'event') => {
@@ -515,7 +418,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === store.id && locationType === 'store'
-        markerEl.innerHTML = createPinMarker('#e11d48', 'store', isActive)
+        markerEl.innerHTML = createPinMarker(PIN_COLORS.store, 'store', isActive)
         markerEl.setAttribute('data-location-id', store.id)
         markerEl.setAttribute('data-location-type', 'store')
         const baseZStore = stackZByKey.get(`store:${store.id}`) ?? 2
@@ -563,7 +466,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === library.id && locationType === 'library'
-        markerEl.innerHTML = createPinMarker('#3b82f6', 'library', isActive)
+        markerEl.innerHTML = createPinMarker(PIN_COLORS.library, 'library', isActive)
         markerEl.setAttribute('data-location-id', library.id)
         markerEl.setAttribute('data-location-type', 'library')
         const baseZLibrary = stackZByKey.get(`library:${library.id}`) ?? 2
@@ -611,7 +514,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
 
         const markerEl = document.createElement("div")
         const isActive = selectedLocation?.id === event.id && locationType === 'event'
-        markerEl.innerHTML = createPinMarker('#009035', 'event', isActive)
+        markerEl.innerHTML = createPinMarker(PIN_COLORS.event, 'event', isActive)
         markerEl.setAttribute('data-location-id', event.id)
         markerEl.setAttribute('data-location-type', 'event')
         const baseZEvent = stackZByKey.get(`event:${event.id}`) ?? 2
@@ -685,15 +588,14 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
       if (markerEl) {
         // Get the location ID and type from the marker's data attributes
         const locationId = markerEl.getAttribute('data-location-id')
-        const markerType = markerEl.getAttribute('data-location-type') as 'store' | 'library' | 'event'
+        const markerType = markerEl.getAttribute('data-location-type') as LocationPinType
         
         if (!locationId || !markerType) return
         
         // Check if this marker should be active
         const isActive = selectedLocation?.id === locationId && locationType === markerType
         
-        // Get the appropriate color for this marker type
-        const color = markerType === 'store' ? '#e11d48' : markerType === 'library' ? '#3b82f6' : '#009035'
+        const color = PIN_COLORS[markerType]
         
         // Update marker HTML with active/inactive state
         markerEl.innerHTML = createPinMarker(color, markerType, isActive)

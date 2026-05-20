@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 52" width="600" height="104" fill="none" role="img" aria-label="ZineMap logo lockup">
+  <title>ZineMap horizontal lockup</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      @font-face {
+        font-family: 'Gloria Hallelujah';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://zinemap.com/fonts/GloriaHallelujah-Regular.woff2) format('woff2');
+      }
+      .zm-wordmark {
+        font-family: 'Gloria Hallelujah', cursive;
+        font-size: 28px;
+        fill: #292524;
+      }
+    ]]></style>
+  </defs>
+  <g transform="translate(0,10)">
+    <path d="M16 6L8 10L16 14L24 10L16 6Z" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 22L16 26L24 22" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 16L16 20L24 16" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="42" y="38" class="zm-wordmark">ZineMap</text>
+</svg>

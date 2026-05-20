@@ -84,6 +84,7 @@ export default function NavBar() {
 
   // Get the current active page name
   const getActivePageName = () => {
+    if (isActive('/map')) return 'Map';
     if (isActive('/stores')) return 'Shops';
     if (isActive('/libraries')) return 'Libraries';
     if (isActive('/events')) return 'Events';
@@ -112,6 +113,16 @@ export default function NavBar() {
               ZineMap
             </Link>
             <div className="flex items-center gap-6">
+              <Link
+                href="/map"
+                className={`font-gloria text-lg transition-all duration-200 hover:scale-105 ${
+                  isActive('/map')
+                    ? 'text-stone-900 font-bold'
+                    : 'text-stone-700 hover:text-stone-900'
+                }`}
+              >
+                Map
+              </Link>
               <Link 
                 href="/stores" 
                 className={`font-gloria text-lg transition-all duration-200 hover:scale-105 ${
@@ -258,6 +269,17 @@ export default function NavBar() {
             <div className="mt-4 pb-4 border-t border-stone-200 pt-4 animate-in slide-in-from-top-2 duration-200">
               <div className="flex flex-col gap-1">
                 {/* Navigation Links */}
+                <Link
+                  href="/map"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-gloria text-base py-2.5 px-3 rounded-md transition-all ${
+                    isActive('/map')
+                      ? 'text-stone-900 font-bold bg-stone-100'
+                      : 'text-stone-700 hover:text-stone-900 hover:bg-stone-50'
+                  }`}
+                >
+                  Map
+                </Link>
                 <Link 
                   href="/stores" 
                   onClick={() => setMobileMenuOpen(false)}
@@ -327,7 +349,6 @@ export default function NavBar() {
                     NEW
                   </span>
                 </Link>
-                
                 {/* Divider */}
                 <div className="h-px bg-stone-200 my-2"></div>
                 

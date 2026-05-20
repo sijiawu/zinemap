@@ -19,6 +19,9 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
 
   const welcomeModalPaths = ['/', '/shops', '/stores', '/libraries', '/events', '/zines', '/stories'];
   const shouldShowWelcomeOnPath = welcomeModalPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const isFullscreenMap = pathname === '/sandbox';
+  const isHomePage = pathname === '/';
+  const hideGlobalChrome = isFullscreenMap;
 
   useEffect(() => {
     if (!loading && user) {
@@ -102,13 +105,13 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
 
   return (
     <>
-      <NavBar />
-      <SupportBanner />
+      {!hideGlobalChrome && <NavBar />}
+      {!hideGlobalChrome && !isHomePage && <SupportBanner />}
       <ProfileOnboardingModal user={user} show={showModal && profileChecked} onComplete={handleOnboardingComplete} />
       <WelcomeToZineMapModal open={showWelcomeModal} onOpenChange={setShowWelcomeModal} />
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-grow pt-16 md:pt-20">{children}</div>
-        <Footer />
+      <div className={hideGlobalChrome ? "min-h-screen" : "flex flex-col min-h-screen"}>
+        <div className={hideGlobalChrome ? "" : "flex-grow pt-[62px] md:pt-[70px]"}>{children}</div>
+        {!hideGlobalChrome && <Footer />}
       </div>
     </>
   );

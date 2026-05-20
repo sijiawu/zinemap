@@ -1,9 +1,15 @@
 "use client"
 
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function FilloutButton() {
+  const pathname = usePathname()
+  const isHomePage = pathname === '/'
+
   useEffect(() => {
+    if (isHomePage) return
+
     const timerId = setTimeout(() => {
       if (!document.querySelector('script[src="https://server.fillout.com/embed/v1/"]')) {
         const script = document.createElement('script')
@@ -28,7 +34,9 @@ export default function FilloutButton() {
     }, 4000)
 
     return () => clearTimeout(timerId)
-  }, [])
+  }, [isHomePage])
+
+  if (isHomePage) return null
 
   return (
     <div 
