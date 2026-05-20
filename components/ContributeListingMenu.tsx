@@ -42,7 +42,7 @@ export function ContributeListingMenu({ variant = "default" }: ContributeListing
         onClick={() => setIsOpen((open) => !open)}
         className={buttonClassName}
       >
-        Contribute a listing
+        Drop a pin
         <ChevronDown
           className={`ml-2 h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />

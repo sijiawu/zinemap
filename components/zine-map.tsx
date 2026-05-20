@@ -4,7 +4,12 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import { useEffect, useRef, useState } from "react"
 import { BookOpen, LocateFixed } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from "@/lib/mapGeolocate"
+import {
+  enableCompactMapAttribution,
+  geolocationErrorMessage,
+  panMapToUserLocation,
+  syncMapboxHtmlMarkers,
+} from "@/lib/mapGeolocate"
 
 interface ZineStore {
   id: string
@@ -66,8 +71,10 @@ export default function ZineMap({ stores }: ZineMapProps) {
           accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ.example",
           style: "mapbox://styles/mapbox/light-v11",
           center: [-98.5795, 39.8283], // Center of US
-          zoom: 3
+          zoom: 3,
+          attributionControl: false,
         })
+        enableCompactMapAttribution(map.current, mapboxgl)
 
         map.current.on("load", () => {
           setMapReady(true)

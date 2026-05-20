@@ -15,6 +15,26 @@ export type MapboxPanMap = {
   once?: (type: string, listener: (e?: unknown) => void) => void
 }
 
+type MapboxAttributionMap = {
+  addControl: (control: unknown, position?: "top-left" | "top-right" | "bottom-left" | "bottom-right") => void
+  getContainer: () => HTMLElement
+}
+
+type MapboxAttributionModule = {
+  AttributionControl: new (options?: { compact?: boolean }) => unknown
+}
+
+/**
+ * Keep attribution tucked as the compact info button in the bottom-right corner.
+ */
+export function enableCompactMapAttribution(
+  map: MapboxAttributionMap,
+  mapboxgl: MapboxAttributionModule
+): void {
+  map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right")
+  map.getContainer().classList.add("zinemap-compact-attribution")
+}
+
 /**
  * Forces Mapbox HTML markers to recompute screen position after camera changes.
  * Without this, some browsers leave duplicate/stuck pins along the viewport edge after pan/zoom.

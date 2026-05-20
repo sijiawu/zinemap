@@ -7,7 +7,12 @@ import { supabase } from '@/lib/supabaseClient'
 import { HomePin, UserProfile } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Minus, LocateFixed } from 'lucide-react'
-import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from '@/lib/mapGeolocate'
+import {
+  enableCompactMapAttribution,
+  geolocationErrorMessage,
+  panMapToUserLocation,
+  syncMapboxHtmlMarkers,
+} from '@/lib/mapGeolocate'
 import {
   Dialog,
   DialogContent,
@@ -109,6 +114,7 @@ export default function ZinestersPage() {
   const isCreatingMarkersRef = useRef(false)
   const suppressScalePinIdRef = useRef<string | null>(null)
   const [pins, setPins] = useState<HomePin[]>([])
+  const [isPinsLoading, setIsPinsLoading] = useState(true)
   const [selectedPin, setSelectedPin] = useState<HomePin | null>(null)
   const [isAddingPin, setIsAddingPin] = useState(false)
   const [isAddingPinLoading, setIsAddingPinLoading] = useState(false)
@@ -140,6 +146,7 @@ export default function ZinestersPage() {
 
   // Fetch all pins
   const fetchPins = async () => {
+    setIsPinsLoading(true)
     try {
       const { data, error } = await supabase
         .from('home_pins')
@@ -198,6 +205,8 @@ export default function ZinestersPage() {
         description: "Failed to load pins",
         variant: "destructive",
       })
+    } finally {
+      setIsPinsLoading(false)
     }
   }
 
@@ -576,7 +585,9 @@ export default function ZinestersPage() {
           style: "mapbox://styles/mapbox/light-v11",
           center: [-53.5, 48.5], // Newfoundland, Canada
           zoom: window.innerWidth < 640 ? 1 : 2, // Zoom level 1 on mobile, 2 on desktop
+          attributionControl: false,
         })
+        enableCompactMapAttribution(map.current, mapboxgl)
 
         map.current.on('load', () => {
           setMapReady(true)
@@ -954,11 +965,15 @@ export default function ZinestersPage() {
                   </button>
                 )
               })}
-              {!userCards.length && (
+              {isPinsLoading ? (
+                <p className="rounded-md border border-dashed border-amber-200 bg-white px-3 py-6 text-center text-sm text-stone-500">
+                  Loading...
+                </p>
+              ) : !userCards.length ? (
                 <p className="rounded-md border border-dashed border-amber-200 bg-white px-3 py-6 text-center text-sm text-stone-500">
                   No zinesters match these filters yet.
                 </p>
-              )}
+              ) : null}
             </div>
           </aside>
 

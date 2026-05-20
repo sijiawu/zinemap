@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { enableCompactMapAttribution } from "@/lib/mapGeolocate"
 
 type PinType = "store" | "library" | "event"
 
@@ -167,7 +168,9 @@ export function ZineMapHeroVisual({ className, busyPins, featuredPins }: ZineMap
         doubleClickZoom: false,
         touchZoomRotate: false,
         keyboard: false,
+        attributionControl: false,
       })
+      enableCompactMapAttribution(mapRef.current, mapboxgl)
 
       mapRef.current.on("load", () => {
         if (cancelled || !mapRef.current) return

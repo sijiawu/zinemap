@@ -4,7 +4,12 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import { useEffect, useRef, useState } from "react"
 import { MapPin, ExternalLink, BookOpen, Calendar, Landmark, Plus, Minus, Store as StoreIcon, Globe, LocateFixed } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { geolocationErrorMessage, panMapToUserLocation, syncMapboxHtmlMarkers } from "@/lib/mapGeolocate"
+import {
+  enableCompactMapAttribution,
+  geolocationErrorMessage,
+  panMapToUserLocation,
+  syncMapboxHtmlMarkers,
+} from "@/lib/mapGeolocate"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/lib/utils"
@@ -256,7 +261,9 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           center: [-95.7129, 37.0902], // Center of US
           zoom: 3.5,
           renderWorldCopies: false, // Prevent showing multiple copies of the world
+          attributionControl: false,
         })
+        enableCompactMapAttribution(map.current, mapboxgl)
 
         // Timeout fallback - if map doesn't load within 10 seconds, remove loading state
         const timeout = setTimeout(() => {
@@ -910,10 +917,6 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
         </div>
       )}
 
-      {/* Map Attribution */}
-      <div className="absolute bottom-2 right-2 bg-white bg-opacity-95 px-3 py-1 rounded text-xs text-gray-600 z-10">
-        © Mapbox © OpenStreetMap
-      </div>
     </div>
   )
 }

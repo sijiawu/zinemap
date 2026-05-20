@@ -283,3 +283,18 @@
     font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
   }
 }
+
+/* Keep Mapbox attribution tucked into the bottom-right info chip on every map. */
+.zinemap-compact-attribution .mapboxgl-ctrl-bottom-right {
+  right: 0.5rem;
+  bottom: 0.5rem;
+}
+
+.zinemap-compact-attribution .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+  margin: 0;
+  border-radius: 9999px;
+  border: 1px solid rgb(231 229 228 / 1);
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  overflow: hidden;
+}
