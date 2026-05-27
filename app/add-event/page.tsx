@@ -3,7 +3,7 @@
 import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat, Image as ImageIcon, X } from "lucide-react"
 import { nanoid } from "nanoid"
 import { Button } from "@/components/ui/button"
@@ -23,9 +23,12 @@ import {
 } from "@/components/ui/dialog"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
-import { EventFormData, RecurrenceFrequency } from "@/lib/types"
+import { EventFormData } from "@/lib/types"
 import { compressImage } from "@/lib/compressImage"
-import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
+import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, normalizeOccurrenceDates, validateOccurrenceDates } from "@/lib/utils"
+import { OccurrenceDatePicker } from "@/components/OccurrenceDatePicker"
+import { RegenerateOccurrenceDatesDialog } from "@/components/RegenerateOccurrenceDatesDialog"
+import { useOccurrenceDateSelection } from "@/hooks/useOccurrenceDateSelection"
 
 const ADD_EVENT_FIELD_SUMMARY_ORDER = [
   "name",
@@ -142,6 +145,7 @@ const INITIAL_EVENT_FORM_DATA: EventFormData = {
   recurrence_until: "",
   recurrence_ordinal: 3,
   recurrence_weekday: 0,
+  occurrence_dates: [],
 }
 
 const inputClass =
@@ -205,6 +209,41 @@ export default function AddEventPage() {
   }
 
   const [formData, setFormData] = useState<EventFormData>(INITIAL_EVENT_FORM_DATA)
+  const [occurrenceDatesError, setOccurrenceDatesError] = useState<string | null>(null)
+
+  const recurrenceRule = useMemo(() => {
+    const freq = formData.recurrence_frequency
+    if (!freq || !formData.start_date || (freq !== "weekly" && freq !== "monthly")) return null
+    return {
+      start_date: formData.start_date,
+      end_date: formData.end_date || formData.start_date,
+      recurrence_frequency: freq as "weekly" | "monthly",
+      recurrence_interval: formData.recurrence_interval ?? 1,
+      recurrence_until: formData.recurrence_until,
+      recurrence_ordinal: formData.recurrence_ordinal ?? 3,
+      recurrence_weekday: formData.recurrence_weekday ?? 0,
+    }
+  }, [
+    formData.recurrence_frequency,
+    formData.start_date,
+    formData.end_date,
+    formData.recurrence_interval,
+    formData.recurrence_until,
+    formData.recurrence_ordinal,
+    formData.recurrence_weekday,
+  ])
+
+  const {
+    selectedDates: occurrenceDates,
+    setSelectedDates: setOccurrenceDates,
+    showRegenerateWarning,
+    confirmRegenerate,
+    cancelRegenerate,
+    resetForOneTime,
+  } = useOccurrenceDateSelection({
+    enabled: !!formData.recurrence_frequency,
+    rule: recurrenceRule,
+  })
 
   // Address autocomplete state
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([])
@@ -511,6 +550,17 @@ export default function AddEventPage() {
       return
     }
 
+    if (formData.recurrence_frequency) {
+      const occErr = validateOccurrenceDates(occurrenceDates, { requireFuture: true })
+      if (occErr) {
+        setOccurrenceDatesError(occErr)
+        setIsSubmitting(false)
+        scrollSubmitFeedbackIntoView()
+        return
+      }
+      setOccurrenceDatesError(null)
+    }
+
     try {
       // Generate ID and permalink for the event
       const id = nanoid(6)
@@ -519,15 +569,13 @@ export default function AddEventPage() {
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
 
-      const freq = formData.recurrence_frequency
-      const recurrenceFreq: RecurrenceFrequency | null = 
-        freq === 'weekly' || freq === 'monthly' ? freq : null
-      const recurrenceInterval = recurrenceFreq ? (formData.recurrence_interval ?? 1) : null
-      const recurrenceUntil = formData.recurrence_until?.trim()
-        ? new Date(formData.recurrence_until + 'T00:00:00.000Z').toISOString().split('T')[0]
+      const isRecurring = !!formData.recurrence_frequency
+      const sortedOccurrenceDates = isRecurring
+        ? normalizeOccurrenceDates(occurrenceDates)
         : null
-      const recurrenceOrdinal = recurrenceFreq === 'monthly' ? (formData.recurrence_ordinal ?? 3) : null
-      const recurrenceWeekday = recurrenceFreq === 'monthly' ? (formData.recurrence_weekday ?? 0) : null
+      const seriesStartDate = isRecurring && sortedOccurrenceDates?.length
+        ? sortedOccurrenceDates[0]
+        : formData.start_date
 
       let posterImageUrl: string | null = null
       if (posterImage && user) {
@@ -558,8 +606,8 @@ export default function AddEventPage() {
           website: formData.website?.trim() || null,
           social: formData.social?.trim() || null,
           category: formData.category,
-          start_date: new Date(formData.start_date + 'T00:00:00.000Z').toISOString().split('T')[0],
-          end_date: new Date(formData.end_date + 'T00:00:00.000Z').toISOString().split('T')[0],
+          start_date: new Date(seriesStartDate + 'T00:00:00.000Z').toISOString().split('T')[0],
+          end_date: new Date((isRecurring ? seriesStartDate : formData.end_date) + 'T00:00:00.000Z').toISOString().split('T')[0],
           start_time: formData.start_time?.trim() || null,
           end_time: formData.end_time?.trim() || null,
           application_open: formData.application_open ? new Date(formData.application_open + 'T00:00:00.000Z').toISOString().split('T')[0] : null,
@@ -570,11 +618,7 @@ export default function AddEventPage() {
           latitude: coordinates?.latitude || null,
           longitude: coordinates?.longitude || null,
           approved: false,
-          recurrence_frequency: recurrenceFreq,
-          recurrence_interval: recurrenceInterval,
-          recurrence_until: recurrenceUntil,
-          recurrence_ordinal: recurrenceOrdinal,
-          recurrence_weekday: recurrenceWeekday,
+          occurrence_dates: sortedOccurrenceDates,
           poster_image: posterImageUrl,
         })
 
@@ -817,6 +861,8 @@ export default function AddEventPage() {
                         setShowRecurringOrganizerDialog(true)
                       } else {
                         setFormData(prev => ({ ...prev, recurrence_frequency: "", recurrence_interval: 1, recurrence_until: "" }))
+                        resetForOneTime()
+                        setOccurrenceDatesError(null)
                       }
                     }}
                   />
@@ -996,39 +1042,19 @@ export default function AddEventPage() {
                         />
                       </div>
                       <p className="text-stone-500 text-xs">
-                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.
+                        Use the schedule below to generate dates, then review and adjust on the calendar (max 12 dates).
                       </p>
-                      {formData.recurrence_frequency && formData.start_date && (() => {
-                        const previewEvent = {
-                          id: "preview",
-                          name: "",
-                          city: "",
-                          country: "",
-                          address: "",
-                          submitted_by: "",
-                          created_at: new Date().toISOString(),
-                          category: "festival" as const,
-                          start_date: formData.start_date,
-                          end_date: formData.end_date || formData.start_date,
-                          recurrence_frequency: formData.recurrence_frequency,
-                          recurrence_interval: formData.recurrence_interval ?? 1,
-                          recurrence_until: formData.recurrence_until || undefined,
-                          recurrence_ordinal: formData.recurrence_ordinal ?? 1,
-                          recurrence_weekday: formData.recurrence_weekday ?? 0,
-                        }
-                        const occurrences = expandRecurringEvents([previewEvent])
-                        return (
-                          <p className="text-stone-500 text-xs mt-2">
-                            This event series is scheduled to occur on the following dates:
-                            <br />
-                            {occurrences.map((o) => (
-                              <span key={o.occurrence_start} className="block mt-0.5">
-                                {formatDateWithWeekday(o.occurrence_start)}
-                              </span>
-                            ))}
-                          </p>
-                        )
-                      })()}
+                      <OccurrenceDatePicker
+                        selectedDates={occurrenceDates}
+                        onChange={(dates) => {
+                          setOccurrenceDates(dates)
+                          setOccurrenceDatesError(null)
+                        }}
+                        className="mt-3"
+                      />
+                      {occurrenceDatesError && (
+                        <FieldErrorMessage message={occurrenceDatesError} />
+                      )}
                     </div>
                   )
                 })()}
@@ -1328,6 +1354,12 @@ export default function AddEventPage() {
           </div>
         </form>
       </div>
+
+      <RegenerateOccurrenceDatesDialog
+        open={showRegenerateWarning}
+        onConfirm={confirmRegenerate}
+        onCancel={cancelRegenerate}
+      />
 
       {/* Recurring organizer confirmation dialog */}
       <Dialog open={showRecurringOrganizerDialog} onOpenChange={setShowRecurringOrganizerDialog}>

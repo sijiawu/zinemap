@@ -13,7 +13,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, isRecurringEvent } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -261,9 +261,9 @@ export default function EventsPage() {
   const mapEvents = useMemo(() => {
     const source = viewMode === "calendar" ? calendarFilteredEvents : filteredEvents
     const today = new Date().toISOString().split('T')[0]
-    const recurring = source.filter(e => e.recurrence_frequency && e.start_date >= today)
+    const recurring = source.filter(e => isRecurringEvent(e) && e.start_date >= today)
       .sort((a, b) => a.start_date.localeCompare(b.start_date))
-    const oneTime = source.filter(e => !e.recurrence_frequency)
+    const oneTime = source.filter(e => !isRecurringEvent(e))
     const byId = new Map<string, Event>()
     for (const e of [...recurring, ...oneTime]) {
       if (!byId.has(e.id)) byId.set(e.id, e)
@@ -706,7 +706,7 @@ export default function EventsPage() {
                           >
                             {getEventCategoryDisplay(event.category)}
                           </Badge>
-                          {event.recurrence_frequency && (
+                          {isRecurringEvent(event) && (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                               Recurring
                             </Badge>
@@ -721,7 +721,7 @@ export default function EventsPage() {
                           )}
                           <div className="flex items-center text-xs text-stone-500">
                             <Calendar className="h-3 w-3 mr-1" />
-                            {event.recurrence_frequency ? (
+                            {isRecurringEvent(event) ? (
                               <>Next: {formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
                             ) : (
                               <>

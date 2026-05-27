@@ -26,6 +26,8 @@ import {
   formatDateReadable,
   formatRecurrenceDescription,
   getEventCategoryDisplay,
+  isRecurringEvent,
+  normalizeOccurrenceDates,
 } from "@/lib/utils"
 
 type ListingType = "store" | "library" | "event"
@@ -145,11 +147,7 @@ type EventQuickFixForm = {
   application_open: string
   application_deadline: string
   notes: string
-  recurrence_frequency: "" | "weekly" | "monthly"
-  recurrence_interval: string
-  recurrence_until: string
-  recurrence_ordinal: string
-  recurrence_weekday: string
+  occurrence_dates: string
   poster_image: string
   adminNote: string
 }
@@ -259,11 +257,7 @@ export default function AdminPage() {
     application_open: "",
     application_deadline: "",
     notes: "",
-    recurrence_frequency: "",
-    recurrence_interval: "",
-    recurrence_until: "",
-    recurrence_ordinal: "",
-    recurrence_weekday: "",
+    occurrence_dates: "",
     poster_image: "",
     adminNote: "",
   })
@@ -715,11 +709,9 @@ export default function AdminPage() {
       application_open: event.application_open || "",
       application_deadline: event.application_deadline || "",
       notes: event.notes || "",
-      recurrence_frequency: event.recurrence_frequency || "",
-      recurrence_interval: event.recurrence_interval ? String(event.recurrence_interval) : "",
-      recurrence_until: event.recurrence_until || "",
-      recurrence_ordinal: event.recurrence_ordinal ? String(event.recurrence_ordinal) : "",
-      recurrence_weekday: event.recurrence_weekday !== null && event.recurrence_weekday !== undefined ? String(event.recurrence_weekday) : "",
+      occurrence_dates: event.occurrence_dates?.length
+        ? event.occurrence_dates.join("\n")
+        : "",
       poster_image: event.poster_image || "",
       adminNote: event.admin_note || "",
     })
@@ -860,6 +852,15 @@ export default function AdminPage() {
     setSuccess(null)
     const now = new Date().toISOString()
 
+    const parsedOccurrenceDates = eventQuickFix.occurrence_dates
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const occurrenceDates =
+      parsedOccurrenceDates.length >= 2 ? normalizeOccurrenceDates(parsedOccurrenceDates) : null
+    const seriesStart =
+      occurrenceDates?.[0] ?? eventQuickFix.start_date
+
     const { error: updateError } = await supabase
       .from("events")
       .update({
@@ -873,18 +874,14 @@ export default function AdminPage() {
         website: eventQuickFix.website || null,
         social: eventQuickFix.social || null,
         category: eventQuickFix.category,
-        start_date: eventQuickFix.start_date,
-        end_date: eventQuickFix.end_date,
+        start_date: seriesStart,
+        end_date: occurrenceDates ? seriesStart : eventQuickFix.end_date,
         start_time: eventQuickFix.start_time || null,
         end_time: eventQuickFix.end_time || null,
         application_open: eventQuickFix.application_open || null,
         application_deadline: eventQuickFix.application_deadline || null,
         notes: eventQuickFix.notes || null,
-        recurrence_frequency: eventQuickFix.recurrence_frequency || null,
-        recurrence_interval: eventQuickFix.recurrence_interval ? Number(eventQuickFix.recurrence_interval) : null,
-        recurrence_until: eventQuickFix.recurrence_until || null,
-        recurrence_ordinal: eventQuickFix.recurrence_ordinal ? Number(eventQuickFix.recurrence_ordinal) : null,
-        recurrence_weekday: eventQuickFix.recurrence_weekday ? Number(eventQuickFix.recurrence_weekday) : null,
+        occurrence_dates: occurrenceDates,
         poster_image: eventQuickFix.poster_image || null,
         admin_note: eventQuickFix.adminNote || null,
         approved: true,
@@ -1088,11 +1085,7 @@ export default function AdminPage() {
             application_deadline?: string | null
             notes?: string | null
             poster_image?: string | null
-            recurrence_frequency?: "weekly" | "monthly" | null
-            recurrence_interval?: number | null
-            recurrence_until?: string | null
-            recurrence_ordinal?: number | null
-            recurrence_weekday?: number | null
+            occurrence_dates?: string[] | null
           }
         | undefined
 
@@ -1118,11 +1111,7 @@ export default function AdminPage() {
             ...(payload.application_deadline !== undefined && { application_deadline: payload.application_deadline }),
             ...(payload.notes !== undefined && { notes: payload.notes }),
             ...(payload.poster_image !== undefined && { poster_image: payload.poster_image }),
-            ...(payload.recurrence_frequency !== undefined && { recurrence_frequency: payload.recurrence_frequency }),
-            ...(payload.recurrence_interval !== undefined && { recurrence_interval: payload.recurrence_interval }),
-            ...(payload.recurrence_until !== undefined && { recurrence_until: payload.recurrence_until }),
-            ...(payload.recurrence_ordinal !== undefined && { recurrence_ordinal: payload.recurrence_ordinal }),
-            ...(payload.recurrence_weekday !== undefined && { recurrence_weekday: payload.recurrence_weekday }),
+            ...(payload.occurrence_dates !== undefined && { occurrence_dates: payload.occurrence_dates }),
             updated_at: new Date().toISOString(),
           })
           .eq("id", edit.event_id)
@@ -1463,7 +1452,7 @@ export default function AdminPage() {
               pendingEvents.map((event) => {
                 const listingKey = getListingKey("event", event.id)
                 const today = new Date().toISOString().split("T")[0]
-                const futureOccurrenceDates = event.recurrence_frequency
+                const futureOccurrenceDates = isRecurringEvent(event)
                   ? expandRecurringEvents([event]).filter((item) => item.occurrence_start >= today).map((item) => item.occurrence_start)
                   : []
                 return (
@@ -1505,7 +1494,7 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {event.recurrence_frequency && (
+                      {isRecurringEvent(event) && (
                         <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-4">
                           <strong className="text-stone-700 text-sm">Recurrence</strong>
                           <p className="text-stone-600 text-sm mt-1">{formatRecurrenceDescription(event)}</p>
@@ -1933,22 +1922,15 @@ export default function AdminPage() {
                 <div><Label>End time</Label><Input type="time" value={eventQuickFix.end_time} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, end_time: e.target.value }))} /></div>
                 <div><Label>Application open</Label><Input type="date" value={eventQuickFix.application_open} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, application_open: e.target.value }))} /></div>
                 <div><Label>Application deadline</Label><Input type="date" value={eventQuickFix.application_deadline} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, application_deadline: e.target.value }))} /></div>
-                <div>
-                  <Label>Recurrence frequency</Label>
-                  <select
-                    className="w-full border border-stone-300 rounded-md h-10 px-3"
-                    value={eventQuickFix.recurrence_frequency}
-                    onChange={(e) => setEventQuickFix((prev) => ({ ...prev, recurrence_frequency: e.target.value as EventQuickFixForm["recurrence_frequency"] }))}
-                  >
-                    <option value="">One-time</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
+                <div className="md:col-span-2">
+                  <Label>Occurrence dates (one per line or comma-separated, min 2 for series)</Label>
+                  <Textarea
+                    value={eventQuickFix.occurrence_dates}
+                    onChange={(e) => setEventQuickFix((prev) => ({ ...prev, occurrence_dates: e.target.value }))}
+                    rows={4}
+                    placeholder="2026-06-01&#10;2026-07-01"
+                  />
                 </div>
-                <div><Label>Recurrence interval</Label><Input value={eventQuickFix.recurrence_interval} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, recurrence_interval: e.target.value }))} /></div>
-                <div><Label>Recurrence until</Label><Input type="date" value={eventQuickFix.recurrence_until} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, recurrence_until: e.target.value }))} /></div>
-                <div><Label>Recurrence ordinal</Label><Input value={eventQuickFix.recurrence_ordinal} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, recurrence_ordinal: e.target.value }))} /></div>
-                <div><Label>Recurrence weekday (0-6)</Label><Input value={eventQuickFix.recurrence_weekday} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, recurrence_weekday: e.target.value }))} /></div>
                 <div className="md:col-span-2"><Label>Poster image URL</Label><Input value={eventQuickFix.poster_image} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, poster_image: e.target.value }))} /></div>
               </div>
               <div><Label>Notes</Label><Textarea value={eventQuickFix.notes} onChange={(e) => setEventQuickFix((prev) => ({ ...prev, notes: e.target.value }))} /></div>

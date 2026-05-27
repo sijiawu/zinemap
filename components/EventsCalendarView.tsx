@@ -5,7 +5,7 @@ import { Landmark, ExternalLink, Clock, Calendar as CalendarIcon } from "lucide-
 import { SaveButton } from "@/components/SaveButton"
 import { Calendar } from "@/components/ui/calendar"
 import { Event } from "@/lib/types"
-import { getEventCategoryDisplay, formatDateReadable, formatTimeRange } from "@/lib/utils"
+import { getEventCategoryDisplay, formatDateReadable, formatTimeRange, isRecurringEvent } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -278,7 +278,7 @@ export function EventsCalendarView({
                         >
                           {getEventCategoryDisplay(event.category)}
                         </Badge>
-                        {event.recurrence_frequency && (
+                        {isRecurringEvent(event) && (
                           <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                             Recurring
                           </Badge>

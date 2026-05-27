@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,17 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { Event } from "@/lib/types"
 import { compressImage } from "@/lib/compressImage"
-import { getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, expandRecurringEvents, formatDateWithWeekday } from "@/lib/utils"
+import {
+  getOrdinalAndWeekdayFromDate,
+  WEEKDAY_NAMES,
+  ORDINAL_LABELS,
+  normalizeOccurrenceDates,
+  validateOccurrenceDates,
+  isRecurringEvent,
+} from "@/lib/utils"
+import { OccurrenceDatePicker } from "@/components/OccurrenceDatePicker"
+import { RegenerateOccurrenceDatesDialog } from "@/components/RegenerateOccurrenceDatesDialog"
+import { useOccurrenceDateSelection } from "@/hooks/useOccurrenceDateSelection"
 
 export default function SuggestEventEditPage() {
   const { permalink } = useParams()
@@ -59,6 +69,8 @@ export default function SuggestEventEditPage() {
     recurrence_weekday: 0
   })
   const [showRecurringOrganizerDialog, setShowRecurringOrganizerDialog] = useState(false)
+  const [initialOccurrenceDates, setInitialOccurrenceDates] = useState<string[] | undefined>(undefined)
+  const [occurrenceDatesError, setOccurrenceDatesError] = useState<string | null>(null)
   const [posterImage, setPosterImage] = useState<File | null>(null)
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
   const [removePoster, setRemovePoster] = useState(false)
@@ -98,12 +110,17 @@ export default function SuggestEventEditPage() {
             end_time: eventData.end_time || "",
             application_open: eventData.application_open || "",
             application_deadline: eventData.application_deadline || "",
-            recurrence_frequency: (eventData.recurrence_frequency || "") as "" | "weekly" | "monthly",
-            recurrence_interval: eventData.recurrence_interval ?? 1,
-            recurrence_until: eventData.recurrence_until || "",
-            recurrence_ordinal: eventData.recurrence_ordinal ?? (derived?.ordinal ?? 3),
-            recurrence_weekday: eventData.recurrence_weekday ?? (derived?.weekday ?? 0)
+            recurrence_frequency: (isRecurringEvent(eventData) ? "monthly" : "") as "" | "weekly" | "monthly",
+            recurrence_interval: 1,
+            recurrence_until: "",
+            recurrence_ordinal: derived?.ordinal ?? 3,
+            recurrence_weekday: derived?.weekday ?? 0
           })
+          setInitialOccurrenceDates(
+            eventData.occurrence_dates?.length >= 2
+              ? eventData.occurrence_dates
+              : undefined
+          )
           setPosterImagePreview(eventData.poster_image || null)
         }
       } catch (error) {
@@ -123,6 +140,41 @@ export default function SuggestEventEditPage() {
       router.push(`/login?redirect=/event/${permalink}/suggest-edit`)
     }
   }, [user, loading, router, permalink])
+
+  const recurrenceRule = useMemo(() => {
+    const freq = formData.recurrence_frequency
+    if (!freq || !formData.start_date || (freq !== "weekly" && freq !== "monthly")) return null
+    return {
+      start_date: formData.start_date,
+      end_date: formData.end_date || formData.start_date,
+      recurrence_frequency: freq,
+      recurrence_interval: formData.recurrence_interval ?? 1,
+      recurrence_until: formData.recurrence_until,
+      recurrence_ordinal: formData.recurrence_ordinal ?? 3,
+      recurrence_weekday: formData.recurrence_weekday ?? 0,
+    }
+  }, [
+    formData.recurrence_frequency,
+    formData.start_date,
+    formData.end_date,
+    formData.recurrence_interval,
+    formData.recurrence_until,
+    formData.recurrence_ordinal,
+    formData.recurrence_weekday,
+  ])
+
+  const {
+    selectedDates: occurrenceDates,
+    setSelectedDates: setOccurrenceDates,
+    showRegenerateWarning,
+    confirmRegenerate,
+    cancelRegenerate,
+    resetForOneTime,
+  } = useOccurrenceDateSelection({
+    enabled: !!formData.recurrence_frequency,
+    rule: recurrenceRule,
+    initialDates: initialOccurrenceDates,
+  })
 
   const handleInputChange = (field: keyof typeof formData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -191,6 +243,15 @@ export default function SuggestEventEditPage() {
       return
     }
 
+    if (formData.recurrence_frequency) {
+      const occErr = validateOccurrenceDates(occurrenceDates)
+      if (occErr) {
+        setOccurrenceDatesError(occErr)
+        return
+      }
+      setOccurrenceDatesError(null)
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -242,11 +303,12 @@ export default function SuggestEventEditPage() {
       if (formData.end_time !== (event.end_time ?? "")) {
         changes.push(`old end time: ${event.end_time || 'none'}\nnew end time: ${formData.end_time || 'none'}`)
       }
-      if (formData.recurrence_frequency !== (event.recurrence_frequency ?? "")) {
-        changes.push(`old recurrence: ${event.recurrence_frequency || 'one-time'}\nnew recurrence: ${formData.recurrence_frequency || 'one-time'}`)
-      }
-      if (formData.recurrence_frequency && formData.recurrence_until !== (event.recurrence_until ?? "")) {
-        changes.push(`old recurrence until: ${event.recurrence_until || 'none'}\nnew recurrence until: ${formData.recurrence_until || 'none'}`)
+      const oldDates = event.occurrence_dates?.join(", ") || (isRecurringEvent(event) ? "recurring series" : "one-time")
+      const newDates = formData.recurrence_frequency
+        ? normalizeOccurrenceDates(occurrenceDates).join(", ")
+        : "one-time"
+      if (oldDates !== newDates) {
+        changes.push(`old occurrence dates: ${oldDates}\nnew occurrence dates: ${newDates}`)
       }
       if (removePoster) {
         changes.push('remove poster image')
@@ -275,14 +337,14 @@ export default function SuggestEventEditPage() {
         posterImageUrl = urlData.publicUrl
       }
 
-      const freq = formData.recurrence_frequency
-      const recurrenceFreq = freq === "weekly" || freq === "monthly" ? freq : null
-      const recurrenceInterval = recurrenceFreq ? (formData.recurrence_interval ?? 1) : null
-      const recurrenceUntil = formData.recurrence_until?.trim()
-        ? new Date(formData.recurrence_until + "T00:00:00.000Z").toISOString().split("T")[0]
+      const isRecurring = !!formData.recurrence_frequency
+      const sortedOccurrenceDates = isRecurring
+        ? normalizeOccurrenceDates(occurrenceDates)
         : null
-      const recurrenceOrdinal = recurrenceFreq === "monthly" ? (formData.recurrence_ordinal ?? 3) : null
-      const recurrenceWeekday = recurrenceFreq === "monthly" ? (formData.recurrence_weekday ?? 0) : null
+      const seriesStartDate =
+        isRecurring && sortedOccurrenceDates?.length
+          ? sortedOccurrenceDates[0]
+          : formData.start_date
 
       const editPayload = {
         name: formData.name,
@@ -295,17 +357,13 @@ export default function SuggestEventEditPage() {
         website: formData.website || null,
         social: formData.social || null,
         category: formData.category,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
+        start_date: seriesStartDate,
+        end_date: isRecurring ? seriesStartDate : formData.end_date,
         start_time: formData.start_time?.trim() || null,
         end_time: formData.end_time?.trim() || null,
         application_open: formData.application_open?.trim() ? new Date(formData.application_open + "T00:00:00.000Z").toISOString().split("T")[0] : null,
         application_deadline: formData.application_deadline?.trim() ? new Date(formData.application_deadline + "T00:00:00.000Z").toISOString().split("T")[0] : null,
-        recurrence_frequency: recurrenceFreq,
-        recurrence_interval: recurrenceInterval,
-        recurrence_until: recurrenceUntil,
-        recurrence_ordinal: recurrenceOrdinal,
-        recurrence_weekday: recurrenceWeekday,
+        occurrence_dates: sortedOccurrenceDates,
         ...(posterImageUrl !== undefined && { poster_image: posterImageUrl })
       }
 
@@ -572,6 +630,9 @@ export default function SuggestEventEditPage() {
                         setShowRecurringOrganizerDialog(true)
                       } else {
                         setFormData(prev => ({ ...prev, recurrence_frequency: "", recurrence_interval: 1, recurrence_until: "" }))
+                        resetForOneTime()
+                        setInitialOccurrenceDates(undefined)
+                        setOccurrenceDatesError(null)
                       }
                     }}
                   />
@@ -739,39 +800,20 @@ export default function SuggestEventEditPage() {
                         />
                       </div>
                       <p className="text-stone-500 text-xs">
-                        Series may include a maximum of 12 occurrences or run up to 1 year, whichever comes first.
+                        Use the schedule below to generate dates, then review and adjust on the calendar (max 12 dates).
                       </p>
-                      {formData.recurrence_frequency && formData.start_date && (() => {
-                        const previewEvent = {
-                          id: "preview",
-                          name: "",
-                          city: "",
-                          country: "",
-                          address: "",
-                          submitted_by: "",
-                          created_at: new Date().toISOString(),
-                          category: "festival" as const,
-                          start_date: formData.start_date,
-                          end_date: formData.end_date || formData.start_date,
-                          recurrence_frequency: formData.recurrence_frequency,
-                          recurrence_interval: formData.recurrence_interval ?? 1,
-                          recurrence_until: formData.recurrence_until || undefined,
-                          recurrence_ordinal: formData.recurrence_ordinal ?? 1,
-                          recurrence_weekday: formData.recurrence_weekday ?? 0,
-                        }
-                        const occurrences = expandRecurringEvents([previewEvent])
-                        return (
-                          <p className="text-stone-500 text-xs mt-2">
-                            This event series is scheduled to occur on the following dates:
-                            <br />
-                            {occurrences.map((o) => (
-                              <span key={o.occurrence_start} className="block mt-0.5">
-                                {formatDateWithWeekday(o.occurrence_start)}
-                              </span>
-                            ))}
-                          </p>
-                        )
-                      })()}
+                      <OccurrenceDatePicker
+                        selectedDates={occurrenceDates}
+                        onChange={(dates) => {
+                          setOccurrenceDates(dates)
+                          setOccurrenceDatesError(null)
+                        }}
+                        minDate={null}
+                        className="mt-3"
+                      />
+                      {occurrenceDatesError && (
+                        <p className="text-red-700 text-sm mt-1">{occurrenceDatesError}</p>
+                      )}
                     </div>
                   )
                 })()}
@@ -950,6 +992,12 @@ export default function SuggestEventEditPage() {
         </form>
 
         {/* Recurring organizer confirmation dialog */}
+        <RegenerateOccurrenceDatesDialog
+          open={showRegenerateWarning}
+          onConfirm={confirmRegenerate}
+          onCancel={cancelRegenerate}
+        />
+
         <Dialog open={showRecurringOrganizerDialog} onOpenChange={setShowRecurringOrganizerDialog}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>

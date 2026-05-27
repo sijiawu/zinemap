@@ -12,7 +12,7 @@ import {
 } from "@/lib/mapGeolocate"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { formatDateReadable, getEventCategoryDisplay, formatTimeRange } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatTimeRange, isRecurringEvent } from "@/lib/utils"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
@@ -804,7 +804,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
                 <Badge variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100">
                   {getEventCategoryDisplay(selectedLocation.category)}
                 </Badge>
-                {'recurrence_frequency' in selectedLocation && selectedLocation.recurrence_frequency && (
+                {'occurrence_dates' in selectedLocation && isRecurringEvent(selectedLocation as Event) && (
                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                     Recurring
                   </Badge>
@@ -818,7 +818,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
               </div>
               {'start_date' in selectedLocation && selectedLocation.start_date && (
                 <p className="text-xs text-gray-500 mt-1">
-                  {'recurrence_frequency' in selectedLocation && selectedLocation.recurrence_frequency ? (
+                  {'occurrence_dates' in selectedLocation && isRecurringEvent(selectedLocation as Event) ? (
                     <>Next: {formatDateReadable(selectedLocation.start_date)}{formatTimeRange(selectedLocation.start_time, selectedLocation.end_time)}</>
                   ) : (
                     <>

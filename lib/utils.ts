@@ -228,6 +228,88 @@ export interface EventOccurrence {
 /** Max occurrences per recurring series (hard cap) */
 export const MAX_RECURRENCE_OCCURRENCES = 12
 
+/** True when event is a recurring series (explicit occurrence_dates only). */
+export function isRecurringEvent(event: {
+  occurrence_dates?: string[] | null
+}): boolean {
+  return !!(event.occurrence_dates && event.occurrence_dates.length >= 2)
+}
+
+/** Sort and dedupe YYYY-MM-DD strings. */
+export function normalizeOccurrenceDates(dates: string[]): string[] {
+  const unique = [...new Set(dates.filter(Boolean))]
+  return unique.sort()
+}
+
+export type OccurrenceDatesValidationOptions = {
+  minCount?: number
+  maxCount?: number
+  requireFuture?: boolean
+}
+
+export function validateOccurrenceDates(
+  dates: string[],
+  options?: OccurrenceDatesValidationOptions
+): string | null {
+  const minCount = options?.minCount ?? 2
+  const maxCount = options?.maxCount ?? MAX_RECURRENCE_OCCURRENCES
+  const normalized = normalizeOccurrenceDates(dates)
+
+  if (normalized.length < minCount) {
+    return `Select at least ${minCount} dates for a recurring series`
+  }
+  if (normalized.length > maxCount) {
+    return `A series can include at most ${maxCount} dates`
+  }
+
+  const isoDate = /^\d{4}-\d{2}-\d{2}$/
+  for (const d of normalized) {
+    if (!isoDate.test(d)) return 'Invalid date format'
+    const parsed = parseISO(d)
+    if (isNaN(parsed.getTime())) return `Invalid date: ${d}`
+  }
+
+  if (options?.requireFuture) {
+    const today = new Date().toISOString().split('T')[0]
+    if (!normalized.some(d => d >= today)) {
+      return 'At least one occurrence date must be today or in the future'
+    }
+  }
+
+  return null
+}
+
+export type RecurrenceRuleInput = {
+  start_date: string
+  end_date?: string
+  recurrence_frequency: 'weekly' | 'monthly'
+  recurrence_interval?: number
+  recurrence_until?: string
+  recurrence_ordinal?: number
+  recurrence_weekday?: number
+}
+
+/** Generate occurrence date strings from weekly/monthly rule (setup UI only). */
+export function generateOccurrenceDatesFromRule(
+  input: RecurrenceRuleInput,
+  options?: { maxOccurrences?: number }
+): string[] {
+  const occs = expandDatesFromRecurrenceRule(input, options)
+  return occs
+}
+
+/** Stable signature for recurrence setup (regenerate dates on change). */
+export function getRecurrenceRuleSignature(input: RecurrenceRuleInput): string {
+  return JSON.stringify({
+    start_date: input.start_date,
+    recurrence_frequency: input.recurrence_frequency,
+    recurrence_interval: input.recurrence_interval ?? 1,
+    recurrence_until: input.recurrence_until ?? '',
+    recurrence_ordinal: input.recurrence_ordinal ?? 3,
+    recurrence_weekday: input.recurrence_weekday ?? 0,
+  })
+}
+
 /**
  * Get the Nth occurrence of a weekday in a month (e.g. 3rd Sunday).
  * @param year - Full year
@@ -258,90 +340,97 @@ function getNthWeekdayOfMonth(year: number, month: number, weekday: number, ordi
 }
 
 /**
- * Expand recurring events into individual occurrences for display.
- * One-time events return a single occurrence. Recurring events are expanded
- * up to recurrence_until or 12 occurrences max, whichever comes first.
+ * Expand events into individual occurrences for display.
+ * Series use occurrence_dates only; one-time events use start_date/end_date.
  */
 export function expandRecurringEvents(
   events: Event[],
   options?: { maxOccurrences?: number }
 ): EventOccurrence[] {
-  const maxOccurrences = options?.maxOccurrences ?? MAX_RECURRENCE_OCCURRENCES
-
   const result: EventOccurrence[] = []
 
   for (const event of events) {
-    const freq = event.recurrence_frequency
-    const interval = event.recurrence_interval ?? 1
-    const startDate = parseISO(event.start_date)
-    const endDate = parseISO(event.end_date)
-    // Recurring events are single-day only: end_date = start_date
-    const durationDays = event.recurrence_frequency ? 0 : Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-
-    if (!freq) {
-      result.push({
-        event,
-        occurrence_start: event.start_date,
-        occurrence_end: event.end_date,
-      })
+    const explicit = event.occurrence_dates
+    if (explicit && explicit.length >= 2) {
+      const sorted = normalizeOccurrenceDates(explicit)
+      const max = options?.maxOccurrences ?? sorted.length
+      for (const dateStr of sorted.slice(0, max)) {
+        result.push({
+          event,
+          occurrence_start: dateStr,
+          occurrence_end: dateStr,
+        })
+      }
       continue
     }
 
-    const untilDate = event.recurrence_until ? parseISO(event.recurrence_until) : null
-    const ordinal = event.recurrence_ordinal ?? 3
-    const weekday = event.recurrence_weekday ?? 0
-
-    let currentStart: Date
-    if (freq === 'monthly' && ordinal >= 1 && ordinal <= 5) {
-      currentStart = getNthWeekdayOfMonth(startDate.getFullYear(), startDate.getMonth(), weekday, ordinal)
-    } else {
-      currentStart = startDate
-    }
-
-    let count = 0
-    const oneYearFromStart = addYears(currentStart, 1)
-
-    while (count < maxOccurrences) {
-      if (untilDate && isBefore(untilDate, currentStart)) break
-      if (isBefore(oneYearFromStart, currentStart)) break
-
-      const currentEnd = addDays(currentStart, durationDays)
-      result.push({
-        event,
-        occurrence_start: format(currentStart, 'yyyy-MM-dd'),
-        occurrence_end: format(currentEnd, 'yyyy-MM-dd'),
-      })
-      count++
-
-      if (freq === 'weekly') {
-        currentStart = addWeeks(currentStart, interval)
-      } else if (freq === 'monthly') {
-        if (ordinal >= 1 && ordinal <= 5) {
-          let y = currentStart.getFullYear()
-          let m = currentStart.getMonth()
-          m += interval
-          if (m > 11) {
-            y += Math.floor(m / 12)
-            m = m % 12
-          }
-          currentStart = getNthWeekdayOfMonth(y, m, weekday, ordinal)
-        } else {
-          currentStart = addMonths(currentStart, interval)
-        }
-      } else if (freq === 'yearly') {
-        currentStart = addYears(currentStart, interval)
-      } else {
-        break
-      }
-    }
+    result.push({
+      event,
+      occurrence_start: event.start_date,
+      occurrence_end: event.end_date,
+    })
   }
 
   return result
 }
 
+/** Rule-based date generation for add/edit UI only (not read from DB). */
+function expandDatesFromRecurrenceRule(
+  input: RecurrenceRuleInput,
+  options?: { maxOccurrences?: number }
+): string[] {
+  const maxOccurrences = options?.maxOccurrences ?? MAX_RECURRENCE_OCCURRENCES
+  const freq = input.recurrence_frequency
+  const interval = input.recurrence_interval ?? 1
+  const startDate = parseISO(input.start_date)
+  const untilDate = input.recurrence_until ? parseISO(input.recurrence_until) : null
+  const ordinal = input.recurrence_ordinal ?? 3
+  const weekday = input.recurrence_weekday ?? 0
+
+  let currentStart: Date
+  if (freq === 'monthly' && ordinal >= 1 && ordinal <= 5) {
+    currentStart = getNthWeekdayOfMonth(startDate.getFullYear(), startDate.getMonth(), weekday, ordinal)
+  } else {
+    currentStart = startDate
+  }
+
+  const dates: string[] = []
+  const oneYearFromStart = addYears(currentStart, 1)
+  let count = 0
+
+  while (count < maxOccurrences) {
+    if (untilDate && isBefore(untilDate, currentStart)) break
+    if (isBefore(oneYearFromStart, currentStart)) break
+
+    dates.push(format(currentStart, 'yyyy-MM-dd'))
+    count++
+
+    if (freq === 'weekly') {
+      currentStart = addWeeks(currentStart, interval)
+    } else if (freq === 'monthly') {
+      if (ordinal >= 1 && ordinal <= 5) {
+        let y = currentStart.getFullYear()
+        let m = currentStart.getMonth()
+        m += interval
+        if (m > 11) {
+          y += Math.floor(m / 12)
+          m = m % 12
+        }
+        currentStart = getNthWeekdayOfMonth(y, m, weekday, ordinal)
+      } else {
+        currentStart = addMonths(currentStart, interval)
+      }
+    } else {
+      break
+    }
+  }
+
+  return dates
+}
+
 /** Get the next occurrence date for a recurring event, or null if none/not recurring */
 export function getNextOccurrenceDate(event: Event): string | null {
-  if (!event.recurrence_frequency) return null
+  if (!isRecurringEvent(event)) return null
   const occs = expandRecurringEvents([event])
   const today = new Date().toISOString().split('T')[0]
   const next = occs.find(o => o.occurrence_end >= today)
@@ -357,7 +446,7 @@ export function occurrencesToNextOnly(occurrences: EventOccurrence[]): EventOccu
   const seenRecurring = new Set<string>()
   const result: EventOccurrence[] = []
   for (const occ of occurrences) {
-    if (!occ.event.recurrence_frequency) {
+    if (!isRecurringEvent(occ.event)) {
       result.push(occ)
       continue
     }
@@ -419,60 +508,14 @@ export function getOrdinalAndWeekdayFromDate(dateString: string): { ordinal: num
   return { ordinal, weekday }
 }
 
-/**
- * Human-readable recurrence description (e.g. "Weekly on Tuesday", "3rd Sunday of every month")
- * Derives ordinal/weekday from start_date when not stored.
- */
+/** Human-readable label for a recurring series (occurrence_dates only). */
 export function formatRecurrenceDescription(event: {
-  start_date?: string
-  recurrence_frequency?: string | null
-  recurrence_interval?: number
-  recurrence_until?: string | null
-  recurrence_ordinal?: number | null
-  recurrence_weekday?: number | null
+  occurrence_dates?: string[] | null
 }): string {
-  const freq = event.recurrence_frequency
-  if (!freq) return ''
-
-  const interval = event.recurrence_interval ?? 1
-  const until = event.recurrence_until
-  let ordinal = event.recurrence_ordinal
-  let weekday = event.recurrence_weekday
-
-  // Derive from start_date when missing (e.g. older events)
-  if (event.start_date) {
-    const parsed = getOrdinalAndWeekdayFromDate(event.start_date)
-    if (parsed) {
-      if (weekday == null) weekday = parsed.weekday
-      if (ordinal == null && freq === 'monthly') ordinal = parsed.ordinal
-    }
-  }
-
-  let intervalText: string
-  if (freq === 'monthly' && ordinal && ordinal >= 1 && ordinal <= 5 && weekday != null) {
-    const ordLabel = ORDINAL_LABELS[ordinal]
-    const dayName = WEEKDAY_NAMES[weekday] ?? 'day'
-    intervalText = interval === 1
-      ? `${ordLabel} ${dayName} of every month`
-      : `${ordLabel} ${dayName} of every ${interval} months`
-  } else if (freq === 'weekly' && weekday != null) {
-    const dayName = WEEKDAY_NAMES[weekday] ?? 'day'
-    intervalText = interval === 1 ? `Weekly on ${dayName}` : `Every ${interval} weeks on ${dayName}`
-  } else {
-    intervalText =
-      interval === 1
-        ? freq === 'weekly'
-          ? 'Weekly'
-          : freq === 'monthly'
-            ? 'Monthly'
-            : 'Yearly'
-        : `Every ${interval} ${freq === 'weekly' ? 'weeks' : freq === 'monthly' ? 'months' : 'years'}`
-  }
-
-  if (until) {
-    return `${intervalText} until ${formatDateReadable(until)}`
-  }
-  return intervalText
+  const explicit = event.occurrence_dates
+  if (!explicit || explicit.length < 2) return ''
+  const n = explicit.length
+  return `Recurring series (${n} dates)`
 }
 
 /**

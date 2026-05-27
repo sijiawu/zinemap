@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, formatTimeRange } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, formatTimeRange, isRecurringEvent } from "@/lib/utils"
 import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -1118,7 +1118,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                             >
                               {getEventCategoryDisplay(event.category)}
                             </Badge>
-                            {event.recurrence_frequency && (
+                            {isRecurringEvent(event) && (
                               <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                                 Recurring
                               </Badge>
@@ -1133,7 +1133,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                             )}
                             <div className="flex items-center text-xs text-stone-500">
                               <Calendar className="h-3 w-3 mr-1" />
-                              {event.recurrence_frequency ? (
+                              {isRecurringEvent(event) ? (
                                 <>Next: {formatDateReadable(event.start_date)}{formatTimeRange(event.start_time, event.end_time)}</>
                               ) : (
                                 <>
