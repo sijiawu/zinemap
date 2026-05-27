@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { Event, CommunityNote, EventAttendee } from "@/lib/types"
-import { formatDate, formatDateReadable, getEventCategoryDisplay, formatSocialMedia, isPastEvent, formatRecurrenceDescription, getNextOccurrenceDate, formatTimeRange, isRecurringEvent, normalizeOccurrenceDates } from "@/lib/utils"
+import { formatDate, formatDateReadable, formatDateWithWeekday, getEventCategoryDisplay, formatSocialMedia, isPastEvent, formatRecurrenceDescription, getNextOccurrenceDate, formatTimeRange, isRecurringEvent, normalizeOccurrenceDates } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 
@@ -734,19 +735,24 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-stone-600">
                 {isRecurringEvent(event) ? (
                   <>
-                    <div className="flex flex-col gap-1 text-green-700">
-                      <div className="flex items-center">
-                        <Repeat className="h-4 w-4 mr-2 flex-shrink-0" />
-                        {formatRecurrenceDescription(event)}
-                      </div>
-                      {event.occurrence_dates && event.occurrence_dates.length >= 2 && (
-                        <ul className="text-stone-600 text-sm ml-6 list-disc list-inside space-y-0.5">
-                          {normalizeOccurrenceDates(event.occurrence_dates).map((d) => (
-                            <li key={d}>{formatDateReadable(d)}{formatTimeRange(event.start_time, event.end_time)}</li>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center text-green-700 font-serif underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-1 rounded-sm"
+                        >
+                          <Repeat className="h-4 w-4 mr-2 flex-shrink-0" />
+                          {formatRecurrenceDescription(event)}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-auto max-w-[min(100vw-2rem,16rem)] p-2 font-serif">
+                        <ul className="text-sm text-stone-700 space-y-0.5 max-h-48 overflow-y-auto whitespace-nowrap">
+                          {normalizeOccurrenceDates(event.occurrence_dates ?? []).map((d) => (
+                            <li key={d}>{formatDateWithWeekday(d)}</li>
                           ))}
                         </ul>
-                      )}
-                    </div>
+                      </PopoverContent>
+                    </Popover>
                     {(() => {
                       const next = getNextOccurrenceDate(event)
                       return next ? (
