@@ -257,18 +257,10 @@ export default function EventsPage() {
     }
   }
 
-  // Map: one marker per event, show next occurrence for recurring (Recurring tag + next date)
+  // Map: one marker per event (list view already picks next or last occurrence per series)
   const mapEvents = useMemo(() => {
     const source = viewMode === "calendar" ? calendarFilteredEvents : filteredEvents
-    const today = new Date().toISOString().split('T')[0]
-    const recurring = source.filter(e => isRecurringEvent(e) && e.start_date >= today)
-      .sort((a, b) => a.start_date.localeCompare(b.start_date))
-    const oneTime = source.filter(e => !isRecurringEvent(e))
-    const byId = new Map<string, Event>()
-    for (const e of [...recurring, ...oneTime]) {
-      if (!byId.has(e.id)) byId.set(e.id, e)
-    }
-    return Array.from(byId.values())
+    return Array.from(new Map(source.map((e) => [e.id, e])).values())
   }, [viewMode, calendarFilteredEvents, filteredEvents])
 
   const clearFilters = () => {

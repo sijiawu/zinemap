@@ -438,23 +438,41 @@ export function getNextOccurrenceDate(event: Event): string | null {
 }
 
 /**
- * For list/map view: keep only the NEXT occurrence per recurring event (first >= today).
- * One-time events pass through. Reduces clutter.
+ * For list/map view: one row per recurring event.
+ * - Upcoming series: next occurrence (first date >= today).
+ * - Ended series (all dates past): most recent occurrence, same as a past one-time event.
+ * One-time events pass through unchanged.
  */
 export function occurrencesToNextOnly(occurrences: EventOccurrence[]): EventOccurrence[] {
   const today = new Date().toISOString().split('T')[0]
   const seenRecurring = new Set<string>()
   const result: EventOccurrence[] = []
+  const latestPastByEventId = new Map<string, EventOccurrence>()
+
   for (const occ of occurrences) {
     if (!isRecurringEvent(occ.event)) {
       result.push(occ)
       continue
     }
-    if (occ.occurrence_end < today) continue
+    if (occ.occurrence_end >= today) {
+      if (seenRecurring.has(occ.event.id)) continue
+      seenRecurring.add(occ.event.id)
+      result.push(occ)
+      continue
+    }
     if (seenRecurring.has(occ.event.id)) continue
-    seenRecurring.add(occ.event.id)
-    result.push(occ)
+    const existing = latestPastByEventId.get(occ.event.id)
+    if (!existing || occ.occurrence_end > existing.occurrence_end) {
+      latestPastByEventId.set(occ.event.id, occ)
+    }
   }
+
+  for (const occ of latestPastByEventId.values()) {
+    if (!seenRecurring.has(occ.event.id)) {
+      result.push(occ)
+    }
+  }
+
   return result
 }
 
