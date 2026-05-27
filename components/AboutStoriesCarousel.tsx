@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { STORY_IMAGE_BLUR_DATA_URL } from "@/lib/imagePlaceholders";
 
 interface StoryItem {
   slug: string;
@@ -49,11 +51,25 @@ export default function AboutStoriesCarousel({ stories }: AboutStoriesCarouselPr
                 className="relative block h-64 overflow-hidden rounded-xl border border-stone-200 bg-stone-900 shadow-sm transition-shadow hover:shadow-md"
               >
                 {story.thumbnail ? (
-                  <img
-                    src={story.thumbnail}
-                    alt={story.title}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
+                  /\.svg(\?|$)/i.test(story.thumbnail) ? (
+                    <img
+                      src={story.thumbnail}
+                      alt={story.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <Image
+                      src={story.thumbnail}
+                      alt={story.title}
+                      fill
+                      sizes="(max-width: 640px) 88vw, (max-width: 1024px) 60vw, 46vw"
+                      className="object-cover"
+                      placeholder="blur"
+                      blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
+                    />
+                  )
                 ) : null}
                 <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/65 via-50% to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-4 [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">

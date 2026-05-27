@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { STORY_IMAGE_BLUR_DATA_URL } from '@/lib/imagePlaceholders'
 import { getAllStories } from '@/lib/getStories'
+import { getStoryThumbnailUrl } from '@/lib/storyImages'
 
 export const metadata = {
   title: 'Stories - ZineMap',
@@ -80,20 +81,23 @@ export default async function StoriesPage({
         </header>
 
         <div className="space-y-8">
-          {stories.map((story, index) => (
+          {stories.map((story, index) => {
+            const thumbnail = story.thumbnail ? getStoryThumbnailUrl(story.thumbnail) : undefined
+
+            return (
               <article
                 key={story.slug}
                 className="border-b border-stone-200 pb-8 last:border-b-0"
               >
                 <div className="flex flex-col sm:flex-row gap-6">
-                  {story.thumbnail && (
+                  {thumbnail && (
                     <Link
                       href={`/stories/${story.slug}`}
                       className="flex-shrink-0 w-full sm:w-48 h-48 relative rounded-lg overflow-hidden bg-stone-200/30 group hover:opacity-80 transition-opacity"
                     >
-                      {/\.svg(\?|$)/i.test(story.thumbnail) ? (
+                      {/\.svg(\?|$)/i.test(thumbnail) ? (
                         <img
-                          src={story.thumbnail}
+                          src={thumbnail}
                           alt={story.title}
                           className="w-full h-full object-cover"
                           loading={index < 2 ? 'eager' : 'lazy'}
@@ -101,7 +105,7 @@ export default async function StoriesPage({
                         />
                       ) : (
                         <Image
-                          src={story.thumbnail}
+                          src={thumbnail}
                           alt={story.title}
                           fill
                           sizes="(max-width: 640px) 100vw, 192px"
@@ -166,7 +170,8 @@ export default async function StoriesPage({
                   </div>
                 </div>
               </article>
-            ))}
+            )
+          })}
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import type { HeroBusyPin, HeroFeaturedPin } from "@/components/ZineMapHeroVisual";
 import { getAllStories } from "@/lib/getStories";
+import { getStoryThumbnailUrl } from "@/lib/storyImages";
 
 export const metadata = {
   title: "About - ZineMap",
@@ -505,7 +506,11 @@ export default async function AboutPage() {
   const blurbs = await loadBlurbs();
   const stories = getAllStories()
     .filter((story) => !story.password || story.password === "")
-    .slice(0, 10);
+    .slice(0, 10)
+    .map((story) => ({
+      ...story,
+      thumbnail: story.thumbnail ? getStoryThumbnailUrl(story.thumbnail) : undefined,
+    }));
   return (
     <div className="min-h-screen bg-stone-50 pb-14">
       <ZineMapAboutHero
