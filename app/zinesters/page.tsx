@@ -34,7 +34,14 @@ type ProfileCachePayload = Pick<
 >
 
 const PIN_PROFILE_FIELDS =
-  'id, display_name, email, permalink, profile_image, roles, open_to'
+  'id, display_name, email, permalink, profile_image, roles, open_to, updated_at'
+
+function zinesterSortTimestamp(pin: HomePin): number {
+  const times = [pin.user?.updated_at, pin.updated_at, pin.created_at]
+    .filter(Boolean)
+    .map((value) => new Date(value as string).getTime())
+  return times.length ? Math.max(...times) : 0
+}
 
 const PIN_COLOR_SWATCHES = [
   { name: 'Amber', value: '#f59e0b' },
@@ -160,11 +167,12 @@ export default function ZinestersPage() {
           state,
           country,
           created_at,
+          updated_at,
           user:profiles!home_pins_user_email_fkey(
             ${PIN_PROFILE_FIELDS}
           )
         `)
-        .order('created_at', { ascending: false })
+        .order('updated_at', { ascending: false, nullsFirst: false })
 
       if (error) throw error
       
@@ -407,11 +415,13 @@ export default function ZinestersPage() {
       openTo: string[]
       pins: HomePin[]
       locationLabels: string[]
+      sortUpdatedAt: number
     }>()
 
     filteredPins.forEach((pin) => {
       const key = pin.user_email
       const locationLabel = getPinLocationText(pin)
+      const pinUpdatedAt = zinesterSortTimestamp(pin)
       const existing = byEmail.get(key)
 
       if (!existing) {
@@ -423,11 +433,13 @@ export default function ZinestersPage() {
           openTo: pin.user?.open_to || [],
           pins: [pin],
           locationLabels: [locationLabel],
+          sortUpdatedAt: pinUpdatedAt,
         })
         return
       }
 
       existing.pins.push(pin)
+      existing.sortUpdatedAt = Math.max(existing.sortUpdatedAt, pinUpdatedAt)
       if (!existing.locationLabels.includes(locationLabel)) {
         existing.locationLabels.push(locationLabel)
       }
@@ -435,7 +447,7 @@ export default function ZinestersPage() {
       existing.openTo = mergeUniquePreserveOrder(existing.openTo, pin.user?.open_to)
     })
 
-    return Array.from(byEmail.values())
+    return Array.from(byEmail.values()).sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
   }, [filteredPins])
 
   const filteredPinIds = useMemo(() => new Set(filteredPins.map((pin) => pin.id)), [filteredPins])

@@ -46,6 +46,7 @@ type ZinesterItem = {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  updated_at: string;
   user: {
     display_name: string | null;
     permalink: string | null;
@@ -53,6 +54,7 @@ type ZinesterItem = {
     roles: string[] | null;
     open_to: string[] | null;
     bio: string | null;
+    updated_at: string | null;
   } | null;
 };
 
@@ -216,15 +218,17 @@ async function fetchAboutData() {
       .from("zines")
       .select("id,title,description,cover_image,permalink,created_at,user_id")
       .eq("is_public", true)
+      .not("cover_image", "is", null)
+      .neq("cover_image", "")
       .order("created_at", { ascending: false })
       .limit(20),
     supabase
       .from("home_pins")
       .select(
-        "id,user_email,city,state,country,latitude,longitude,created_at,user:profiles!home_pins_user_email_fkey(display_name,permalink,profile_image,roles,open_to,bio)"
+        "id,user_email,city,state,country,latitude,longitude,created_at,updated_at,user:profiles!home_pins_user_email_fkey(display_name,permalink,profile_image,roles,open_to,bio,updated_at)"
       )
-      .order("created_at", { ascending: false })
-      .limit(120),
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .limit(50),
     supabase
       .from("stores")
       .select("updated_at,created_at")
@@ -325,18 +329,18 @@ async function fetchAboutData() {
     ...row,
     user: Array.isArray(row.user) ? row.user[0] || null : row.user,
   }));
-  const zinesterByEmail = new Map<string, ZinesterItem>();
+  const featuredZinesters: ZinesterItem[] = [];
+  const featuredZinesterEmails = new Set<string>();
 
   for (const row of recentZinesterRows) {
-    if (zinesterByEmail.has(row.user_email)) continue;
+    if (featuredZinesterEmails.has(row.user_email)) continue;
     const hasAnyTag = (row.user?.roles?.length || 0) > 0 || (row.user?.open_to?.length || 0) > 0;
     const hasBio = Boolean(row.user?.bio?.trim());
-    if (!hasAnyTag) continue;
-    if (!hasBio) continue;
+    if (!hasAnyTag || !hasBio) continue;
 
-    zinesterByEmail.set(row.user_email, row);
-
-    if (zinesterByEmail.size >= 9) break;
+    featuredZinesterEmails.add(row.user_email);
+    featuredZinesters.push(row);
+    if (featuredZinesters.length >= 9) break;
   }
 
   const featuredStoreIds = featuredStoreRows.map((row) => row.id);
@@ -493,9 +497,7 @@ async function fetchAboutData() {
       ...zine,
       profiles: zine.user_id ? zineProfilesMap.get(zine.user_id) || null : null,
     })),
-    zinesters: Array.from(zinesterByEmail.values()).sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    ),
+    zinesters: featuredZinesters,
     busyPins,
     featuredPins,
   };
