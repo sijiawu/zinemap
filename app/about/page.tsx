@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { HeroBusyPin, HeroFeaturedPin } from "@/components/ZineMapHeroVisual";
 import { getAllStories } from "@/lib/getStories";
 import { getStoryThumbnailUrl } from "@/lib/storyImages";
+import { selectFeaturedZinestersFromPins } from "@/lib/utils";
 
 export const metadata = {
   title: "About - ZineMap",
@@ -226,9 +227,7 @@ async function fetchAboutData() {
       .from("home_pins")
       .select(
         "id,user_email,city,state,country,latitude,longitude,created_at,updated_at,user:profiles!home_pins_user_email_fkey(display_name,permalink,profile_image,roles,open_to,bio,updated_at)"
-      )
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .limit(50),
+      ),
     supabase
       .from("stores")
       .select("updated_at,created_at")
@@ -329,19 +328,7 @@ async function fetchAboutData() {
     ...row,
     user: Array.isArray(row.user) ? row.user[0] || null : row.user,
   }));
-  const featuredZinesters: ZinesterItem[] = [];
-  const featuredZinesterEmails = new Set<string>();
-
-  for (const row of recentZinesterRows) {
-    if (featuredZinesterEmails.has(row.user_email)) continue;
-    const hasAnyTag = (row.user?.roles?.length || 0) > 0 || (row.user?.open_to?.length || 0) > 0;
-    const hasBio = Boolean(row.user?.bio?.trim());
-    if (!hasAnyTag || !hasBio) continue;
-
-    featuredZinesterEmails.add(row.user_email);
-    featuredZinesters.push(row);
-    if (featuredZinesters.length >= 9) break;
-  }
+  const featuredZinesters = selectFeaturedZinestersFromPins(recentZinesterRows, 9);
 
   const featuredStoreIds = featuredStoreRows.map((row) => row.id);
   const featuredLibraryIds = featuredLibraryRows.map((row) => row.id);

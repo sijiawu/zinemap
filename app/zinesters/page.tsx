@@ -13,6 +13,7 @@ import {
   panMapToUserLocation,
   syncMapboxHtmlMarkers,
 } from '@/lib/mapGeolocate'
+import { zinesterSortTimestamp } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -35,13 +36,6 @@ type ProfileCachePayload = Pick<
 
 const PIN_PROFILE_FIELDS =
   'id, display_name, email, permalink, profile_image, roles, open_to, updated_at'
-
-function zinesterSortTimestamp(pin: HomePin): number {
-  const times = [pin.user?.updated_at, pin.updated_at, pin.created_at]
-    .filter(Boolean)
-    .map((value) => new Date(value as string).getTime())
-  return times.length ? Math.max(...times) : 0
-}
 
 const PIN_COLOR_SWATCHES = [
   { name: 'Amber', value: '#f59e0b' },

@@ -754,3 +754,67 @@ export function normalizeUSState(state: string, country: string): string {
   return normalizedState
 }
 
+/** Pin + profile fields used to rank zinesters (matches /zinesters sidebar). */
+export type ZinesterSortablePin = {
+  user_email: string
+  created_at: string
+  updated_at?: string | null
+  user?: {
+    roles?: string[] | null
+    open_to?: string[] | null
+    bio?: string | null
+    updated_at?: string | null
+  } | null
+}
+
+/** Latest activity timestamp for a zinester (profile or pin update). */
+export function zinesterSortTimestamp(pin: ZinesterSortablePin): number {
+  const times = [pin.user?.updated_at, pin.updated_at, pin.created_at]
+    .filter(Boolean)
+    .map((value) => new Date(value as string).getTime())
+  return times.length ? Math.max(...times) : 0
+}
+
+/** Homepage People carousel: roles/open-to tag and bio required. */
+export function meetsZinesterPeopleDisplayCriteria(
+  user: ZinesterSortablePin["user"]
+): boolean {
+  if (!user) return false
+  const hasAnyTag = (user.roles?.length || 0) > 0 || (user.open_to?.length || 0) > 0
+  const hasBio = Boolean(user.bio?.trim())
+  return hasAnyTag && hasBio
+}
+
+/**
+ * Rank zinesters like the /zinesters sidebar (uses profile and pin updated_at), apply
+ * People display rules, return top N. Requires the full pin set—not a subset ordered by
+ * pin.updated_at only, or recently updated profiles can be missed.
+ */
+export function selectFeaturedZinestersFromPins<T extends ZinesterSortablePin>(
+  pins: T[],
+  limit = 9
+): T[] {
+  const byEmail = new Map<string, { row: T; sortUpdatedAt: number }>()
+
+  for (const row of pins) {
+    const ts = zinesterSortTimestamp(row)
+    const existing = byEmail.get(row.user_email)
+    if (!existing) {
+      byEmail.set(row.user_email, { row, sortUpdatedAt: ts })
+      continue
+    }
+    existing.sortUpdatedAt = Math.max(existing.sortUpdatedAt, ts)
+    const rowPinTime = new Date(row.updated_at || row.created_at).getTime()
+    const existingPinTime = new Date(existing.row.updated_at || existing.row.created_at).getTime()
+    if (rowPinTime > existingPinTime) {
+      existing.row = row
+    }
+  }
+
+  return Array.from(byEmail.values())
+    .filter(({ row }) => meetsZinesterPeopleDisplayCriteria(row.user))
+    .sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
+    .slice(0, limit)
+    .map(({ row }) => row)
+}
+
