@@ -66,7 +66,8 @@ export default function ProfilePage() {
     libraries: number
     events: number
     notes: number
-  }>({ stores: 0, libraries: 0, events: 0, notes: 0 })
+    edits: number
+  }>({ stores: 0, libraries: 0, events: 0, notes: 0, edits: 0 })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -309,21 +310,23 @@ export default function ProfilePage() {
   // Fetch user's contributions - parallelized
   const fetchContributions = async (userId: string) => {
     try {
-      const [storesRes, librariesRes, eventsRes, notesRes] = await Promise.all([
+      const [storesRes, librariesRes, eventsRes, notesRes, editsRes] = await Promise.all([
         supabase.from('stores').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
         supabase.from('libraries').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
         supabase.from('events').select('id', { count: 'exact', head: true }).eq('submitted_by', userId),
         supabase.from('community_notes').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('locale_edits').select('id', { count: 'exact', head: true }).eq('user_id', userId),
       ])
       setContributions({
         stores: storesRes.count || 0,
         libraries: librariesRes.count || 0,
         events: eventsRes.count || 0,
-        notes: notesRes.count || 0
+        notes: notesRes.count || 0,
+        edits: editsRes.count || 0,
       })
     } catch (err) {
       console.error('Contributions fetch error:', err)
-      setContributions({ stores: 0, libraries: 0, events: 0, notes: 0 })
+      setContributions({ stores: 0, libraries: 0, events: 0, notes: 0, edits: 0 })
     }
   }
 
@@ -1631,7 +1634,7 @@ export default function ProfilePage() {
                       className="text-lg font-semibold text-stone-800 cursor-pointer rounded px-1 -mx-1 hover:bg-stone-100 hover:text-stone-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2"
                       aria-label="View contributions"
                     >
-                      {contributions.stores + contributions.libraries + contributions.events + contributions.notes}
+                      {contributions.stores + contributions.libraries + contributions.events + contributions.notes + contributions.edits}
                     </button>
                     {/* Hover tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-stone-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
@@ -1644,6 +1647,9 @@ export default function ProfilePage() {
                   </div>
                         <div className="text-stone-300 text-xs mt-1">
                           notes: {contributions.notes}
+                        </div>
+                        <div className="text-stone-300 text-xs mt-1">
+                          edits: {contributions.edits}
                         </div>
                       </div>
                       {/* Arrow */}
