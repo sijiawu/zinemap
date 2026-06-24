@@ -1,6 +1,6 @@
 ---
 title: "Behind the Zine Scenes #6: School of Zines"
-date: 2026-06-23
+date: 2026-07-20
 tags:
   - Behind the Zine Scenes
   - Workshops
