@@ -27,7 +27,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/miranda.jpg"
   alt="Idalia Sautto introducing Miranda at WIRWIR, Berlin, 2023"
-  caption="Idalia Sautto from Pitzilein Books introducing Miranda to the Riso workshop participants at WIRWIR, Berlin in 2023 · Photo by Alex Tapia"
+  caption="Idalia Sautto from Pitzilein Books introducing Miranda to the Riso workshop participants at WIRWIR, Berlin in 2023 . Photo by Alex Tapia"
 />
 
 **April:** Anyway, Miranda joined the studio almost four years ago. And when I wasn’t using her for my zine class I was teaching at Bard College Berlin, I kept looking at her and thinking, what can I do with you? The thing with Miranda is that she didn’t come with a computer connection. Most Risograph machines work through a computer interface where you can do layouts and design digitally, but she doesn’t have that. Like all Riso machines, she has a scanning bed. So I would print hard copies on my home printer first and then print with her, but I also started putting random objects on the scanning bed — plants, food, my cats, whatever. Another limitation is that she only has a one color drum, so I’m relegated to printing one color at a time. Right now it’s bright red.
@@ -37,13 +37,13 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/buchstabensalat.jpg"
   alt="Inside Buchstabensalat, the first book fair April co-organized with Idalia Sautto from Pitzilein Books (MX) in 2023"
-  caption="Inside Buchstabensalat, the first book fair April co-organized with Idalia Sautto from Pitzilein Books (MX) in 2023 · Photo by Alex Tapia"
+  caption="Inside Buchstabensalat, the first book fair April co-organized with Idalia Sautto from Pitzilein Books (MX) in 2023 . Photo by Alex Tapia"
 />
 
 <ImageWithCaption
   src="flyleaf/buchstabensalat-street.jpg"
   alt="A view of Buchstabensalat from the street"
-  caption="A view of Buchstabensalat from the street · Photo by April Gertler
+  caption="A view of Buchstabensalat from the street . Photo by April Gertler
 "
 />
 
@@ -68,19 +68,19 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/flyleaf2025-outside.jpg"
   alt="Outside of Falschrum Books, FLYLEAF 2025"
-  caption="Outside of Falschrum Books, FLYLEAF 2025 · Photo by Piotr Pietrus"
+  caption="Outside of Falschrum Books, FLYLEAF 2025 . Photo by Piotr Pietrus"
 />
 
 <ImageWithCaption
   src="flyleaf/flyleaf2024-outside.jpg"
   alt="Outside of WIRWIR, FLYLEAF 2024"
-  caption="Outside of WIRWIR, FLYLEAF 2024 · Photo by Piotr Pietrus"
+  caption="Outside of WIRWIR, FLYLEAF 2024 . Photo by Piotr Pietrus"
 />
 
 <ImageWithCaption
   src="flyleaf/fireside-2025-1.jpg"
   alt="April and Stefan greeting the audience at FLYLEAF 2025 fireside chats"
-  caption="April and Stefan greeting the audience for the fireside chats at FLYLEAF 2025, where invited publishers had about 10 minutes to present a new project they were working on · Photo by Piotr Pietrus"
+  caption="April and Stefan greeting the audience for the fireside chats at FLYLEAF 2025, where invited publishers had about 10 minutes to present a new project they were working on . Photo by Piotr Pietrus"
 />
 
 **April:** We also learned a lot from other festivals. I'm very inspired by the organizers of Bergen Art Book Fair. They're fantastic people and incredibly conscientious about the publishers who come to table there. One of the things I learned from participating in their festival last year is that conviviality toward publishers should be number one. Because people are putting their hearts and souls into these publications. None of us are doing this for money — we're doing it because we love it, because we love the community and the conversations. So Stefan and I really wanted to support that. For example, we had a cook stationed at each location so food was made for all of the tablers. There was also cake at each location, including coffee and tea. All of that was paid for by the table fees, but we tried to keep the table fee very low at EUR 25 for three days.
@@ -90,7 +90,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/bookbuffet-2025.jpg"
   alt="Book buffet at FLYLEAF 2025"
-  caption="Book buffet with Florets poetry magazine from Berlin and Pencil Magazine from the US at FLYLEAF 2025 · Photo by Piotr Pietrus"
+  caption="Book buffet with Florets poetry magazine from Berlin and Pencil Magazine from the US at FLYLEAF 2025 . Photo by Piotr Pietrus"
 />
 
 **April:** We also give everybody an opportunity to participate in what we call the fireside chat. Originally it was actually a fireside chat because we had a wood-burning stove in the space. People could present an idea or a project, read a poem, or share a text. Stefan focuses more on poetry and literature, while I focus more on visual arts, so between us, we kind of cover these grounds. That was really amazing. Last year we had about fifteen people presenting at the fireside chat. It was quite warm, so we projected a fire on the wall for people to sit next to. It was really well attended and very fun. We also organize a big publishers’ brunch where everyone brings something to contribute to the table. Everyone is invited so even if you only table for one day, you can still come to the brunch. Last year we had about forty people coming for the brunch, which was super fun. Those are some of the ways we support the publishers.
@@ -105,7 +105,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/fireside-2024.jpg"
   alt="Fireside chat at WIRWIR during FLYLEAF 2024"
-  caption="Fireside chat at WIRWIR during FLYLEAF 2024, when participants sat next to a fire · Photo by Piotr Pietrus"
+  caption="Fireside chat at WIRWIR during FLYLEAF 2024, when participants sat next to a fire . Photo by Piotr Pietrus"
 />
 
 **CJ:** That’s amazing. I feel like we should really up our game here.
@@ -117,7 +117,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/brunch-2025.jpg"
   alt="Publishers potluck brunch at FLYLEAF 2025"
-  caption="Potluck publishers brunch at FLYLEAF 2025 · Photo by Piotr Pietrus"
+  caption="Potluck publishers brunch at FLYLEAF 2025 . Photo by Piotr Pietrus"
 />
 
 **April:** No, not necessarily. Some of it was, for sure. But other things were just ideas we had ourselves. The food element, you know, having food available for publishers all the time — that was inspired by Bergen. They know that it’s very expensive in Norway for people coming from abroad, so they have breakfast and lunch available for the publishers the whole day. You can go into a break room and food is continuously being stocked. They have people managing the buffet the whole time, cleaning it, making fresh coffee. It’s really nice. That was a wonderful element to experience. But the fireside chats were our own invention. In addition to all of this, we also have public programming for visitors. We have art walks: we had a poetry walk, a drawing walk, and an origami bookbinding workshop. There was another workshop too — I’d have to look at the program to remember exactly. But we had a few workshops, and it was really nice to also include the public. People could participate at every station and every location had something different happening.
@@ -125,13 +125,13 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/workshops.jpg"
   alt="Workshops during FLYLEAF 2025"
-  caption="Workshopping at FLYLEAF 2025 · Photos by Piotr Pietrus"
+  caption="Workshopping at FLYLEAF 2025 . Photos by Piotr Pietrus"
 />
 
 <ImageWithCaption
   src="flyleaf/poetry-workshop.jpg"
   alt="Poetry writing workshop during FLYLEAF 2025"
-  caption="Poetry writing workshop with Brooks and Johanna from Florets Magazine for FLYLEAF 2025 · Photo by Piotr Pietrus"
+  caption="Poetry writing workshop with Brooks and Johanna from Florets Magazine for FLYLEAF 2025 . Photo by Piotr Pietrus"
 />
 
 **CJ:** Were the walks designed to guide people from one space to another?
@@ -165,13 +165,13 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/poster-2025.jpg"
   alt="FLYLEAF 2025 poster installed in Berlin"
-  caption="Flyer installed in Berlin for FLYLEAF 2025 · Photo by Simone Kyle"
+  caption="Flyer installed in Berlin for FLYLEAF 2025 . Photo by Simone Kyle"
 />
 
 <ImageWithCaption
   src="flyleaf/poster-2024.jpg"
   alt="FLYLEAF 2024 posters installed in Berlin"
-  caption="Flyers installed in Berlin for FLYLEAF 2024 · Photo by Ruska Tskhvediani"
+  caption="Flyers installed in Berlin for FLYLEAF 2024 . Photo by Ruska Tskhvediani"
 />
 
 **CJ:** Did the international dimension happen somewhat organically for the festival, or was that always part of the vision?
@@ -189,7 +189,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/shelf.jpeg"
   alt="Mobile book trolley built by Adrian Schiesser that currently holds April’s zine collection, with Nikita the cat supervising."
-  caption="Mobile book trolley built by Adrian Schiesser that currently holds April’s zine collection, with Nikita the cat supervising · Photo by April Gertler"
+  caption="Mobile book trolley built by Adrian Schiesser that currently holds April’s zine collection, with Nikita the cat supervising . Photo by April Gertler"
 />
 
 **CJ:** Especially given that you also run a small press yourself.
@@ -207,7 +207,7 @@ excerpt: A conversation with April, co-organizer of the FLYLEAF Book and Zine Fe
 <ImageWithCaption
   src="flyleaf/wirwir-flag.jpg"
   alt="WIRWIR flag at FLYLEAF"
-  caption="WIRWIR flag · Photo by Piotr Pietrus"
+  caption="WIRWIR flag . Photo by Piotr Pietrus"
 />
 
 **CJ:** Is there something about the upcoming edition that you’re particularly excited about?

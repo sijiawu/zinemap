@@ -18,7 +18,7 @@ We are a super new bookstore; we only opened in February (2025). I came in aroun
 <ImageWithCaption
   src="the-feminist-bookstore/corner-feminist-bookstore.jpg"
   alt="A cozy corner of The Feminist Bookstore."
-  caption="A cozy corner of The Feminist Bookstore · Photo by Aleah C"
+  caption="A cozy corner of The Feminist Bookstore . Photo by Aleah C"
 />
 
 **So before working here, you weren’t making zines at all?**\
@@ -33,7 +33,7 @@ I know. I sell my zines at other bookstores, and their rate is 50%. Here I wante
 <ImageWithCaption
   src="the-feminist-bookstore/zine-shelf-feminist-bookstore.jpg"
   alt="The zine rack at The Feminist Bookstore."
-  caption="The zine rack at The Feminist Bookstore · Photo by Aleah C"
+  caption="The zine rack at The Feminist Bookstore . Photo by Aleah C"
 />
 
 **How many zinesters are you actively working with?**\
@@ -45,7 +45,7 @@ People call, DM or email me, and I try to get back to them. I make sure the topi
 <ImageWithCaption
   src="the-feminist-bookstore/zines-1-feminist-bookstore.jpg"
   alt="Some of the zines currently on the rack at The Feminist Bookstore."
-  caption="Some of the zines currently on the rack at The Feminist Bookstore · Photo by Aleah C"
+  caption="Some of the zines currently on the rack at The Feminist Bookstore . Photo by Aleah C"
 />
 
 **It sounds like there’s a lot of care that goes into the curation. Where would you draw the line between a zine and a non-zine?**\

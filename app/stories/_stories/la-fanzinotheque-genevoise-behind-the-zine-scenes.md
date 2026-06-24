@@ -241,7 +241,7 @@ Quand Stef a répondu à mon e-mail de remerciement pour sa contribution à Zine
 <ImageWithCaption
   src="la-fanzinotheque-genevoise/tote-bag.jpg"
   alt="Tote bag sérigraphié avec une illustration de Ben Comix (série de 50 exemplaires)"
-  caption="Tote bag sérigraphié avec une illustration de Ben Comix (série de 50 exemplaires) · Photo : Stef Probst"
+  caption="Tote bag sérigraphié avec une illustration de Ben Comix (série de 50 exemplaires) . Photo : Stef Probst"
 />
 
 <Callout variant="highlight">

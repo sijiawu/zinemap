@@ -215,7 +215,7 @@
   }
   
   .prose p {
-    @apply mb-6 leading-relaxed text-base font-serif;
+    @apply mb-4 leading-relaxed text-base font-serif;
   }
   
   .prose ul,

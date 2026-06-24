@@ -62,7 +62,7 @@ export function ImageWithCaption({
   const isSvg = /\.svg(\?|$)/i.test(resolvedSrc)
 
   return (
-    <figure className="my-8 sm:my-12">
+    <figure className="my-5 sm:my-8">
       <div className="relative w-full max-w-xl mx-auto rounded-lg overflow-hidden bg-stone-200/40">
         {isSvg ? (
           <img

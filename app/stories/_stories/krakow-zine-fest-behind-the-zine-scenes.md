@@ -27,7 +27,7 @@ Ilde: Well, a little bar. He likes to tell stories about bands and old-school pu
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-1.jpg"
   alt="First edition of Kraków Zine Fest, Oct 2021"
-  caption="First edition of Kraków Zine Fest, Oct 2021 · Photos by Gabriel Kutz"
+  caption="First edition of Kraków Zine Fest, Oct 2021 . Photos by Gabriel Kutz"
 />
 
 CJ: Where was this bar?
@@ -49,7 +49,7 @@ Ilde: Yes, she’s also folding zines today. You’ll meet her tomorrow. Anyways
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-3.jpg"
   alt="Third edition of Kraków Zine Fest at Poczta Główna, May 2023"
-  caption="Third edition of Kraków Zine Fest at Poczta Główna, May 2023 · Photo by Konrad Waszkiewicz"
+  caption="Third edition of Kraków Zine Fest at Poczta Główna, May 2023 . Photo by Konrad Waszkiewicz"
 />
 
 CJ: So it’s a conscious choice to keep it small.
@@ -98,8 +98,8 @@ Ilde: I can try to find it and take photos. Agnieszka has it. Wojtek later worke
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-5.jpg"
-  alt="A page from Antena Krzyku: Antologia 1986-1990 · Photo by Ilde B"
-  caption="A page from Antena Krzyku: Antologia 1986-1990 · Photo by Ilde B"
+  alt="A page from Antena Krzyku: Antologia 1986-1990 . Photo by Ilde B"
+  caption="A page from Antena Krzyku: Antologia 1986-1990 . Photo by Ilde B"
 />
 
 CJ: I keep hearing this overlap between punk and the zine community.
@@ -108,8 +108,8 @@ Ilde: I guess it’s all about DIY and freedom. Do it yourself, do what you want
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-6.jpg"
-  alt="Cassette tape released alongside Ascending Order Magazine ZENON (2023) · Photo by Ilde B"
-  caption="Cassette tape released alongside Ascending Order Magazine ZENON (2023) · Photo by Ilde B"
+  alt="Cassette tape released alongside Ascending Order Magazine ZENON (2023) . Photo by Ilde B"
+  caption="Cassette tape released alongside Ascending Order Magazine ZENON (2023) . Photo by Ilde B"
 />
 
 CJ: Wow! Do people still own cassette players?
@@ -141,8 +141,8 @@ Ilde: Mostly at festivals or online, people contact by e-mail or social media.
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-8.jpg"
-  alt="Mózgroty (2025), a zine by Ilde B · Photo by Ilde B"
-  caption="Mózgroty (2025), a zine by Ilde B · Photo by Ilde B"
+  alt="Mózgroty (2025), a zine by Ilde B . Photo by Ilde B"
+  caption="Mózgroty (2025), a zine by Ilde B . Photo by Ilde B"
 />
 
 CJ: What’s your vision for the Kraków zine scene, beyond the festival weekend?
@@ -176,7 +176,7 @@ Ilde: No, po prostu mały bar. Wojtek uwielbia opowiadać o zespołach i starych
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-1.jpg"
   alt="Pierwsza edycja Kraków Zine Fest, październik 2021"
-  caption="Pierwsza edycja Kraków Zine Fest, październik 2021 · Zdjęcia: Gabriel Kutz"
+  caption="Pierwsza edycja Kraków Zine Fest, październik 2021 . Zdjęcia: Gabriel Kutz"
 />
 
 CJ: Gdzie był ten bar?
@@ -198,7 +198,7 @@ Ilde: Tak, ona też dziś składa zine'y. Spotkasz ją jutro. W każdym razie tr
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-3.jpg"
   alt="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023"
-  caption="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023 · Zdjęcie: Konrad Waszkiewicz"
+  caption="Trzecia edycja Kraków Zine Fest w Poczcie Głównej, maj 2023 . Zdjęcie: Konrad Waszkiewicz"
 />
 
 CJ: Więc to świadomy wybór, żeby utrzymać go w małej skali.
@@ -247,8 +247,8 @@ Ilde: Mogę spróbować znaleźć i zrobić zdjęcia. Agnieszka ma jeden. Wojtek
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-5.jpg"
-  alt="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
-  caption="Strona z Antena Krzyku: Antologia 1986-1990 · Zdjęcie: Ilde B"
+  alt="Strona z Antena Krzyku: Antologia 1986-1990 . Zdjęcie: Ilde B"
+  caption="Strona z Antena Krzyku: Antologia 1986-1990 . Zdjęcie: Ilde B"
 />
 
 CJ: Ciągle słyszę o tym nakładaniu się punku i społeczności zine'ów.
@@ -257,8 +257,8 @@ Ilde: Chyba chodzi o DIY i wolność. Zrób to sam, rób co chcesz. Jutro mogę 
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-6.jpg"
-  alt="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
-  caption="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) · Zdjęcie: Ilde B"
+  alt="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) . Zdjęcie: Ilde B"
+  caption="Kaseta wydana razem z Ascending Order Magazine ZENON (2023) . Zdjęcie: Ilde B"
 />
 
 CJ: Wow! Ludzie nadal mają odtwarzacze kaset?
@@ -289,8 +289,8 @@ Ilde: Głównie na festiwalach albo online, ludzie kontaktują się przez e-mail
 
 <ImageWithCaption
   src="krakow-zine-fest/krakow-zine-fest-8.jpg"
-  alt="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
-  caption="Mózgroty (2025), zine autorstwa Ilde B · Zdjęcie: Ilde B"
+  alt="Mózgroty (2025), zine autorstwa Ilde B . Zdjęcie: Ilde B"
+  caption="Mózgroty (2025), zine autorstwa Ilde B . Zdjęcie: Ilde B"
 />
 
 CJ: Jaka jest twoja wizja krakowskiej sceny zine'owej poza weekendem festiwalowym?
