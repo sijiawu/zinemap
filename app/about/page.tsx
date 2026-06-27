@@ -7,6 +7,7 @@ import AboutBlurbsCarousel from "@/components/AboutBlurbsCarousel";
 import AboutFinalCta from "@/components/AboutFinalCta";
 import AboutStoriesCarousel from "@/components/AboutStoriesCarousel";
 import AboutPeopleCarousel from "@/components/AboutPeopleCarousel";
+import AboutSupportersSection from "@/components/AboutSupportersSection";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import type { HeroBusyPin, HeroFeaturedPin } from "@/components/ZineMapHeroVisual";
@@ -541,6 +542,8 @@ export default async function AboutPage() {
           />
           <AboutPeopleCarousel zinesters={data.zinesters} />
         </section>
+
+        <AboutSupportersSection />
 
         <AboutFinalCta initialContributorCount={data.initialContributorCount} />
 
