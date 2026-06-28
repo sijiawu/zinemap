@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, formatTimeRange, isRecurringEvent } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, formatTimeRange, isRecurringEvent, sortTagJoinsByTypeFirst } from "@/lib/utils"
 import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -783,11 +783,15 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           {/* Store Tags */}
                           {store.store_tags && store.store_tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">
-                              {store.store_tags.map((storeTag, index) => (
+                              {sortTagJoinsByTypeFirst(store.store_tags, "shop_type").map((storeTag, index) => (
                                 <Badge
                                   key={storeTag.id || `store-tag-${store.id}-${index}`}
                                   variant="outline"
-                                  className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                                  className={`text-xs border-stone-200 ${
+                                    storeTag.tag.category === "shop_type"
+                                      ? "bg-stone-50 text-stone-700 hover:bg-stone-100"
+                                      : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                                  }`}
                                 >
                                   {storeTag.tag.label}
                                 </Badge>
@@ -929,11 +933,15 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                           {/* Library Tags */}
                           {library.library_tags && library.library_tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">
-                              {library.library_tags.map((libraryTag, index) => (
+                              {sortTagJoinsByTypeFirst(library.library_tags, "library_type").map((libraryTag, index) => (
                                 <Badge
                                   key={libraryTag.id || `library-tag-${library.id}-${index}`}
                                   variant="outline"
-                                  className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                                  className={`text-xs border-stone-200 ${
+                                    libraryTag.tag.category === "library_type"
+                                      ? "bg-stone-50 text-stone-700 hover:bg-stone-100"
+                                      : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                                  }`}
                                 >
                                   {libraryTag.tag.label}
                                 </Badge>

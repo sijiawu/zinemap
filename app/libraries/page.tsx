@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { formatSocialMedia, sortTagJoinsByTypeFirst, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -642,11 +642,15 @@ export default function LibrariesPage() {
                         {/* Library Tags */}
                         {library.library_tags && library.library_tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-3">
-                            {library.library_tags.map((libraryTag, index) => (
+                            {sortTagJoinsByTypeFirst(library.library_tags, "library_type").map((libraryTag, index) => (
                               <Badge
                                 key={libraryTag.id || `library-tag-${library.id}-${index}`}
                                 variant="outline"
-                                className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                                className={`text-xs border-stone-200 ${
+                                  libraryTag.tag.category === "library_type"
+                                    ? "bg-stone-50 text-stone-700 hover:bg-stone-100"
+                                    : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                                }`}
                               >
                                 {libraryTag.tag.label}
                               </Badge>

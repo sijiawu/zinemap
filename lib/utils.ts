@@ -239,6 +239,46 @@ export function sortTagsByConfiguredOrder<T extends { id: string }>(tags: T[], c
   return [...tags].sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER))
 }
 
+type TagJoinWithCategory = {
+  tag?: {
+    id?: string
+    label?: string
+    category?: string | null
+  } | null
+}
+
+export function sortTagJoinsByTypeFirst<T extends TagJoinWithCategory>(
+  tagJoins: T[],
+  typeCategory: "shop_type" | "library_type"
+): T[] {
+  const configuredOrder = typeCategory === "shop_type" ? SHOP_TYPE_ORDER : LIBRARY_TYPE_ORDER
+  const configuredOrderMap = new Map(configuredOrder.map((id, index) => [id, index]))
+
+  return [...tagJoins].sort((a, b) => {
+    const aTag = a.tag
+    const bTag = b.tag
+    const aIsTypeTag = aTag?.category === typeCategory
+    const bIsTypeTag = bTag?.category === typeCategory
+
+    // Keep type tags before all other categories in list/map badge rows.
+    if (aIsTypeTag !== bIsTypeTag) {
+      return aIsTypeTag ? -1 : 1
+    }
+
+    if (aIsTypeTag && bIsTypeTag) {
+      const aOrder = configuredOrderMap.get(aTag?.id ?? "") ?? Number.MAX_SAFE_INTEGER
+      const bOrder = configuredOrderMap.get(bTag?.id ?? "") ?? Number.MAX_SAFE_INTEGER
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder
+      }
+    }
+
+    const aLabel = aTag?.label ?? ""
+    const bLabel = bTag?.label ?? ""
+    return aLabel.localeCompare(bLabel)
+  })
+}
+
 /**
  * Convert database event category to readable display name
  */

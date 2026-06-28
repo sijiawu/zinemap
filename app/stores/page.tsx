@@ -13,7 +13,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { formatSocialMedia, getTagCategoryDisplay, sortTagJoinsByTypeFirst, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -708,11 +708,15 @@ export default function StoresPage() {
                         {/* Store Tags */}
                         {store.store_tags && store.store_tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-3">
-                            {store.store_tags.map((storeTag, index) => (
+                            {sortTagJoinsByTypeFirst(store.store_tags, "shop_type").map((storeTag, index) => (
                               <Badge
                                 key={storeTag.id || `store-tag-${store.id}-${index}`}
                                 variant="outline"
-                                className="text-xs bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100"
+                                className={`text-xs border-stone-200 ${
+                                  storeTag.tag.category === "shop_type"
+                                    ? "bg-stone-50 text-stone-700 hover:bg-stone-100"
+                                    : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                                }`}
                               >
                                 {storeTag.tag.label}
                               </Badge>

@@ -12,7 +12,7 @@ import {
 } from "@/lib/mapGeolocate"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { formatDateReadable, getEventCategoryDisplay, formatTimeRange, isRecurringEvent } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatTimeRange, isRecurringEvent, sortTagJoinsByTypeFirst } from "@/lib/utils"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { Store, Library, Event } from "@/lib/types"
@@ -842,15 +842,35 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           {/* Tags */}
           {locationType === 'store' && 'store_tags' in selectedLocation && selectedLocation.store_tags && selectedLocation.store_tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {selectedLocation.store_tags.map((storeTag) => (
-                <Badge key={storeTag.id} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200">{storeTag.tag.label}</Badge>
+              {sortTagJoinsByTypeFirst(selectedLocation.store_tags, "shop_type").map((storeTag) => (
+                <Badge
+                  key={storeTag.id}
+                  variant="outline"
+                  className={`text-xs border-stone-200 ${
+                    storeTag.tag.category === "shop_type"
+                      ? "bg-stone-50 text-stone-700"
+                      : "bg-stone-50 text-stone-600"
+                  }`}
+                >
+                  {storeTag.tag.label}
+                </Badge>
               ))}
             </div>
           )}
           {locationType === 'library' && 'library_tags' in selectedLocation && selectedLocation.library_tags && selectedLocation.library_tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {selectedLocation.library_tags.map((libraryTag) => (
-                <Badge key={libraryTag.id} variant="outline" className="text-xs bg-stone-50 text-stone-700 border-stone-200">{libraryTag.tag.label}</Badge>
+              {sortTagJoinsByTypeFirst(selectedLocation.library_tags, "library_type").map((libraryTag) => (
+                <Badge
+                  key={libraryTag.id}
+                  variant="outline"
+                  className={`text-xs border-stone-200 ${
+                    libraryTag.tag.category === "library_type"
+                      ? "bg-stone-50 text-stone-700"
+                      : "bg-stone-50 text-stone-600"
+                  }`}
+                >
+                  {libraryTag.tag.label}
+                </Badge>
               ))}
             </div>
           )}
