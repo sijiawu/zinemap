@@ -28,6 +28,7 @@ import {
   getEventCategoryDisplay,
   isRecurringEvent,
   normalizeOccurrenceDates,
+  getTagCategoryDisplay,
 } from "@/lib/utils"
 
 type ListingType = "store" | "library" | "event"
@@ -176,6 +177,9 @@ const getListingHref = (item: ModerationHistoryItem) => {
   if (item.listingType === "library") return `/library/${item.permalink || item.id}`
   return `/event/${item.permalink || item.id}`
 }
+
+const STORE_TAG_CATEGORIES = ["shop_type", "split", "payment", "method", "limits", "pricing", "returns"]
+const LIBRARY_TAG_CATEGORIES = ["library_type", "service", "access"]
 
 export default function AdminPage() {
   const { user, loading } = useSupabaseUser()
@@ -1136,6 +1140,26 @@ export default function AdminPage() {
     }
   }
 
+  const groupedStoreQuickFixTags = allTags
+    .filter((tag) => STORE_TAG_CATEGORIES.includes(tag.category))
+    .reduce((acc, tag) => {
+      if (!acc[tag.category]) {
+        acc[tag.category] = []
+      }
+      acc[tag.category].push(tag)
+      return acc
+    }, {} as Record<string, Tag[]>)
+
+  const groupedLibraryQuickFixTags = allTags
+    .filter((tag) => LIBRARY_TAG_CATEGORIES.includes(tag.category))
+    .reduce((acc, tag) => {
+      if (!acc[tag.category]) {
+        acc[tag.category] = []
+      }
+      acc[tag.category].push(tag)
+      return acc
+    }, {} as Record<string, Tag[]>)
+
   if (loading || checkingAdmin || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 font-serif">
@@ -1815,27 +1839,36 @@ export default function AdminPage() {
               </div>
               <div>
                 <Label>Tags</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {allTags.map((tag) => {
-                    const selected = storeQuickFix.selectedTagIds.includes(tag.id)
-                    return (
-                      <Badge
-                        key={`store-tag-option-${tag.id}`}
-                        variant={selected ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setStoreQuickFix((prev) => ({
-                            ...prev,
-                            selectedTagIds: selected
-                              ? prev.selectedTagIds.filter((id) => id !== tag.id)
-                              : [...prev.selectedTagIds, tag.id],
-                          }))
-                        }
-                      >
-                        {tag.label}
-                      </Badge>
-                    )
-                  })}
+                <div className="space-y-3 mt-2">
+                  {Object.entries(groupedStoreQuickFixTags).map(([category, tags]) => (
+                    <div key={`store-tag-group-${category}`} className="space-y-2">
+                      <p className="text-xs text-stone-500 uppercase tracking-wide">
+                        {getTagCategoryDisplay(category)}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => {
+                          const selected = storeQuickFix.selectedTagIds.includes(tag.id)
+                          return (
+                            <Badge
+                              key={`store-tag-option-${tag.id}`}
+                              variant={selected ? "default" : "outline"}
+                              className="cursor-pointer"
+                              onClick={() =>
+                                setStoreQuickFix((prev) => ({
+                                  ...prev,
+                                  selectedTagIds: selected
+                                    ? prev.selectedTagIds.filter((id) => id !== tag.id)
+                                    : [...prev.selectedTagIds, tag.id],
+                                }))
+                              }
+                            >
+                              {tag.label}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div>
@@ -1862,27 +1895,36 @@ export default function AdminPage() {
               </div>
               <div>
                 <Label>Tags</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {allTags.map((tag) => {
-                    const selected = libraryQuickFix.selectedTagIds.includes(tag.id)
-                    return (
-                      <Badge
-                        key={`library-tag-option-${tag.id}`}
-                        variant={selected ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setLibraryQuickFix((prev) => ({
-                            ...prev,
-                            selectedTagIds: selected
-                              ? prev.selectedTagIds.filter((id) => id !== tag.id)
-                              : [...prev.selectedTagIds, tag.id],
-                          }))
-                        }
-                      >
-                        {tag.label}
-                      </Badge>
-                    )
-                  })}
+                <div className="space-y-3 mt-2">
+                  {Object.entries(groupedLibraryQuickFixTags).map(([category, tags]) => (
+                    <div key={`library-tag-group-${category}`} className="space-y-2">
+                      <p className="text-xs text-stone-500 uppercase tracking-wide">
+                        {getTagCategoryDisplay(category)}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => {
+                          const selected = libraryQuickFix.selectedTagIds.includes(tag.id)
+                          return (
+                            <Badge
+                              key={`library-tag-option-${tag.id}`}
+                              variant={selected ? "default" : "outline"}
+                              className="cursor-pointer"
+                              onClick={() =>
+                                setLibraryQuickFix((prev) => ({
+                                  ...prev,
+                                  selectedTagIds: selected
+                                    ? prev.selectedTagIds.filter((id) => id !== tag.id)
+                                    : [...prev.selectedTagIds, tag.id],
+                                }))
+                              }
+                            >
+                              {tag.label}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div>

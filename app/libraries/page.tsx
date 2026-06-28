@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia } from "@/lib/utils"
+import { formatSocialMedia, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -98,7 +98,7 @@ export default function LibrariesPage() {
         const { data: tagsData, error: tagsError } = await supabase
           .from('tags')
           .select('*')
-          .in('category', ['service', 'access'])
+          .in('category', ['library_type', 'service', 'access'])
           .order('label')
 
         if (tagsError) {
@@ -259,6 +259,12 @@ export default function LibrariesPage() {
     clearLocationFilters()
     setSelectedTags([])
   }
+
+  const libraryTypeTags = sortTagsByConfiguredOrder(
+    allTags.filter((tag) => tag.category === "library_type"),
+    "library_type"
+  )
+  const libraryServiceTags = allTags.filter((tag) => tag.category !== "library_type")
 
   // Track map height for list view min-height
   useEffect(() => {
@@ -453,23 +459,45 @@ export default function LibrariesPage() {
 
                 {/* Tag Filters */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-stone-700">Library Types</h3>
                   <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {allTags.map(tag => (
-                      <div key={tag.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`tag-${tag.id}`}
-                          checked={selectedTags.includes(tag.id)}
-                          onCheckedChange={() => handleTagToggle(tag.id)}
-                        />
-                        <label
-                          htmlFor={`tag-${tag.id}`}
-                          className="text-sm text-stone-700 cursor-pointer"
-                        >
-                          {tag.label}
-                        </label>
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium text-stone-700">Library Types</h3>
+                      {libraryTypeTags.map(tag => (
+                        <div key={tag.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`tag-${tag.id}`}
+                            checked={selectedTags.includes(tag.id)}
+                            onCheckedChange={() => handleTagToggle(tag.id)}
+                          />
+                          <label
+                            htmlFor={`tag-${tag.id}`}
+                            className="text-sm text-stone-700 cursor-pointer"
+                          >
+                            {tag.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    {libraryServiceTags.length > 0 && (
+                      <div className="pt-3 mt-3 border-t border-stone-100 space-y-2">
+                        <h3 className="text-sm font-medium text-stone-700">Access & Services</h3>
+                        {libraryServiceTags.map(tag => (
+                          <div key={tag.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`tag-${tag.id}`}
+                              checked={selectedTags.includes(tag.id)}
+                              onCheckedChange={() => handleTagToggle(tag.id)}
+                            />
+                            <label
+                              htmlFor={`tag-${tag.id}`}
+                              className="text-sm text-stone-700 cursor-pointer"
+                            >
+                              {tag.label}
+                            </label>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 

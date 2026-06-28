@@ -99,3 +99,16 @@ Generated IDs will look like:
 Stores will now have URLs like:
 - `/store/a1b2c3` (using ID)
 - `/store/quimbys-bookstore-chicago` (using permalink) 
+
+## Seed Shop and Library Type Tags
+
+To add the new type categories used by the UI, run:
+
+```sql
+-- From repository root:
+-- seed-shop-library-type-tags.sql
+```
+
+The seed adds:
+- `shop_type` tags for `/stores` and store add/edit flows
+- `library_type` tags for `/libraries` and library add/edit flows

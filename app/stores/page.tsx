@@ -13,7 +13,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia } from "@/lib/utils"
+import { formatSocialMedia, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -100,7 +100,7 @@ export default function StoresPage() {
         const { data: tagsData, error: tagsError } = await supabase
           .from('tags')
           .select('*')
-          .not('category', 'in', '(service,access,split)')
+          .in('category', ['shop_type', 'payment', 'method', 'limits', 'pricing', 'returns'])
           .order('label')
         
         const sortedTags = tagsData || []
@@ -286,6 +286,12 @@ export default function StoresPage() {
     setNoMaxPrice(false)
     setCreatorSplitMin(45)
   }
+
+  const shopTypeTags = sortTagsByConfiguredOrder(
+    allTags.filter((tag) => tag.category === "shop_type"),
+    "shop_type"
+  )
+  const stockingTermTags = allTags.filter((tag) => tag.category !== "shop_type")
 
   // Track map height for list view min-height
   useEffect(() => {
@@ -475,37 +481,60 @@ export default function StoresPage() {
                   </div>
                 </div>
 
-                {/* Creator Split Slider */}
-                <div className="space-y-3">
-                  <div className="flex items-baseline justify-between">
-                    <h3 className="text-sm font-medium text-stone-700">Creator Split</h3>
-                    <span className="text-xs text-stone-400 tabular-nums">
-                      {creatorSplitMin === 45 ? 'all' : creatorSplitMin === 100 ? '100%' : `≥ ${creatorSplitMin}%`}
-                    </span>
-                  </div>
-                  <Slider
-                    value={[creatorSplitMin]}
-                    onValueChange={([v]) => setCreatorSplitMin(v)}
-                    min={45}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                    trackClassName="h-[3px] bg-stone-400"
-                    rangeClassName="bg-stone-200"
-                    thumbClassName="h-3.5 w-3.5 border border-stone-300 bg-white shadow-sm"
-                  />
-                  <div className="flex justify-between text-[10px] text-stone-300">
-                    <span>45%</span>
-                    <span>70%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-
                 {/* Tag Filters */}
                 <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                  <h3 className="text-sm font-medium text-stone-700">Stocking Terms</h3>
                   <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
-                    {/* No Maximum Price Checkbox */}
+                    {shopTypeTags.length > 0 && (
+                      <div className="space-y-2 pb-3 border-b border-stone-100">
+                        <h3 className="text-sm font-medium text-stone-700">{getTagCategoryDisplay("shop_type")}</h3>
+                        {shopTypeTags.map(tag => (
+                          <div key={tag.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`tag-${tag.id}`}
+                              checked={selectedTags.includes(tag.id)}
+                              onCheckedChange={() => handleTagToggle(tag.id)}
+                            />
+                            <label
+                              htmlFor={`tag-${tag.id}`}
+                              className="text-sm text-stone-700 cursor-pointer"
+                            >
+                              {tag.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="space-y-3 pt-1">
+                      <h3 className="text-sm font-medium text-stone-700">Stocking Terms</h3>
+
+                      {/* Creator Split Slider */}
+                      <div className="space-y-3">
+                        <div className="flex items-baseline justify-between">
+                          <h4 className="text-sm font-medium text-stone-700">Creator Split</h4>
+                          <span className="text-xs text-stone-400 tabular-nums">
+                            {creatorSplitMin === 45 ? 'all' : creatorSplitMin === 100 ? '100%' : `≥ ${creatorSplitMin}%`}
+                          </span>
+                        </div>
+                        <Slider
+                          value={[creatorSplitMin]}
+                          onValueChange={([v]) => setCreatorSplitMin(v)}
+                          min={45}
+                          max={100}
+                          step={5}
+                          className="w-full"
+                          trackClassName="h-[3px] bg-stone-400"
+                          rangeClassName="bg-stone-200"
+                          thumbClassName="h-3.5 w-3.5 border border-stone-300 bg-white shadow-sm"
+                        />
+                        <div className="flex justify-between text-[10px] text-stone-300">
+                          <span>45%</span>
+                          <span>70%</span>
+                          <span>100%</span>
+                        </div>
+                      </div>
+
+                      {/* No Maximum Price Checkbox */}
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="no-max-price"
@@ -519,8 +548,8 @@ export default function StoresPage() {
                         No maximum price set
                       </label>
                     </div>
-                    
-                    {allTags.map(tag => (
+
+                    {stockingTermTags.map(tag => (
                       <div key={tag.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`tag-${tag.id}`}
@@ -535,6 +564,7 @@ export default function StoresPage() {
                         </label>
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
 

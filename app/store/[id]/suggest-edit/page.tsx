@@ -15,9 +15,10 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
+import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
 
 import { Tag, Store } from "@/lib/types"
-import { sortSplitTagsByCreatorPercentage } from "@/lib/utils"
+import { sortSplitTagsByCreatorPercentage, sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function SuggestStoreEditPage() {
   const { user, loading: authLoading } = useSupabaseUser()
@@ -57,7 +58,32 @@ export default function SuggestStoreEditPage() {
 
   // Get terms by category
   const getTermsByCategory = (category: string) => {
-    return consignmentTerms.filter((term) => term.category === category)
+    const terms = sortTagsByConfiguredOrder(
+      consignmentTerms.filter((term) => term.category === category),
+      category
+    )
+    if (category === "split") {
+      return sortSplitTagsByCreatorPercentage(terms)
+    }
+    return terms
+  }
+
+  const renderTermBadge = (term: Tag) => {
+    const selected = formData.selectedTerms.includes(term.id)
+    return (
+      <Badge
+        key={term.id}
+        variant={selected ? "default" : "outline"}
+        className={`cursor-pointer transition-all ${
+          selected
+            ? "bg-rose-500 text-white hover:bg-rose-600"
+            : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+        }`}
+        onClick={() => handleTermToggle(term.id)}
+      >
+        {term.label}
+      </Badge>
+    )
   }
 
   useEffect(() => {
@@ -122,7 +148,8 @@ export default function SuggestStoreEditPage() {
         // Fetch available tags
         const { data: availableTagsData, error: tagsError } = await supabase
           .from('tags')
-          .select('*')
+          .select('id, label, category')
+          .in('category', ['shop_type', 'split', 'payment', 'method', 'limits', 'pricing', 'returns'])
           .order('label')
 
         if (tagsError) {
@@ -440,6 +467,29 @@ export default function SuggestStoreEditPage() {
 
 
 
+          {/* Shop Type */}
+          <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-stone-800 text-xl">
+                <TagIcon className="h-5 w-5 mr-2 text-rose-500" />
+                Shop Type
+                <span className="ml-2">
+                  <TagCategoryInfoModalButton category="shop_type" />
+                </span>
+              </CardTitle>
+              <p className="text-sm text-stone-600 font-mono">Select all that apply</p>
+            </CardHeader>
+            <CardContent>
+              {termsLoading ? (
+                <div className="text-center py-8 text-stone-500">Loading terms...</div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {getTermsByCategory("shop_type").map((term) => renderTermBadge(term))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Stocking Terms */}
           <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
             <CardHeader className="pb-4">
@@ -458,20 +508,7 @@ export default function SuggestStoreEditPage() {
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Revenue Split</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("split").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("split").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 
@@ -479,20 +516,7 @@ export default function SuggestStoreEditPage() {
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payment Types</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("payment").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("payment").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 
@@ -500,20 +524,7 @@ export default function SuggestStoreEditPage() {
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Payout Methods</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("method").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("method").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 
@@ -521,20 +532,7 @@ export default function SuggestStoreEditPage() {
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Copy Limits</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("limits").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("limits").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 
@@ -543,39 +541,13 @@ export default function SuggestStoreEditPage() {
                     <div>
                       <h4 className="font-semibold text-stone-700 mb-3 font-serif">Pricing Requirements</h4>
                       <div className="flex flex-wrap gap-2">
-                        {getTermsByCategory("pricing").map((term) => (
-                          <Badge
-                            key={term.id}
-                            variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                            className={`cursor-pointer transition-all ${
-                              formData.selectedTerms.includes(term.id)
-                                ? "bg-rose-500 text-white hover:bg-rose-600"
-                                : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                            }`}
-                            onClick={() => handleTermToggle(term.id)}
-                          >
-                            {term.label}
-                          </Badge>
-                        ))}
+                        {getTermsByCategory("pricing").map((term) => renderTermBadge(term))}
                       </div>
                     </div>
                     <div>
                       <h4 className="font-semibold text-stone-700 mb-3 font-serif">Returns & Exchanges</h4>
                       <div className="flex flex-wrap gap-2">
-                        {getTermsByCategory("returns").map((term) => (
-                          <Badge
-                            key={term.id}
-                            variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                            className={`cursor-pointer transition-all ${
-                              formData.selectedTerms.includes(term.id)
-                                ? "bg-rose-500 text-white hover:bg-rose-600"
-                                : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                            }`}
-                            onClick={() => handleTermToggle(term.id)}
-                          >
-                            {term.label}
-                          </Badge>
-                        ))}
+                        {getTermsByCategory("returns").map((term) => renderTermBadge(term))}
                       </div>
                     </div>
                   </div>

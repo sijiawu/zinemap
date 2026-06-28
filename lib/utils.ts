@@ -174,6 +174,9 @@ export function formatDateMonthDay(dateString: string | Date): string {
  */
 export function getTagCategoryDisplay(category: string): string {
   const map: Record<string, string> = {
+    // Shop and library type categories
+    shop_type: 'Shop Type',
+    library_type: 'Library Type',
     // Store tag categories
     split: 'Revenue Split',
     payment: 'Payment Types',
@@ -187,6 +190,53 @@ export function getTagCategoryDisplay(category: string): string {
     access: 'Access Requirements',
   }
   return map[category] ?? category.replace(/\b\w/g, l => l.toUpperCase())
+}
+
+export type TagDescriptionItem = {
+  id: string
+  label: string
+  description: string
+}
+
+export const SHOP_TYPE_TAG_DETAILS: TagDescriptionItem[] = [
+  // Shop types
+  { id: "shop_type_zine_shop", label: "Zine shop", description: "A shop where zines, small press, artist publications, or self-published works are central to the identity of the place." },
+  { id: "shop_type_independent_bookstore", label: "Independent bookstore", description: "A general independent bookstore that sells zines through a shelf, rack, box, or small-press section, but is not primarily a zine shop." },
+  { id: "shop_type_comics_shop", label: "Comics shop", description: "A shop whose main focus is comics, including graphic novels, manga, minicomics, comic zines, self-published comics, or small-press work." },
+  { id: "shop_type_art_design_bookshop", label: "Art/design bookshop", description: "A shop primarily focused on art books, design books, photography books, artist books, and independent visual publishing, with zines included in the mix." },
+  { id: "shop_type_record_shop", label: "Record shop", description: "A music-focused shop that also stocks zines." },
+  { id: "shop_type_gift_stationery_shop", label: "Gift/stationery shop", description: "A shop primarily selling gifts, stationery, paper goods, prints, or handmade/lifestyle items, with zines as part of the stock." },
+  { id: "shop_type_gallery_museum_shop", label: "Gallery/museum shop", description: "A retail shop attached to a gallery, museum, arts center, or cultural institution." },
+  { id: "shop_type_cafe_bar_hybrid_space", label: "Cafe/bar/hybrid space", description: "A cafe, bar, venue, studio, or mixed-use space with a zine shelf." },
+]
+
+export const LIBRARY_TYPE_TAG_DETAILS: TagDescriptionItem[] = [
+  // Library types
+  { id: "library_type_zine_library", label: "Zine library", description: "A library or collection where zines are the main focus." },
+  { id: "library_type_zine_exchange_library", label: "Zine exchange library", description: "A small self-serve zine-focused library, box, shelf, or exchange point where people can take, leave, or swap zines for free." },
+  { id: "library_type_public_library", label: "Public library", description: "A zine collection inside a public, city, county, municipal, or local library." },
+  { id: "library_type_academic_library", label: "Academic library", description: "A zine collection inside a university, college, school, or research library." },
+  { id: "library_type_community_archive", label: "Community archive", description: "A grassroots, community-led, activist, local, identity-based, or movement-based archive that includes zines." },
+  { id: "library_type_reading_room_resource_center", label: "Reading room/resource center", description: "A space where people can browse, read, study, or use zines on-site, but whose main identity is not necessarily library or archive." },
+  { id: "library_type_mobile_pop_up_collection", label: "Mobile/pop-up collection", description: "A zine collection that travels, appears temporarily, or does not have a fixed regular public location." },
+]
+
+const TAG_TOOLTIP_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  [...SHOP_TYPE_TAG_DETAILS, ...LIBRARY_TYPE_TAG_DETAILS].map((item) => [item.id, item.description])
+)
+
+const SHOP_TYPE_ORDER = SHOP_TYPE_TAG_DETAILS.map((item) => item.id)
+const LIBRARY_TYPE_ORDER = LIBRARY_TYPE_TAG_DETAILS.map((item) => item.id)
+
+export function getTagTooltipDescription(tagId: string): string | undefined {
+  return TAG_TOOLTIP_DESCRIPTIONS[tagId]
+}
+
+export function sortTagsByConfiguredOrder<T extends { id: string }>(tags: T[], category: string): T[] {
+  const order = category === "shop_type" ? SHOP_TYPE_ORDER : category === "library_type" ? LIBRARY_TYPE_ORDER : null
+  if (!order) return tags
+  const orderMap = new Map(order.map((id, index) => [id, index]))
+  return [...tags].sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER))
 }
 
 /**

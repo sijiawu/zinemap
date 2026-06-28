@@ -14,7 +14,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 import { Store, StoreTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
-import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay } from "@/lib/utils"
+import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -505,6 +505,10 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
   if (tagsByCategory.split) {
     tagsByCategory.split = sortSplitTagsByCreatorPercentage(tagsByCategory.split)
   }
+  const shopTypeTags = sortTagsByConfiguredOrder(tagsByCategory.shop_type || [], "shop_type")
+  const stockingTagsByCategory = Object.fromEntries(
+    Object.entries(tagsByCategory).filter(([category]) => category !== "shop_type")
+  )
 
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
@@ -624,8 +628,27 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
           </Card>
         </div>
 
+        {/* Shop Type */}
+        {shopTypeTags.length > 0 && (
+          <Card className="bg-white border border-rose-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-stone-800 text-xl flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-rose-600" />
+                Shop Type
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-stone-50 p-4 rounded-lg border border-rose-100 space-y-1">
+                {shopTypeTags.map((tag) => (
+                  <p key={tag.id} className="text-sm text-stone-700">{tag.label}</p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stocking Terms */}
-        {Object.keys(tagsByCategory).length > 0 && (
+        {Object.keys(stockingTagsByCategory).length > 0 && (
           <Card className="bg-white border border-rose-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-stone-800 text-xl flex items-center">
@@ -635,7 +658,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-6 text-stone-700">
-                {Object.entries(tagsByCategory).map(([category, tags]) => (
+                {Object.entries(stockingTagsByCategory).map(([category, tags]) => (
                   <div key={category} className="space-y-4">
                     <div className="bg-stone-50 p-4 rounded-lg border border-rose-100">
                       <h4 className="font-semibold text-stone-800 mb-2">{getTagCategoryDisplay(category)}</h4>

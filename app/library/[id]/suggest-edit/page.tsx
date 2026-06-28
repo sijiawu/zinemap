@@ -14,8 +14,10 @@ import Link from "next/link"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
+import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
 
 import { Tag, Library } from "@/lib/types"
+import { sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function SuggestLibraryEditPage() {
   const { user, loading: authLoading } = useSupabaseUser()
@@ -63,7 +65,28 @@ export default function SuggestLibraryEditPage() {
 
   // Get terms by category
   const getTermsByCategory = (category: string) => {
-    return libraryTags.filter((term) => term.category === category)
+    return sortTagsByConfiguredOrder(
+      libraryTags.filter((term) => term.category === category),
+      category
+    )
+  }
+
+  const renderTermBadge = (term: Tag) => {
+    const selected = formData.selectedTerms.includes(term.id)
+    return (
+      <Badge
+        key={term.id}
+        variant={selected ? "default" : "outline"}
+        className={`cursor-pointer transition-all ${
+          selected
+            ? "bg-blue-500 text-white hover:bg-blue-600"
+            : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
+        }`}
+        onClick={() => handleTermToggle(term.id)}
+      >
+        {term.label}
+      </Badge>
+    )
   }
 
 
@@ -130,7 +153,8 @@ export default function SuggestLibraryEditPage() {
         // Fetch available tags
         const { data: availableTagsData, error: tagsError } = await supabase
           .from('tags')
-          .select('*')
+          .select('id, label, category')
+          .in('category', ['library_type', 'service', 'access'])
           .order('label')
 
         if (tagsError) {
@@ -454,6 +478,9 @@ export default function SuggestLibraryEditPage() {
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <TagIcon className="h-5 w-5 mr-2 text-blue-500" />
                 Library Tags
+                <span className="ml-2">
+                  <TagCategoryInfoModalButton category="library_type" />
+                </span>
               </CardTitle>
               <p className="text-sm text-stone-600 font-mono">What describes this library? (Select all that apply)</p>
             </CardHeader>
@@ -462,24 +489,20 @@ export default function SuggestLibraryEditPage() {
                 <div className="text-center py-8 text-stone-500">Loading tags...</div>
               ) : (
                 <div className="space-y-6">
-                                    {/* Access */}
+                  {/* Library Type */}
+                  <div>
+                    <h4 className="font-semibold text-stone-700 mb-3 font-serif">Library Type</h4>
+                    <p className="text-xs text-stone-500 mb-3">Select all that apply.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {getTermsByCategory("library_type").map((term) => renderTermBadge(term))}
+                    </div>
+                  </div>
+
+                  {/* Access */}
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Access</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("access").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-blue-500 text-white hover:bg-blue-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("access").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 
@@ -487,20 +510,7 @@ export default function SuggestLibraryEditPage() {
                   <div>
                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Service</h4>
                     <div className="flex flex-wrap gap-2">
-                      {getTermsByCategory("service").map((term) => (
-                        <Badge
-                          key={term.id}
-                          variant={formData.selectedTerms.includes(term.id) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
-                            formData.selectedTerms.includes(term.id)
-                              ? "bg-blue-500 text-white hover:bg-blue-600"
-                              : "bg-white border-stone-300 text-stone-700 hover:bg-stone-50"
-                          }`}
-                          onClick={() => handleTermToggle(term.id)}
-                        >
-                          {term.label}
-                        </Badge>
-                      ))}
+                      {getTermsByCategory("service").map((term) => renderTermBadge(term))}
                     </div>
                   </div>
 

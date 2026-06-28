@@ -14,7 +14,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 
 import { Library, LibraryTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
-import { getTagCategoryDisplay } from "@/lib/utils"
+import { getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -461,7 +461,9 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
     if (!acc[tag.tag.category]) {
       acc[tag.tag.category] = []
     }
-    acc[tag.tag.category].push(tag)
+    const categoryTags = acc[tag.tag.category] || []
+    categoryTags.push(tag)
+    acc[tag.tag.category] = categoryTags
     return acc
   }, {} as Record<string, LibraryTag[]>)
 
@@ -599,8 +601,8 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                     <div className="bg-stone-50 p-4 rounded-lg border border-blue-100">
                       <h4 className="font-semibold text-stone-800 mb-2">{getTagCategoryDisplay(category)}</h4>
                       <div className="space-y-1">
-                        {tags.map((tag) => (
-                          <p key={tag.id} className="text-sm">{tag.tag.label}</p>
+                        {sortTagsByConfiguredOrder(tags.map((item) => item.tag), category).map((tag) => (
+                          <p key={tag.id} className="text-sm">{tag.label}</p>
                         ))}
                       </div>
                     </div>
