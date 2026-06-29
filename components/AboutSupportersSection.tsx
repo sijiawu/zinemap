@@ -4,7 +4,7 @@ import { supporters } from "@/content/supporters";
 
 export default function AboutSupportersSection() {
   return (
-    <section className="px-2 py-4 sm:px-4">
+    <section id="supporters" className="scroll-mt-20 px-2 py-4 sm:px-4">
       <h2 className="font-gloria text-3xl text-stone-900">Thank you to ZineMap supporters</h2>
       <p className="mt-3 max-w-3xl font-serif text-sm leading-relaxed text-stone-700 md:text-lg">
         ZineMap is free to use, but keeping the site running and growing comes with ongoing costs.

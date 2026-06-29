@@ -510,11 +510,11 @@ export default async function AboutPage() {
       />
 
       <main className="mx-auto mt-6 max-w-6xl space-y-10 px-4">
-        <section>
+        <section id="zines" className="scroll-mt-20">
           <AboutZinesShelf items={data.zines} />
         </section>
 
-        <section className="py-0">
+        <section id="blurbs" className="scroll-mt-20 py-0">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.22em] text-rose-600/80 md:mb-2.5">
               Notes from the community
@@ -523,7 +523,7 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        <section>
+        <section id="stories" className="scroll-mt-20">
           <AboutSectionHeader
             title="Stories"
             subtitle="Interviews, field notes, and updates from the people and places behind the map."
@@ -533,7 +533,7 @@ export default async function AboutPage() {
           <AboutStoriesCarousel stories={stories} />
         </section>
 
-        <section>
+        <section id="people" className="scroll-mt-20">
           <AboutSectionHeader
             title="People"
             subtitle="Find makers, readers, organizers, researchers, and collectors across the ZineMap community"
@@ -545,7 +545,9 @@ export default async function AboutPage() {
 
         <AboutSupportersSection />
 
-        <AboutFinalCta initialContributorCount={data.initialContributorCount} />
+        <section id="join-zinemap" className="scroll-mt-20">
+          <AboutFinalCta initialContributorCount={data.initialContributorCount} />
+        </section>
 
       </main>
     </div>
