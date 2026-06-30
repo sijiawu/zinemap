@@ -17,6 +17,8 @@ import { formatSocialMedia, getTagCategoryDisplay, sortTagJoinsByTypeFirst, sort
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
+import { PageLoader } from "@/components/loading/PageLoader"
+import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
 
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -376,11 +378,7 @@ export default function StoresPage() {
   }, [hashTarget, filteredStores])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
@@ -587,9 +585,11 @@ export default function StoresPage() {
               <Card ref={mapCardRef} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
                 <CardContent className="p-0">
                   {loading ? (
-                    <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
-                      <div className="text-stone-500">Loading map...</div>
-                    </div>
+                    <MapLoadingOverlay
+                      absolute={false}
+                      title="Loading map..."
+                      subtitle="Locating shops on the map."
+                    />
                   ) : (
                     <div className="w-full h-96 lg:h-full">
                       <StoreMap 

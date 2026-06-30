@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Store as StoreType, Library as LibraryType, Event as EventType } from "@/lib/types"
 import { useToast } from '@/hooks/use-toast'
+import { PageLoader } from "@/components/loading/PageLoader"
 
 const ROLES = [
   'zine maker',
@@ -866,11 +867,7 @@ export default function ProfilePage() {
   }
 
   if (userLoading || loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-sans flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!profile) {

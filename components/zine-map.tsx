@@ -10,6 +10,7 @@ import {
   panMapToUserLocation,
   syncMapboxHtmlMarkers,
 } from "@/lib/mapGeolocate"
+import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
 
 interface ZineStore {
   id: string
@@ -207,9 +208,7 @@ export default function ZineMap({ stores }: ZineMapProps) {
         data-testid="map-container"
       />
       {!mapReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-stone-100">
-          <div className="text-stone-500">Loading map...</div>
-        </div>
+        <MapLoadingOverlay title="Loading map..." subtitle="Placing zine locations." />
       )}
 
       <div className="absolute top-4 right-4 z-20">

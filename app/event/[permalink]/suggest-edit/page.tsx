@@ -33,6 +33,7 @@ import {
 } from "@/lib/utils"
 import { OccurrenceDatePicker } from "@/components/OccurrenceDatePicker"
 import { RegenerateOccurrenceDatesDialog } from "@/components/RegenerateOccurrenceDatesDialog"
+import { PageLoader } from "@/components/loading/PageLoader"
 import { useOccurrenceDateSelection } from "@/hooks/useOccurrenceDateSelection"
 
 export default function SuggestEventEditPage() {
@@ -389,11 +390,7 @@ export default function SuggestEventEditPage() {
   }
 
   if (loading || loadingEvent) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!user) {

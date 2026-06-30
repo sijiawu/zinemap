@@ -15,6 +15,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { Store, StoreTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
 import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -464,11 +465,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading store...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !store) {

@@ -15,6 +15,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { useParams } from "next/navigation"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 import { Tag, Library } from "@/lib/types"
 import { sortTagsByConfiguredOrder } from "@/lib/utils"
@@ -94,7 +95,7 @@ export default function SuggestLibraryEditPage() {
   useEffect(() => {
     // Don't redirect until authentication check is complete
     if (authLoading) {
-      return // Still checking authentication
+      return // Auth status still resolving
     }
     
     if (!user) {
@@ -294,19 +295,11 @@ export default function SuggestLibraryEditPage() {
 
   // Show loading while authentication is being checked
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500">Checking authentication...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error && !library) {

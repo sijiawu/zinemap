@@ -16,6 +16,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 import { Tag, Store } from "@/lib/types"
 import { sortSplitTagsByCreatorPercentage, sortTagsByConfiguredOrder } from "@/lib/utils"
@@ -89,7 +90,7 @@ export default function SuggestStoreEditPage() {
   useEffect(() => {
     // Don't redirect until authentication check is complete
     if (authLoading) {
-      return // Still checking authentication
+      return // Auth status still resolving
     }
     
     if (!user) {
@@ -289,19 +290,11 @@ export default function SuggestStoreEditPage() {
 
   // Show loading while authentication is being checked
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500">Checking authentication...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error && !store) {

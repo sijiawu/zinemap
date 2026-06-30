@@ -11,6 +11,7 @@ import { autoLinkText, isPastEvent, getEventCategoryDisplay, formatDateReadable 
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 export type Activity = {
   id: string
@@ -345,11 +346,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-sans flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !profile) {

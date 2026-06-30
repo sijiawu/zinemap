@@ -15,6 +15,7 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { Library, LibraryTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
 import { getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -429,11 +430,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading library...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !library) {

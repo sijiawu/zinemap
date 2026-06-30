@@ -17,15 +17,18 @@ import { SaveButton } from "@/components/SaveButton"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { HowDoesThisWorkLink } from "@/components/HowDoesThisWorkModal"
+import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
 
 const StoreMap = dynamic(
   () => import("@/components/store-map").then(mod => ({ default: mod.StoreMap })),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-stone-100 animate-pulse flex items-center justify-center">
-        <div className="text-stone-500">Loading map...</div>
-      </div>
+      <MapLoadingOverlay
+        absolute={false}
+        title="Loading map..."
+        subtitle="Plotting shops, libraries, and events."
+      />
     ),
   }
 )
@@ -620,9 +623,12 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
             <Card ref={mapCardRef} className="bg-white border-stone-200 shadow-sm rounded-lg overflow-hidden">
               <CardContent className="p-0">
                 {!phase1Complete ? (
-                  <div className="w-full h-96 lg:h-full bg-stone-100 animate-pulse flex items-center justify-center">
-                    <div className="text-stone-500">Preparing map...</div>
-                  </div>
+                  <MapLoadingOverlay
+                    absolute={false}
+                    title="Preparing map..."
+                    subtitle="Fetching places from the community."
+                    className="h-96 lg:h-full"
+                  />
                 ) : (
                   <div className="w-full h-96 lg:h-full relative">
                     <StoreMap 
@@ -634,9 +640,10 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                       onMapReady={handleMapReady}
                     />
                     {!phase2Complete && (
-                      <div className="absolute inset-0 bg-stone-100 bg-opacity-75 flex items-center justify-center z-10">
-                        <div className="text-stone-500">Loading map...</div>
-                      </div>
+                      <MapLoadingOverlay
+                        title="Loading map..."
+                        subtitle="Final map details are on the way."
+                      />
                     )}
                   </div>
                 )}

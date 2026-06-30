@@ -16,6 +16,7 @@ import { formatDate, formatDateReadable, formatDateWithWeekday, getEventCategory
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const { user } = useSupabaseUser()
@@ -612,11 +613,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !event) {

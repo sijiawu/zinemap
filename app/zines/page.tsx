@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { Zine, UserProfile } from "@/lib/types"
 import { autoLinkText } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 interface ZineWithAuthor extends Zine {
   profiles: UserProfile
@@ -412,28 +413,7 @@ export default function ZinesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif">
-        <div className="w-full bg-white border-b border-stone-200 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-8 text-center">
-            <div className="text-4xl md:text-5xl font-bold text-stone-800 mb-2 tracking-tight font-gloria">Zines</div>
-            <div className="flex justify-center items-center mb-3">
-              <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-              <div className="mx-3 text-purple-500">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-            </div>
-            <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Discover zines from creators worldwide</p>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center">
-            <div className="text-stone-500 text-lg">Loading zines...</div>
-          </div>
-        </div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   const zinesToDisplay = displayZines ?? filteredZines

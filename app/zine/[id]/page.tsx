@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { Zine, UserProfile, Store, Batch } from "@/lib/types"
 import { autoLinkText } from "@/lib/utils"
 import ZineMap from "@/components/zine-map"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 interface ZineWithAuthor extends Zine {
   profiles: UserProfile
@@ -134,11 +135,7 @@ export default function PublicZinePage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !zine) {

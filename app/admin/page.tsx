@@ -30,6 +30,7 @@ import {
   normalizeOccurrenceDates,
   getTagCategoryDisplay,
 } from "@/lib/utils"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 type ListingType = "store" | "library" | "event"
 type ModerationStatus = "pending" | "approved" | "flagged"
@@ -1161,11 +1162,7 @@ export default function AdminPage() {
     }, {} as Record<string, Tag[]>)
 
   if (loading || checkingAdmin || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 font-serif">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!isAdmin) {
