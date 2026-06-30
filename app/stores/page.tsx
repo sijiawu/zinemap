@@ -19,6 +19,7 @@ import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
+import { NoResultsTaggingHint } from "@/components/NoResultsTaggingHint"
 
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([])
@@ -484,7 +485,10 @@ export default function StoresPage() {
                   <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
                     {shopTypeTags.length > 0 && (
                       <div className="space-y-2 pb-3 border-b border-stone-100">
-                        <h3 className="text-sm font-medium text-stone-700">{getTagCategoryDisplay("shop_type")}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-medium text-stone-700">{getTagCategoryDisplay("shop_type")}</h3>
+                          <NoResultsTaggingHint />
+                        </div>
                         {shopTypeTags.map(tag => (
                           <div key={tag.id} className="flex items-center space-x-2">
                             <Checkbox

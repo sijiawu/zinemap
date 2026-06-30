@@ -19,6 +19,7 @@ import { SaveButton } from "@/components/SaveButton"
 import { HowDoesThisWorkLink } from "@/components/HowDoesThisWorkModal"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
+import { NoResultsTaggingHint } from "@/components/NoResultsTaggingHint"
 
 export default function LibrariesPage() {
   const [libraries, setLibraries] = useState<Library[]>([])
@@ -459,7 +460,10 @@ export default function LibrariesPage() {
                 <div className="space-y-4">
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium text-stone-700">Library Types</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-stone-700">Library Type</h3>
+                        <NoResultsTaggingHint entityType="library" />
+                      </div>
                       {libraryTypeTags.map(tag => (
                         <div key={tag.id} className="flex items-center space-x-2">
                           <Checkbox
