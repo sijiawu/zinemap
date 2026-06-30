@@ -15,9 +15,10 @@ import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { supabase } from "@/lib/supabaseClient"
 import { nanoid } from "nanoid"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 import { Tag, Library } from "@/lib/types"
-import { normalizeUSState, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { generateListingPermalink, normalizeUSState, sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function AddLibraryPage() {
   const { user, loading } = useSupabaseUser()
@@ -70,17 +71,6 @@ export default function AddLibraryPage() {
     }))
   }
 
-  const generatePermalink = (name: string, city: string): string => {
-    const combined = `${name} ${city}`
-    return combined
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-      .trim()
-      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
-  }
-
   const geocodeAddress = async (address: string, city: string, country: string) => {
     try {
       const query = `${address}, ${city}, ${country}`
@@ -129,7 +119,7 @@ export default function AddLibraryPage() {
     try {
       // Generate ID and permalink for the library
       const id = nanoid(6)
-      const permalink = generatePermalink(formData.libraryName, formData.city)
+      const permalink = generateListingPermalink(formData.libraryName, formData.city)
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
@@ -474,11 +464,7 @@ export default function AddLibraryPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!user) {

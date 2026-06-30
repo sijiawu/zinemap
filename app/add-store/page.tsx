@@ -16,9 +16,10 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 import { Tag, Store } from "@/lib/types"
-import { normalizeUSState, sortSplitTagsByCreatorPercentage, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { generateListingPermalink, normalizeUSState, sortSplitTagsByCreatorPercentage, sortTagsByConfiguredOrder } from "@/lib/utils"
 
 export default function AddStorePage() {
   const { user, loading } = useSupabaseUser()
@@ -250,23 +251,7 @@ export default function AddStorePage() {
   }, [user, loading, router])
 
   if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 font-serif">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
-  }
-
-  // Generate permalink from store name and city
-  const generatePermalink = (storeName: string, city: string): string => {
-    const combined = `${storeName} ${city}`
-    return combined
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-      .trim()
-      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+    return <PageLoader />
   }
 
   // Geocode address to get coordinates
@@ -329,7 +314,7 @@ export default function AddStorePage() {
     try {
       // Generate ID and permalink for the store
       const id = nanoid(6)
-      const permalink = generatePermalink(formData.storeName, formData.city)
+      const permalink = generateListingPermalink(formData.storeName, formData.city)
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)

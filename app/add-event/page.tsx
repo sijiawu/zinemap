@@ -25,10 +25,11 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { EventFormData } from "@/lib/types"
 import { compressImage } from "@/lib/compressImage"
-import { normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, normalizeOccurrenceDates, validateOccurrenceDates } from "@/lib/utils"
+import { generateListingPermalink, normalizeUSState, getOrdinalAndWeekdayFromDate, WEEKDAY_NAMES, ORDINAL_LABELS, normalizeOccurrenceDates, validateOccurrenceDates } from "@/lib/utils"
 import { OccurrenceDatePicker } from "@/components/OccurrenceDatePicker"
 import { RegenerateOccurrenceDatesDialog } from "@/components/RegenerateOccurrenceDatesDialog"
 import { useOccurrenceDateSelection } from "@/hooks/useOccurrenceDateSelection"
+import { PageLoader } from "@/components/loading/PageLoader"
 
 const ADD_EVENT_FIELD_SUMMARY_ORDER = [
   "name",
@@ -463,11 +464,6 @@ export default function AddEventPage() {
     }
   }
 
-  // Generate permalink from name and city
-  const generatePermalink = (name: string, city: string) => {
-    return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${city.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-  }
-
   // Redirect if not logged in
   if (!loading && !user) {
     router.push("/login")
@@ -475,11 +471,7 @@ export default function AddEventPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-stone-50 font-serif flex items-center justify-center">
-        <div className="text-stone-500 text-lg">Loading...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   const handleInputChange = (field: keyof EventFormData, value: string) => {
@@ -564,7 +556,7 @@ export default function AddEventPage() {
     try {
       // Generate ID and permalink for the event
       const id = nanoid(6)
-      const permalink = generatePermalink(formData.name, formData.city)
+      const permalink = generateListingPermalink(formData.name, formData.city)
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)

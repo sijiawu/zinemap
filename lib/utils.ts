@@ -15,12 +15,24 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function generatePermalink(displayName: string): string {
   return displayName
+    .normalize('NFKD')
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[\u0300-\u036f]/g, '') // Strip combining accents after normalization
+    .replace(/['’`´]/g, '-') // Convert apostrophes to hyphens
+    .replace(/&/g, ' and ') // Keep ampersand semantically
+    .replace(/[^a-z0-9\s-]/g, '-') // Convert remaining separators to hyphens
+    .replace(/\s+/g, '-') // Convert spaces to hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+}
+
+/**
+ * Generate listing permalink from name + city with consistent transliteration.
+ * Used for shops, libraries, and events.
+ */
+export function generateListingPermalink(name: string, city: string): string {
+  return generatePermalink(`${name} ${city}`)
 }
 
 /**
