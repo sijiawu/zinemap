@@ -16,6 +16,7 @@ import { Library, LibraryTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
 import { getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
+import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -464,6 +465,16 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
     return acc
   }, {} as Record<string, LibraryTag[]>)
 
+  const libraryTypeTags = sortTagsByConfiguredOrder(
+    (tagsByCategory.library_type || []).map((item) => item.tag),
+    "library_type"
+  )
+  const libraryServiceTagsByCategory = Object.fromEntries(
+    Object.entries(tagsByCategory)
+      .filter(([category]) => category !== "library_type")
+      .map(([category, tags]) => [category, sortTagsByConfiguredOrder(tags.map((item) => item.tag), category)])
+  )
+
   return (
     <div className="min-h-screen bg-stone-50 font-serif">
       {/* Header with back button */}
@@ -582,8 +593,36 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
           </Card>
         </div>
 
+        {/* Library Type */}
+        {libraryTypeTags.length > 0 && (
+          <Card className="bg-white border border-blue-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-stone-800 text-xl flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                Library Type
+                <span className="ml-2">
+                  <TagCategoryInfoModalButton category="library_type" />
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {libraryTypeTags.map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    variant="outline"
+                    className="text-xs border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100"
+                  >
+                    {tag.label}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Library Services */}
-        {Object.keys(tagsByCategory).length > 0 && (
+        {Object.keys(libraryServiceTagsByCategory).length > 0 && (
           <Card className="bg-white border border-blue-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-stone-800 text-xl flex items-center">
@@ -593,12 +632,12 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-6 text-stone-700">
-                {Object.entries(tagsByCategory).map(([category, tags]) => (
+                {Object.entries(libraryServiceTagsByCategory).map(([category, tags]) => (
                   <div key={category} className="space-y-4">
                     <div className="bg-stone-50 p-4 rounded-lg border border-blue-100">
                       <h4 className="font-semibold text-stone-800 mb-2">{getTagCategoryDisplay(category)}</h4>
                       <div className="space-y-1">
-                        {sortTagsByConfiguredOrder(tags.map((item) => item.tag), category).map((tag) => (
+                        {tags.map((tag) => (
                           <p key={tag.id} className="text-sm">{tag.label}</p>
                         ))}
                       </div>

@@ -16,6 +16,7 @@ import { Store, StoreTag, CommunityNote } from "@/lib/types"
 import { SaveButton } from "@/components/SaveButton"
 import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
+import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -632,12 +633,21 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
               <CardTitle className="text-stone-800 text-xl flex items-center">
                 <FileText className="h-5 w-5 mr-2 text-rose-600" />
                 Shop Type
+                <span className="ml-2">
+                  <TagCategoryInfoModalButton category="shop_type" />
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-stone-50 p-4 rounded-lg border border-rose-100 space-y-1">
+              <div className="flex flex-wrap gap-2">
                 {shopTypeTags.map((tag) => (
-                  <p key={tag.id} className="text-sm text-stone-700">{tag.label}</p>
+                  <Badge
+                    key={tag.id}
+                    variant="outline"
+                    className="text-xs border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100"
+                  >
+                    {tag.label}
+                  </Badge>
                 ))}
               </div>
             </CardContent>
