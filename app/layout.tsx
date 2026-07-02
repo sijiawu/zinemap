@@ -7,11 +7,11 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://zinemap.com'),
-  title: "A Collaborative Map of the Global Zine Scene",
-  description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
+  title: "ZineMap - A Collaborative Map of the Global Zine Scene",
+  description: "Explore a global map of the zine universe, map your local zine scene, and connect with other zine makers worldwide.",
   openGraph: {
-    title: "A Collaborative Map of the Global Zine Scene",
-    description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
+    title: "ZineMap - A Collaborative Map of the Global Zine Scene",
+    description: "Explore a global map of the zine universe, map your local zine scene, and connect with other zine makers worldwide.",
     url: "https://zinemap.com",
     siteName: "ZineMap",
     images: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: "/preview-image.png", // Update this path to your actual image
         width: 1200,
         height: 630,
-        alt: "A Collaborative Map of the Global Zine Scene",
+        alt: "ZineMap - A Collaborative Map of the Global Zine Scene",
       },
     ],
     locale: "en_US",
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "A Collaborative Map of the Global Zine Scene",
-    description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
+    title: "ZineMap - A Collaborative Map of the Global Zine Scene",
+    description: "Explore a global map of the zine universe, map your local zine scene, and connect with other zine makers worldwide.",
     images: ["/preview-image.png"], // Update this path to your actual image
   },
   generator: 'v0.dev',
