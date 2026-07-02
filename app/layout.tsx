@@ -7,10 +7,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://zinemap.com'),
-  title: "ZineMap - Drop Your Zines, Find Your People",
+  title: "A Collaborative Map of the Global Zine Scene",
   description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
   openGraph: {
-    title: "ZineMap - Drop Your Zines, Find Your People",
+    title: "A Collaborative Map of the Global Zine Scene",
     description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
     url: "https://zinemap.com",
     siteName: "ZineMap",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: "/preview-image.png", // Update this path to your actual image
         width: 1200,
         height: 630,
-        alt: "ZineMap - Drop Your Zines, Find Your People",
+        alt: "A Collaborative Map of the Global Zine Scene",
       },
     ],
     locale: "en_US",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ZineMap - Drop Your Zines, Find Your People",
+    title: "A Collaborative Map of the Global Zine Scene",
     description: "Explore a global map of the zine universe, track your zines, and discover new places to share your work.",
     images: ["/preview-image.png"], // Update this path to your actual image
   },
