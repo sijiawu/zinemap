@@ -439,11 +439,10 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                           href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
-                          style={{ wordBreak: 'break-all' }}
+                          className="inline-flex max-w-full min-w-0 flex-wrap items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
                         >
-                          {profile.site}
-                          <ExternalLink className="h-4 w-4" />
+                          <span className="break-all">{profile.site}</span>
+                          <ExternalLink className="h-4 w-4 shrink-0" />
                         </a>
                       )}
                       {profile.roles && profile.roles.length > 0 && (
@@ -461,8 +460,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                   {/* Bio */}
                   {profile.bio && (
                     <div>
-                      <p className="text-stone-700 leading-relaxed">
-                        {profile.bio}
+                      <p className="text-stone-700 leading-relaxed whitespace-pre-wrap break-words [&_a]:break-all">
+                        {autoLinkText(profile.bio)}
                       </p>
                     </div>
                   )}
@@ -885,7 +884,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
           onClick={() => setSelectedZine(null)}
         >
           <div 
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -919,7 +918,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                   
                   {selectedZine.description && (
                     <div className="mb-4">
-                      <p className="text-stone-600 whitespace-pre-wrap">{autoLinkText(selectedZine.description)}</p>
+                      <p className="text-stone-600 whitespace-pre-wrap break-words [&_a]:break-all">{autoLinkText(selectedZine.description)}</p>
                     </div>
                   )}
                 </div>

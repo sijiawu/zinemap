@@ -763,7 +763,7 @@ export default function ZinesPage() {
           onClick={() => setSelectedZine(null)}
         >
           <div 
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -823,7 +823,7 @@ export default function ZinesPage() {
                   
                   {selectedZine.description && (
                     <div className="mb-4">
-                      <p className="text-stone-600 whitespace-pre-wrap">{autoLinkText(selectedZine.description)}</p>
+                      <p className="text-stone-600 whitespace-pre-wrap break-words [&_a]:break-all">{autoLinkText(selectedZine.description)}</p>
                     </div>
                   )}
 

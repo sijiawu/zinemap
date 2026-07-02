@@ -13,7 +13,7 @@ import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calenda
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { UserProfile, Zine } from '@/lib/types'
-import { generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
+import { autoLinkText, generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 import AddZineModal from '@/components/AddZineModal'
 import { SaveButton } from '@/components/SaveButton'
@@ -986,11 +986,10 @@ export default function ProfilePage() {
                               href={profile.site.startsWith('http') ? profile.site : `https://${profile.site}`}
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
-                              style={{ wordBreak: 'break-all' }}
+                              className="inline-flex max-w-full min-w-0 flex-wrap items-center gap-2 text-[#b45309] hover:text-[#92400e] transition-colors"
                             >
-                              {profile.site}
-                              <ExternalLink className="h-4 w-4" />
+                              <span className="break-all">{profile.site}</span>
+                              <ExternalLink className="h-4 w-4 shrink-0" />
                             </a>
                           )}
                           {profile.roles && profile.roles.length > 0 && (
@@ -1031,8 +1030,8 @@ export default function ProfilePage() {
                   {/* Bio - Full Width */}
                   {profile.bio && (
                     <div className="px-6 pb-4">
-                      <p className="text-stone-700 leading-relaxed">
-                        {profile.bio}
+                      <p className="text-stone-700 leading-relaxed whitespace-pre-wrap break-words [&_a]:break-all">
+                        {autoLinkText(profile.bio)}
                       </p>
                     </div>
                   )}

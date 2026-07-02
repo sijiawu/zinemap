@@ -684,7 +684,7 @@ export function autoLinkText(text: string): React.ReactNode[] {
         href,
         target: isEmail ? undefined : '_blank',
         rel: isEmail ? undefined : 'noopener noreferrer',
-        className: 'text-blue-600 hover:text-blue-800 underline'
+        className: 'text-blue-600 hover:text-blue-800 underline break-all max-w-full inline-block align-bottom'
       }, cleanMatch)
     )
 
