@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import HomePageClient from '@/components/HomePageClient'
 import { Store, Library, Event } from '@/lib/types'
+import { sortByLatestActivity } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,11 +33,15 @@ export default async function MapPage() {
       .order('created_at', { ascending: false }),
   ])
 
+  const initialStores = sortByLatestActivity((storesResult.data || []) as Store[])
+  const initialLibraries = sortByLatestActivity((librariesResult.data || []) as Library[])
+  const initialEvents = sortByLatestActivity((eventsResult.data || []) as Event[])
+
   return (
     <HomePageClient
-      initialStores={(storesResult.data || []) as Store[]}
-      initialLibraries={(librariesResult.data || []) as Library[]}
-      initialEvents={(eventsResult.data || []) as Event[]}
+      initialStores={initialStores}
+      initialLibraries={initialLibraries}
+      initialEvents={initialEvents}
     />
   )
 }

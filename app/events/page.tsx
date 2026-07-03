@@ -13,7 +13,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event } from "@/lib/types"
-import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, isRecurringEvent } from "@/lib/utils"
+import { formatDateReadable, getEventCategoryDisplay, formatSocialMedia, formatTimeRange, expandRecurringEvents, occurrenceToDisplayEvent, occurrencesToNextOnly, isPastEvent, isRecurringEvent, sortByLatestActivity } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { EventsCalendarView } from "@/components/EventsCalendarView"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
@@ -157,7 +157,7 @@ export default function EventsPage() {
           }
         })
 
-        setEvents(eventsWithUser)
+        setEvents(sortByLatestActivity(eventsWithUser))
       } catch (error) {
         console.error('Error fetching data:', error)
         setEvents([])

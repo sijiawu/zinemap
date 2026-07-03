@@ -8,6 +8,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export type LatestActivityTimestamped = {
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export function latestActivityTimestamp(row: LatestActivityTimestamped): number {
+  const createdAt = row.created_at ? Date.parse(row.created_at) : 0
+  const updatedAt = row.updated_at ? Date.parse(row.updated_at) : 0
+  const createdAtSafe = Number.isNaN(createdAt) ? 0 : createdAt
+  const updatedAtSafe = Number.isNaN(updatedAt) ? 0 : updatedAt
+  return Math.max(createdAtSafe, updatedAtSafe)
+}
+
+export function sortByLatestActivity<T extends LatestActivityTimestamped>(items: T[]): T[] {
+  return [...items].sort((a, b) => latestActivityTimestamp(b) - latestActivityTimestamp(a))
+}
+
 /**
  * Generate a URL-friendly permalink from a display name
  * @param displayName - The display name to convert

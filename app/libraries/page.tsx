@@ -12,7 +12,7 @@ import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
-import { formatSocialMedia, sortTagJoinsByTypeFirst, sortTagsByConfiguredOrder } from "@/lib/utils"
+import { formatSocialMedia, sortByLatestActivity, sortTagJoinsByTypeFirst, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { RelativeDateWithTooltip } from "@/components/RelativeDateWithTooltip"
 import { useLocationFilters } from "@/hooks/useLocationFilters"
 import { SaveButton } from "@/components/SaveButton"
@@ -178,7 +178,7 @@ export default function LibrariesPage() {
           }
         })
 
-        setLibraries(librariesWithTags)
+        setLibraries(sortByLatestActivity(librariesWithTags))
         setAllTags(tagsData || [])
       } catch (error) {
         console.error('Error fetching data:', error)
