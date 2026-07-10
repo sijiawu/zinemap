@@ -11,7 +11,7 @@ const brushStrokePath =
 
 export default function MapathonCampaignBanner({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <div className={`${specialElite.className} fixed left-0 right-0 top-[68px] z-40 w-full overflow-hidden border-b border-stone-200/80 bg-[#f6f1e7]`}>
+    <div className={`${specialElite.className} fixed left-0 right-0 top-[68px] z-40 w-full overflow-hidden border-b border-stone-200/80 bg-[#FFF9E1]`}>
       <Link
         href="/mapathon"
         className="relative z-10 block px-10 py-2 text-center text-xs leading-relaxed text-stone-900 transition-colors hover:bg-white/40 md:text-sm"
