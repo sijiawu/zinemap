@@ -35,4 +35,18 @@ export const supporters: Supporter[] = [
     width: 420,
     height: 160,
   },
+  {
+    name: "Firestorm Books",
+    logoSrc: "/supporter-logos/Firestorm%20Books.png",
+    websiteUrl: "https://www.firestorm.coop/",
+    width: 420,
+    height: 160,
+  },
+  {
+    name: "Quimby's NYC",
+    logoSrc: "/supporter-logos/Quimbys%20NYC.png",
+    websiteUrl: "https://quimbysnyc.com/",
+    width: 420,
+    height: 160,
+  },
 ];
