@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
@@ -22,6 +23,7 @@ import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
 import { NoResultsTaggingHint } from "@/components/NoResultsTaggingHint"
 
 export default function StoresPage() {
+  const searchParams = useSearchParams()
   const [stores, setStores] = useState<Store[]>([])
   const [filteredStores, setFilteredStores] = useState<Store[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
@@ -34,6 +36,7 @@ export default function StoresPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [hashTarget, setHashTarget] = useState<string | null>(null)
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const showUntaggedType = searchParams.get("untagged") === "type"
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
@@ -228,6 +231,12 @@ export default function StoresPage() {
       filtered = filtered.filter(store => store.city === selectedCity)
     }
 
+    if (showUntaggedType) {
+      filtered = filtered.filter(store =>
+        !store.store_tags?.some(storeTag => storeTag.tag?.category === "shop_type")
+      )
+    }
+
     // Apply tag filters (including "no maximum price" as OR condition)
     if (selectedTags.length > 0 || noMaxPrice) {
       filtered = filtered.filter(store => {
@@ -259,7 +268,7 @@ export default function StoresPage() {
     }
 
     setFilteredStores(filtered)
-  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, noMaxPrice, creatorSplitMin])
+  }, [stores, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, noMaxPrice, creatorSplitMin, showUntaggedType])
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { StoreMap } from "@/components/store-map"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Store, Library, Event, Tag } from "@/lib/types"
@@ -22,6 +23,7 @@ import { MapLoadingOverlay } from "@/components/loading/MapLoadingOverlay"
 import { NoResultsTaggingHint } from "@/components/NoResultsTaggingHint"
 
 export default function LibrariesPage() {
+  const searchParams = useSearchParams()
   const [libraries, setLibraries] = useState<Library[]>([])
   const [filteredLibraries, setFilteredLibraries] = useState<Library[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
@@ -32,6 +34,7 @@ export default function LibrariesPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [hashTarget, setHashTarget] = useState<string | null>(null)
   const [selectedLibraryId, setSelectedLibraryId] = useState<string | null>(null)
+  const showUntaggedType = searchParams.get("untagged") === "type"
   
   // Map height tracking for list view min-height
   const mapCardRef = useRef<HTMLDivElement>(null)
@@ -224,6 +227,12 @@ export default function LibrariesPage() {
       filtered = filtered.filter(library => library.city === selectedCity)
     }
 
+    if (showUntaggedType) {
+      filtered = filtered.filter(library =>
+        !library.library_tags?.some(libraryTag => libraryTag.tag?.category === "library_type")
+      )
+    }
+
     // Apply tag filters
     if (selectedTags.length > 0) {
       filtered = filtered.filter(library => 
@@ -234,7 +243,7 @@ export default function LibrariesPage() {
     }
 
     setFilteredLibraries(filtered)
-  }, [libraries, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags])
+  }, [libraries, debouncedSearchQuery, selectedCountry, selectedState, selectedCity, selectedTags, showUntaggedType])
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 
