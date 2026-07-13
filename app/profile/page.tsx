@@ -1734,6 +1734,15 @@ export default function ProfilePage() {
                         </Link>
                         {activity.type === 'edit' ? (
                           <> suggested an edit to the page: <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">{activity.entityName}</Link>.</>
+                        ) : activity.type === 'note' ? (
+                          <>
+                            {' added a community note on '}
+                            <Link href={activity.entityUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-rose-600 hover:text-rose-700 hover:underline">
+                              {activity.entityName}
+                            </Link>
+                            {': '}
+                            <span className="italic line-clamp-4">&ldquo;{activity.note}&rdquo;</span>
+                          </>
                         ) : activity.note ? (
                           <>
                             {' added '}
