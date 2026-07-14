@@ -252,7 +252,7 @@ export default function SuggestStoreEditPage() {
         address: formData.address,
         email: formData.email || null,
         website: formData.website || null,
-        notes: formData.notes?.trim() || null,
+        ...(formData.notes?.trim() ? { notes: formData.notes.trim() } : {}),
         tag_ids: formData.selectedTerms
       }
 

@@ -944,7 +944,7 @@ export default function AdminPage() {
             ...(address != null && { address }),
             ...(email !== undefined && { email }),
             ...(website !== undefined && { website }),
-            ...(notes !== undefined && { notes }),
+            ...(typeof notes === "string" && notes.trim() !== "" && { notes: notes.trim() }),
             updated_at: new Date().toISOString(),
           })
           .eq("id", edit.store_id)
@@ -1020,7 +1020,7 @@ export default function AdminPage() {
             ...(address != null && { address }),
             ...(email !== undefined && { email }),
             ...(website !== undefined && { website }),
-            ...(notes !== undefined && { notes }),
+            ...(typeof notes === "string" && notes.trim() !== "" && { notes: notes.trim() }),
             updated_at: new Date().toISOString(),
           })
           .eq("id", edit.library_id)
@@ -1114,7 +1114,7 @@ export default function AdminPage() {
             ...(payload.end_time !== undefined && { end_time: payload.end_time }),
             ...(payload.application_open !== undefined && { application_open: payload.application_open }),
             ...(payload.application_deadline !== undefined && { application_deadline: payload.application_deadline }),
-            ...(payload.notes !== undefined && { notes: payload.notes }),
+            ...(typeof payload.notes === "string" && payload.notes.trim() !== "" && { notes: payload.notes.trim() }),
             ...(payload.poster_image !== undefined && { poster_image: payload.poster_image }),
             ...(payload.occurrence_dates !== undefined && { occurrence_dates: payload.occurrence_dates }),
             updated_at: new Date().toISOString(),
