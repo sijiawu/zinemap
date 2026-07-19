@@ -128,10 +128,6 @@ export default function AboutZinesShelf({ items }: AboutZinesShelfProps) {
           )}
         </div>
 
-        {zine.description ? (
-          <p className="line-clamp-2 text-xs text-stone-600 sm:line-clamp-3 sm:text-sm">{autoLinkText(zine.description)}</p>
-        ) : null}
-
         <div className="flex items-center justify-end font-sans text-xs text-stone-500">
           <span>
             <RelativeDateWithTooltip dateString={zine.created_at} prefix="Added " />

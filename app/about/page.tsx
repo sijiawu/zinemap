@@ -510,7 +510,7 @@ export default async function AboutPage() {
       />
 
       <main className="mx-auto mt-6 max-w-6xl space-y-10 px-4">
-        <section id="zines" className="scroll-mt-20">
+        <section id="zines" className="scroll-mt-20" data-nosnippet>
           <AboutZinesShelf items={data.zines} />
         </section>
 

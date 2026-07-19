@@ -365,7 +365,7 @@ export function ZineMapHeroVisual({ className, busyPins, featuredPins }: ZineMap
                   </Link>
                 </h3>
                 <p className="mt-0.5 text-xs text-stone-600 sm:text-sm">{locationLabel(activeFeatured)}</p>
-                <p className="mt-1.5 text-xs leading-snug text-stone-700 sm:text-sm">
+                <p className="mt-1.5 text-xs leading-snug text-stone-700 sm:text-sm" data-nosnippet>
                   {snippet(activeFeatured.notes)}
                 </p>
               {activeFeatured.type !== "event" && activeFeatured.tags.length > 0 ? (
