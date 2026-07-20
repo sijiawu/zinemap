@@ -69,7 +69,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     <div className="min-h-screen bg-white">
       <ArticleLayout
         title={story.metadata.title}
-        excerpt={story.metadata.excerpt}
         date={story.metadata.date}
         tags={story.metadata.tags}
         thumbnail={story.metadata.thumbnail}
@@ -80,7 +79,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         primaryLang={story.primaryLang}
         titleHeading={story.metadata.title_heading}
         bodyFont={story.metadata.body_font}
-        headerStyle={story.metadata.header_style}
       >
         {story.content}
       </ArticleLayout>
