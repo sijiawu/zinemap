@@ -21,6 +21,7 @@ export type TranslationLang = 'pl' | 'en' | 'fr'
 
 export type StoryTitleHeading = 'h1' | 'h2' | 'h3'
 export type StoryBodyFont = 'default' | 'lucida'
+export type StoryHeaderStyle = 'default' | 'classic'
 
 export interface StoryMetadata {
   title: string
@@ -37,6 +38,8 @@ export interface StoryMetadata {
   title_heading?: StoryTitleHeading
   /** Body font stack; `lucida` matches the newsletter email styles */
   body_font?: StoryBodyFont
+  /** Header layout style for story detail pages */
+  header_style?: StoryHeaderStyle
 }
 
 export interface Story {
@@ -388,6 +391,8 @@ export function parseStory(markdownContent: string, slug: string): Story {
 
   const bodyFontRaw = data.body_font ? String(data.body_font).toLowerCase() : 'default'
   const body_font: StoryBodyFont = bodyFontRaw === 'lucida' ? 'lucida' : 'default'
+  const headerStyleRaw = data.header_style ? String(data.header_style).toLowerCase() : 'default'
+  const header_style: StoryHeaderStyle = headerStyleRaw === 'classic' ? 'classic' : 'default'
 
   const metadata: StoryMetadata = {
     title: String(data.title),
@@ -401,6 +406,7 @@ export function parseStory(markdownContent: string, slug: string): Story {
     password: data.password ? String(data.password) : undefined,
     title_heading,
     body_font,
+    header_style,
   }
 
   // Check for inline translation: <!-- TRANSLATION_XX --> ... <!-- /TRANSLATION_XX --> (XX = pl, en, fr)

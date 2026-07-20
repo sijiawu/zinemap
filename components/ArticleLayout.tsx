@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { STORY_IMAGE_BLUR_DATA_URL } from '@/lib/imagePlaceholders'
 import { TranslationToggle } from '@/components/TranslationToggle'
-import type { StoryBodyFont, StoryTitleHeading } from '@/lib/storyParser'
+import type { StoryBodyFont, StoryHeaderStyle, StoryTitleHeading } from '@/lib/storyParser'
 
 type TranslationLang = 'pl' | 'en' | 'fr'
 
@@ -28,6 +28,7 @@ const TITLE_HEADING_STYLES: Record<
 interface ArticleLayoutProps {
   children: ReactNode
   title: string
+  excerpt?: string
   date?: string
   tags?: string[]
   thumbnail?: string
@@ -38,6 +39,7 @@ interface ArticleLayoutProps {
   primaryLang?: TranslationLang
   titleHeading?: StoryTitleHeading
   bodyFont?: StoryBodyFont
+  headerStyle?: StoryHeaderStyle
 }
 
 function TitleHeading({
@@ -56,6 +58,7 @@ function TitleHeading({
 export function ArticleLayout({
   children,
   title,
+  excerpt,
   date,
   tags,
   thumbnail,
@@ -66,6 +69,7 @@ export function ArticleLayout({
   primaryLang = 'en',
   titleHeading = 'h1',
   bodyFont = 'default',
+  headerStyle = 'default',
 }: ArticleLayoutProps) {
   const fontKey = bodyFont === 'lucida' ? 'lucida' : 'default'
   const titleClass = TITLE_HEADING_STYLES[titleHeading][fontKey]
@@ -74,6 +78,7 @@ export function ArticleLayout({
       ? "font-['Lucida_Sans_Unicode',_'Lucida_Grande',_sans-serif]"
       : undefined
   const hasHeaderBackground = Boolean(thumbnail)
+  const useClassicHeader = hasHeaderBackground && headerStyle === 'classic'
 
   return (
     <article
@@ -88,14 +93,15 @@ export function ArticleLayout({
       <header
         className={[
           'mb-8 sm:mb-12',
-          hasHeaderBackground ? 'relative overflow-hidden rounded-xl border border-stone-200' : '',
+          hasHeaderBackground ? 'overflow-hidden rounded-xl border border-stone-200' : '',
+          hasHeaderBackground && !useClassicHeader ? 'relative' : '',
         ]
           .filter(Boolean)
           .join(' ')}
       >
-        {hasHeaderBackground && thumbnail && (
+        {useClassicHeader && thumbnail ? (
           <>
-            <div className="absolute inset-0" aria-hidden>
+            <div className="relative aspect-[4/3] w-full sm:aspect-[16/10]">
               <Image
                 src={thumbnail}
                 alt=""
@@ -107,64 +113,135 @@ export function ArticleLayout({
                 blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
               />
             </div>
-            <div
-              className="absolute inset-0 bg-white/80"
-              aria-hidden="true"
-            />
+            <div className="bg-white px-5 py-6 sm:px-8 sm:py-8">
+              <TitleHeading as={titleHeading} className={titleClass}>
+                {title}
+              </TitleHeading>
+              {excerpt ? (
+                <p className={bodyFont === 'lucida' ? 'text-stone-700 text-lg leading-relaxed' : 'font-serif text-stone-700 text-lg leading-relaxed'}>
+                  {excerpt}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-4 pt-4 text-stone-600 text-sm sm:text-base">
+                {date && (
+                  <time dateTime={date} className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
+                    {new Date(date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </time>
+                )}
+                {author && (
+                  <span className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
+                    By{' '}
+                    {authorPermalink ? (
+                      <Link
+                        href={`/profile/${authorPermalink}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-stone-900 hover:text-rose-600 no-underline transition-colors duration-200"
+                      >
+                        {author}
+                      </Link>
+                    ) : (
+                      author
+                    )}
+                  </span>
+                )}
+              </div>
+              {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/stories?tag=${encodeURIComponent(tag)}`}
+                      className={`inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-sm text-stone-800 shadow-sm transition-colors hover:border-stone-400 hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${
+                        bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'
+                      }`}
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            {hasHeaderBackground && thumbnail && (
+              <>
+                <div className="absolute inset-0" aria-hidden>
+                  <Image
+                    src={thumbnail}
+                    alt=""
+                    fill
+                    priority
+                    sizes="(max-width: 896px) 100vw, 896px"
+                    className="object-cover object-center"
+                    placeholder="blur"
+                    blurDataURL={STORY_IMAGE_BLUR_DATA_URL}
+                  />
+                </div>
+                <div
+                  className="absolute inset-0 bg-white/80"
+                  aria-hidden="true"
+                />
+              </>
+            )}
+
+            <div className={hasHeaderBackground ? 'relative z-10 px-5 py-6 sm:px-8 sm:py-8' : ''}>
+              <TitleHeading as={titleHeading} className={titleClass}>
+                {title}
+              </TitleHeading>
+
+              <div className="flex flex-wrap items-center gap-4 text-stone-600 text-sm sm:text-base">
+                {date && (
+                  <time dateTime={date} className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
+                    {new Date(date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </time>
+                )}
+                {author && (
+                  <span className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
+                    By{' '}
+                    {authorPermalink ? (
+                      <Link
+                        href={`/profile/${authorPermalink}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-stone-900 hover:text-rose-600 no-underline transition-colors duration-200"
+                      >
+                        {author}
+                      </Link>
+                    ) : (
+                      author
+                    )}
+                  </span>
+                )}
+              </div>
+
+              {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/stories?tag=${encodeURIComponent(tag)}`}
+                      className={`inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-sm text-stone-800 shadow-sm transition-colors hover:border-stone-400 hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${
+                        bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'
+                      }`}
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
-
-        <div className={hasHeaderBackground ? 'relative z-10 px-5 py-6 sm:px-8 sm:py-8' : ''}>
-          <TitleHeading as={titleHeading} className={titleClass}>
-            {title}
-          </TitleHeading>
-
-          <div className="flex flex-wrap items-center gap-4 text-stone-600 text-sm sm:text-base">
-            {date && (
-              <time dateTime={date} className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
-                {new Date(date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </time>
-            )}
-            {author && (
-              <span className={bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'}>
-                By{' '}
-                {authorPermalink ? (
-                  <Link
-                    href={`/profile/${authorPermalink}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-stone-900 hover:text-rose-600 no-underline transition-colors duration-200"
-                  >
-                    {author}
-                  </Link>
-                ) : (
-                  author
-                )}
-              </span>
-            )}
-          </div>
-
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/stories?tag=${encodeURIComponent(tag)}`}
-                  className={`inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-sm text-stone-800 shadow-sm transition-colors hover:border-stone-400 hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${
-                    bodyFont === 'lucida' ? 'font-inherit' : 'font-serif'
-                  }`}
-                >
-                  {tag}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
       </header>
 
       {/* Content */}
