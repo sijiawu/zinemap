@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import ProfileOnboardingModal from '@/components/ProfileOnboardingModal'
 import { supabase } from '@/lib/supabaseClient'
 import NavBar from '@/components/NavBar'
-import MapathonCampaignBanner from '@/components/MapathonCampaignBanner'
 import Footer from '@/components/Footer'
 import { WelcomeToZineMapModal } from '@/components/WelcomeToZineMapModal'
 
@@ -15,15 +14,13 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   const [showModal, setShowModal] = useState(false);
   const [profileChecked, setProfileChecked] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [isMapathonBannerDismissed, setIsMapathonBannerDismissed] = useState(false);
   const welcomeModalSeenKey = 'zinemap_welcome_modal_seen_this_session';
 
   const welcomeModalPaths = ['/', '/shops', '/stores', '/libraries', '/events', '/zines', '/stories'];
   const shouldShowWelcomeOnPath = welcomeModalPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   const isFullscreenMap = pathname === '/sandbox';
   const hideGlobalChrome = isFullscreenMap;
-  const showMapathonBanner = !hideGlobalChrome && !pathname.startsWith('/mapathon') && !isMapathonBannerDismissed;
-  const contentTopPadding = showMapathonBanner ? "pt-[100px] md:pt-[102px]" : "pt-[62px] md:pt-[70px]";
+  const contentTopPadding = "pt-[62px] md:pt-[70px]";
 
   useEffect(() => {
     if (!loading && user) {
@@ -108,7 +105,6 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   return (
     <>
       {!hideGlobalChrome && <NavBar />}
-      {showMapathonBanner && <MapathonCampaignBanner onDismiss={() => setIsMapathonBannerDismissed(true)} />}
       <ProfileOnboardingModal user={user} show={showModal && profileChecked} onComplete={handleOnboardingComplete} />
       <WelcomeToZineMapModal open={showWelcomeModal} onOpenChange={setShowWelcomeModal} />
       <div className={hideGlobalChrome ? "min-h-screen" : "flex flex-col min-h-screen"}>

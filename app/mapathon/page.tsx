@@ -13,6 +13,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 const MAPATHON_START_DATE = "2026-07-01T00:00:00.000Z";
+const MAPATHON_END_DATE = "2026-07-31T23:59:59.999Z";
 
 const specialElite = Special_Elite({ weight: "400", subsets: ["latin"] });
 const rosePillClass = "inline-block bg-rose-200 px-1.5 py-0.5 leading-none";
@@ -33,13 +34,6 @@ type TypeTagRow = {
   store_id?: string | null;
   library_id?: string | null;
 };
-
-function formatUpdatedAt(dateIso: string): string {
-  return new Date(dateIso).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 async function fetchMapathonStats() {
   const supabase = createClient(
@@ -62,26 +56,31 @@ async function fetchMapathonStats() {
       .from("stores")
       .select("submitted_by")
       .eq("moderation_status", "approved")
-      .gte("created_at", MAPATHON_START_DATE),
+      .gte("created_at", MAPATHON_START_DATE)
+      .lte("created_at", MAPATHON_END_DATE),
     supabase
       .from("libraries")
       .select("submitted_by")
       .eq("moderation_status", "approved")
-      .gte("created_at", MAPATHON_START_DATE),
+      .gte("created_at", MAPATHON_START_DATE)
+      .lte("created_at", MAPATHON_END_DATE),
     supabase
       .from("events")
       .select("submitted_by")
       .eq("moderation_status", "approved")
-      .gte("created_at", MAPATHON_START_DATE),
+      .gte("created_at", MAPATHON_START_DATE)
+      .lte("created_at", MAPATHON_END_DATE),
     supabase
       .from("community_notes")
       .select("user_id,anonymous,store_id,library_id,event_id")
-      .gte("submitted_at", MAPATHON_START_DATE),
+      .gte("submitted_at", MAPATHON_START_DATE)
+      .lte("submitted_at", MAPATHON_END_DATE),
     supabase
       .from("locale_edits")
       .select("user_id,store_id,library_id,event_id")
       .eq("status", "approved")
-      .gte("created_at", MAPATHON_START_DATE),
+      .gte("created_at", MAPATHON_START_DATE)
+      .lte("created_at", MAPATHON_END_DATE),
     supabase
       .from("stores")
       .select("id")
@@ -225,12 +224,11 @@ async function fetchMapathonStats() {
     leaderboard,
     untaggedShopsCount,
     untaggedLibrariesCount,
-    lastUpdatedAt: new Date().toISOString(),
   };
 }
 
 export default async function MapathonPage() {
-  const { leaderboard, untaggedShopsCount, untaggedLibrariesCount, lastUpdatedAt } = await fetchMapathonStats();
+  const { leaderboard, untaggedShopsCount, untaggedLibrariesCount } = await fetchMapathonStats();
   let tieRank = 0;
   const rankedLeaderboard = leaderboard.map((entry, index) => {
     if (index === 0 || entry.contributions !== leaderboard[index - 1].contributions) {
@@ -295,6 +293,20 @@ export default async function MapathonPage() {
               alt="Hand-drawn ZineMap-a-thon campaign banner"
               className="relative z-10 mx-auto h-auto w-full object-contain"
             />
+          </div>
+        </section>
+
+        <section className="border-y border-stone-300 bg-[#fffdf7]/70 px-4 py-5 text-sm leading-[1.75] md:px-6 md:text-lg">
+          <div className="space-y-3">
+            <p>July 31, 2026 was the last day of ZineMap-a-thon.</p>
+            <p>
+              Together we’ve made <span className={rosePillClass}>389 updates</span> to ZineMap
+              this July!
+            </p>
+            <p>
+              Thank you to everyone who added a place/event, fixed a listing, left a note, or
+              added shop/library tags. Every contribution helped make the map more useful!
+            </p>
           </div>
         </section>
 
@@ -423,7 +435,9 @@ export default async function MapathonPage() {
           <div className="mx-auto w-full max-w-[17rem] sm:max-w-xs md:max-w-none">
             <div className="mb-3 text-center">
               <h2 className="text-lg leading-none md:text-xl">Top Contributors</h2>
-              <p className="mt-1 text-xs text-stone-600">Updated {formatUpdatedAt(lastUpdatedAt)}</p>
+              <p className="mt-1 text-xs text-stone-600">
+                Last updated: July 31, 2026, 11:59 PM
+              </p>
             </div>
 
             <Card className="mx-auto w-full overflow-hidden border-0 bg-transparent shadow-none">
