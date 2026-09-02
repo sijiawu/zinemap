@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "admin:change-email": "node --env-file=.env.local scripts/admin/change-user-email.mjs",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
