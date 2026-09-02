@@ -75,7 +75,7 @@ function relativeAddedAt(timestamp: string) {
   return `Added ${months} month${months === 1 ? "" : "s"} ago`
 }
 
-function snippet(text: string | null | undefined, max = 140) {
+function snippet(text: string | null | undefined, max = 240) {
   if (!text) return ""
   const clean = text.replace(/\s+/g, " ").trim()
   if (clean.length <= max) return clean
@@ -123,7 +123,7 @@ export function ZineMapHeroVisual({ className, busyPins, featuredPins }: ZineMap
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTitleHovered, setIsTitleHovered] = useState(false)
 
-  const safeFeaturedPins = useMemo(() => featuredPins.slice(0, 10), [featuredPins])
+  const safeFeaturedPins = useMemo(() => featuredPins.slice(0, 20), [featuredPins])
   const totalCards = safeFeaturedPins.length + 1
   const isExploreCard = activeIndex === safeFeaturedPins.length
   const activeFeatured = isExploreCard ? null : safeFeaturedPins[activeIndex] ?? null
@@ -287,7 +287,7 @@ export function ZineMapHeroVisual({ className, busyPins, featuredPins }: ZineMap
   return (
     <div className={cn("relative", className)}>
       <div className="overflow-hidden rounded-2xl border-2 border-stone-300 bg-[#f5efe6] shadow-sm">
-        <div className="relative h-[21rem] sm:h-[25rem] md:h-[28rem]">
+        <div className="relative h-[19.45rem] sm:h-[23.19rem] md:h-[26.93rem]">
           <div ref={mapContainerRef} className="h-full w-full" />
           {!mapReady ? (
             <div className="absolute inset-0 flex items-center justify-center bg-stone-100/80 text-sm text-stone-500">

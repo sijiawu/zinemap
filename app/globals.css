@@ -45,6 +45,26 @@
   }
 }
 
+@keyframes zineCoverDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.zine-cover-track {
+  animation: zineCoverDrift 50s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zine-cover-track {
+    animation: none;
+  }
+}
+
 /* Pin Drop Animation */
 @keyframes pinDrop {
   0% {

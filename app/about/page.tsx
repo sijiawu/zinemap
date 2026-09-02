@@ -64,6 +64,7 @@ type CoordItem = {
   id: string;
   latitude: number | null;
   longitude: number | null;
+  country: string | null;
 };
 
 type FeaturedStoreLibrary = {
@@ -258,9 +259,9 @@ async function fetchAboutData() {
       .select("created_at")
       .order("created_at", { ascending: false })
       .limit(1),
-    supabase.from("stores").select("id,latitude,longitude").eq("approved", true),
-    supabase.from("libraries").select("id,latitude,longitude").eq("approved", true),
-    supabase.from("events").select("id,latitude,longitude").eq("approved", true),
+    supabase.from("stores").select("id,latitude,longitude,country").eq("approved", true),
+    supabase.from("libraries").select("id,latitude,longitude,country").eq("approved", true),
+    supabase.from("events").select("id,latitude,longitude,country").eq("approved", true),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase
       .from("stores")
@@ -269,7 +270,7 @@ async function fetchAboutData() {
       .not("notes", "is", null)
       .neq("notes", "")
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(50),
     supabase
       .from("libraries")
       .select("id,name,permalink,city,state,country,notes,submitted_by,created_at,latitude,longitude")
@@ -277,7 +278,7 @@ async function fetchAboutData() {
       .not("notes", "is", null)
       .neq("notes", "")
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(50),
     supabase
       .from("events")
       .select("id,name,permalink,city,state,country,notes,category,poster_image,submitted_by,created_at,latitude,longitude")
@@ -285,7 +286,7 @@ async function fetchAboutData() {
       .not("notes", "is", null)
       .neq("notes", "")
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(50),
   ]);
 
   const updatedCandidates = [
@@ -301,9 +302,10 @@ async function fetchAboutData() {
   const featuredStoreRows = (featuredStoresRes.data || []) as FeaturedStoreLibrary[];
   const featuredLibraryRows = (featuredLibrariesRes.data || []) as FeaturedStoreLibrary[];
   const featuredEventRows = (featuredEventsRes.data || []) as FeaturedEvent[];
+  const zineRows = (zinesRes.data || []) as Array<Omit<ZineItem, "profiles">>;
   const zineAuthorIds = Array.from(
     new Set(
-      ((zinesRes.data || []) as Array<{ user_id: string | null }>)
+      zineRows
         .map((zine) => zine.user_id)
         .filter((value): value is string => Boolean(value))
     )
@@ -417,10 +419,20 @@ async function fetchAboutData() {
         longitude: row.longitude as number,
       })),
   ];
+  const countryCount = new Set(
+    [
+      ...((allStoreCoordsRes.data || []) as CoordItem[]),
+      ...((allLibraryCoordsRes.data || []) as CoordItem[]),
+      ...((allEventCoordsRes.data || []) as CoordItem[]),
+    ]
+      .map((row) => row.country?.trim())
+      .filter((country): country is string => Boolean(country))
+  ).size;
 
-  const featuredPins: HeroFeaturedPin[] = [
+  const featuredPinCandidates = [
     ...featuredStoreRows.map((row) => ({
       id: `store-${row.id}`,
+      submitterId: row.submitted_by,
       type: "store" as const,
       title: row.name,
       permalink: row.permalink,
@@ -438,6 +450,7 @@ async function fetchAboutData() {
     })),
     ...featuredLibraryRows.map((row) => ({
       id: `library-${row.id}`,
+      submitterId: row.submitted_by,
       type: "library" as const,
       title: row.name,
       permalink: row.permalink,
@@ -455,6 +468,7 @@ async function fetchAboutData() {
     })),
     ...featuredEventRows.map((row) => ({
       id: `event-${row.id}`,
+      submitterId: row.submitted_by,
       type: "event" as const,
       title: row.name,
       permalink: row.permalink,
@@ -472,16 +486,28 @@ async function fetchAboutData() {
     })),
   ]
     .filter((item) => item.latitude != null && item.longitude != null)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 10);
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const seenSubmitters = new Set<string>();
+  const featuredPins: HeroFeaturedPin[] = featuredPinCandidates
+    .filter((item) => {
+      if (seenSubmitters.has(item.submitterId)) return false;
+      seenSubmitters.add(item.submitterId);
+      return true;
+    })
+    .slice(0, 20);
 
   return {
     initialContributorCount: contributorsCountRes.count ?? null,
+    heroStats: {
+      zinesterCount: contributorsCountRes.count ?? 0,
+      countryCount,
+    },
     lastUpdatedAt:
       updatedCandidates.length > 0
         ? new Date(Math.max(...updatedCandidates)).toISOString()
         : null,
-    zines: ((zinesRes.data || []) as Array<Omit<ZineItem, "profiles">>).map((zine) => ({
+    zines: zineRows.map((zine) => ({
       ...zine,
       profiles: zine.user_id ? zineProfilesMap.get(zine.user_id) || null : null,
     })),
@@ -504,6 +530,7 @@ export default async function AboutPage() {
   return (
     <div className="min-h-screen bg-stone-50 pb-14">
       <ZineMapAboutHero
+        stats={data.heroStats}
         busyPins={data.busyPins}
         featuredPins={data.featuredPins}
         lastUpdatedAt={data.lastUpdatedAt}
