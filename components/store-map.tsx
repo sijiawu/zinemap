@@ -630,7 +630,7 @@ export function StoreMap({ stores, libraries, events, searchQuery = "", onLocati
           type="button"
           onClick={panToMyLocation}
           disabled={!mapReady || isLocating}
-          className="cursor-pointer rounded-lg border border-stone-200 bg-white p-2 shadow-md transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="relative flex h-[34px] w-[34px] cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-stone-200 bg-white p-0 shadow-md transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
           title="Go to my location"
           aria-label="Go to my location"
         >

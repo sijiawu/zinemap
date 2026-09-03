@@ -36,12 +36,6 @@ export function ProfileBadges({ userId, titleClassName }: ProfileBadgesProps) {
               height={216}
               className="h-24 w-24 transition-transform duration-200 group-hover:scale-105"
             />
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-900 px-2.5 py-1.5 text-xs text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-            >
-              {MAPATHON_BADGE_LABEL}
-            </span>
           </Link>
         </div>
       </CardContent>

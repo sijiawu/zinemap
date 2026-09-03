@@ -1216,7 +1216,7 @@ export default function ZinestersPage() {
               type="button"
               onClick={panToMyLocation}
               disabled={!mapReady || isLocating}
-              className="cursor-pointer rounded-lg border border-gray-200 bg-white p-2 shadow-md transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="relative hidden h-[34px] w-[34px] cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-gray-200 bg-white p-0 shadow-md transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
               title="Go to my location"
               aria-label="Go to my location"
             >
