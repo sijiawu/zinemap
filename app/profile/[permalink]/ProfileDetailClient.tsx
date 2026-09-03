@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageLoader } from "@/components/loading/PageLoader"
+import { ProfileBadges } from "@/components/ProfileBadges"
 
 export type Activity = {
   id: string
@@ -758,6 +759,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                 </div>
               </CardContent>
             </Card>
+            <ProfileBadges userId={profile.id} titleClassName="text-lg font-gloria" />
           </div>
         </div>
 

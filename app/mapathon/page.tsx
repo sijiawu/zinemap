@@ -229,13 +229,55 @@ async function fetchMapathonStats() {
 
 export default async function MapathonPage() {
   const { leaderboard, untaggedShopsCount, untaggedLibrariesCount } = await fetchMapathonStats();
-  let tieRank = 0;
-  const rankedLeaderboard = leaderboard.map((entry, index) => {
-    if (index === 0 || entry.contributions !== leaderboard[index - 1].contributions) {
-      tieRank = index + 1;
-    }
-    return { ...entry, rank: tieRank };
-  });
+  const rankedLeaderboard = leaderboard;
+  const leaderboardColumns = Array.from(
+    { length: Math.ceil(rankedLeaderboard.length / 10) },
+    (_, columnIndex) => rankedLeaderboard.slice(columnIndex * 10, (columnIndex + 1) * 10)
+  );
+  const renderLeaderboardEntry = (entry: (typeof rankedLeaderboard)[number]) => {
+    const rowClass =
+      "flex w-full min-w-0 items-center gap-2 border-b border-stone-200 px-2 py-2 transition-colors hover:bg-[#fffdf7]/70";
+    const avatar = entry.profileImage ? (
+      <img
+        src={entry.profileImage}
+        alt={`${entry.displayName} avatar`}
+        className="h-7 w-7 rounded-full border border-stone-300 object-cover"
+      />
+    ) : (
+      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 bg-[#f6f1e7] text-xs text-stone-600">
+        {entry.displayName.slice(0, 1).toUpperCase()}
+      </div>
+    );
+    const rowContent = (
+      <>
+        <div className="shrink-0">{avatar}</div>
+        <div className="min-w-0 flex-1 self-center">
+          <p className="translate-y-px break-words text-sm leading-snug text-stone-900 group-hover:underline group-hover:underline-offset-4">
+            {entry.displayName}
+          </p>
+        </div>
+        <span className="shrink-0 pl-1 text-xs tabular-nums text-stone-700">
+          {entry.contributions}
+        </span>
+      </>
+    );
+
+    return entry.permalink ? (
+      <Link
+        key={entry.userId}
+        href={`/profile/${entry.permalink}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${rowClass} group`}
+      >
+        {rowContent}
+      </Link>
+    ) : (
+      <div key={entry.userId} className={rowClass}>
+        {rowContent}
+      </div>
+    );
+  };
 
   return (
     <div className={`${specialElite.className} min-h-screen overflow-x-hidden bg-[#f6f1e7] pb-16 text-stone-900`}>
@@ -300,17 +342,70 @@ export default async function MapathonPage() {
           <div className="space-y-3">
             <p>July 31, 2026 was the last day of ZineMap-a-thon.</p>
             <p>
-              Together we’ve made <span className={rosePillClass}>389 updates</span> to ZineMap
+              Together we made <span className={rosePillClass}>389 updates</span> to ZineMap
               this July!
             </p>
             <p>
               Thank you to everyone who added a place/event, fixed a listing, left a note, or
               added shop/library tags. Every contribution helped make the map more useful!
             </p>
+            <p>
+              If you took part, you should now see a ZineMap-a-thon contributor badge on your
+              profile.
+            </p>
+            <div className="flex justify-center pt-2">
+              <img
+                src="/brand/mapathon-contributor-2026.png"
+                alt="ZineMap-A-Thon Contributor 2026 badge"
+                width={218}
+                height={216}
+                className="h-[8.05rem] w-auto"
+              />
+            </div>
+            <p className="pt-2 text-center text-xs leading-relaxed text-stone-500">
+              Special thanks to{" "}
+              <Link
+                href="/profile/charlie-sierra"
+                className="underline decoration-stone-300 underline-offset-2 transition-colors hover:text-stone-800"
+              >
+                Charlie Quebec Sierra
+              </Link>{" "}
+              for the badge design.
+            </p>
           </div>
         </section>
 
-        <section className="text-sm leading-[1.85] md:text-lg">
+        <section className="relative left-1/2 w-[min(66.3rem,calc(100vw-2rem))] min-w-0 -translate-x-1/2">
+          <div className="mb-3 text-center">
+            <h2 className="text-lg leading-none md:text-xl">Top Contributors</h2>
+            <p className="mt-1 text-xs text-stone-600">
+              Last updated: July 31, 2026, 11:59 PM
+            </p>
+          </div>
+
+          <Card className="mx-auto w-full overflow-hidden border-0 bg-transparent shadow-none">
+            <CardContent className="flex gap-2 overflow-x-auto p-0 pb-2">
+              {leaderboard.length === 0 ? (
+                <p className="border border-dashed border-stone-300 p-4 text-sm text-stone-700">
+                  Updates will appear here as the campaign picks up.
+                </p>
+              ) : (
+                leaderboardColumns.map((column, index) => (
+                  <div
+                    key={index}
+                    className="relative w-[15.3rem] shrink-0 pr-2 after:absolute after:bottom-4 after:right-0 after:top-4 after:w-px after:bg-gradient-to-b after:from-transparent after:via-stone-300 after:to-transparent last:pr-0 last:after:hidden md:w-[16.2rem]"
+                  >
+                    {column.map(renderLeaderboardEntry)}
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section
+          className="ml-1 border-l border-stone-300 pl-4 text-sm leading-[1.85] text-stone-600 sm:ml-3 sm:pl-6 md:text-lg"
+        >
           <div className="space-y-4">
             <p className="text-xl leading-normal tracking-normal md:text-2xl">ZineMap is turning one this month!</p>
             <p>
@@ -429,71 +524,8 @@ export default async function MapathonPage() {
           </div>
         </section>
 
-        <section className="grid gap-8 border-t border-stone-300 pt-5 md:grid-cols-2 md:items-start">
+        <section className="border-t border-stone-300 pt-5">
           <MapathonFaq />
-
-          <div className="mx-auto w-full max-w-[17rem] sm:max-w-xs md:max-w-none">
-            <div className="mb-3 text-center">
-              <h2 className="text-lg leading-none md:text-xl">Top Contributors</h2>
-              <p className="mt-1 text-xs text-stone-600">
-                Last updated: July 31, 2026, 11:59 PM
-              </p>
-            </div>
-
-            <Card className="mx-auto w-full overflow-hidden border-0 bg-transparent shadow-none">
-              <CardContent className="max-h-[32rem] space-y-0 overflow-x-hidden overflow-y-auto p-0">
-                {leaderboard.length === 0 ? (
-                  <p className="border border-dashed border-stone-300 p-4 text-sm text-stone-700">
-                    Updates will appear here as the campaign picks up.
-                  </p>
-                ) : (
-                  rankedLeaderboard.map((entry) => {
-                    const rowClass =
-                      "flex w-full min-w-0 items-center gap-2 border-b border-stone-200 px-2 py-2 transition-colors last:border-b-0 hover:bg-[#fffdf7]/70";
-                    const avatar = entry.profileImage ? (
-                      <img
-                        src={entry.profileImage}
-                        alt={`${entry.displayName} avatar`}
-                        className="h-7 w-7 rounded-full border border-stone-300 object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 bg-[#f6f1e7] text-xs text-stone-600">
-                        {entry.displayName.slice(0, 1).toUpperCase()}
-                      </div>
-                    );
-                    const rowContent = (
-                      <>
-                        <span className="w-6 shrink-0 text-sm text-stone-500">{String(entry.rank).padStart(2, "0")}</span>
-                        <div className="shrink-0">{avatar}</div>
-                        <div className="min-w-0 flex-1 self-center">
-                          <p className="translate-y-px break-all text-sm leading-snug text-stone-900 group-hover:underline group-hover:underline-offset-4">
-                            {entry.displayName}
-                          </p>
-                        </div>
-                        <span className="shrink-0 pl-1 text-xs tabular-nums text-stone-700">{entry.contributions}</span>
-                      </>
-                    );
-
-                    return entry.permalink ? (
-                      <Link
-                        key={entry.userId}
-                        href={`/profile/${entry.permalink}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${rowClass} group`}
-                      >
-                        {rowContent}
-                      </Link>
-                    ) : (
-                      <div key={entry.userId} className={rowClass}>
-                        {rowContent}
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </section>
       </main>
     </div>

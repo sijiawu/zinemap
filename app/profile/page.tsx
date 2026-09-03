@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Store as StoreType, Library as LibraryType, Event as EventType } from "@/lib/types"
 import { useToast } from '@/hooks/use-toast'
 import { PageLoader } from "@/components/loading/PageLoader"
+import { ProfileBadges } from "@/components/ProfileBadges"
 
 const ROLES = [
   'zine maker',
@@ -1664,6 +1665,7 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
+            <ProfileBadges userId={profile.id} />
           </div>
         </div>
 
