@@ -2,29 +2,35 @@ import { Metadata } from 'next'
 import { cache } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { generateEventMetadata, generateEventStructuredData } from '@/lib/seo'
+import type { Event } from '@/lib/types'
 import EventDetailClient from './EventDetailClient'
 
-// Cache the event fetch to avoid duplicate queries
-const getEvent = cache(async (id: string) => {
-  const { data, error } = await supabase
-          .from('events')
-          .select('*')
-    .or(`permalink.eq.${id},id.eq.${id}`)
-          .eq('approved', true)
-          .single()
-        
-  if (error || !data) {
-    return null
-  }
+const getEvent = cache(async (id: string): Promise<Event | null> => {
+  const { data: eventByPermalink } = await supabase
+    .from('events')
+    .select('*')
+    .eq('permalink', id)
+    .eq('approved', true)
+    .limit(1)
+    .maybeSingle()
 
-  return data
+  if (eventByPermalink) return eventByPermalink
+
+  const { data: eventById } = await supabase
+    .from('events')
+    .select('*')
+    .eq('id', id)
+    .eq('approved', true)
+    .maybeSingle()
+
+  return eventById
 })
 
 export async function generateMetadata({ params }: { params: Promise<{ permalink: string }> }): Promise<Metadata> {
   const { permalink } = await params
   const event = await getEvent(permalink)
 
-    if (!event) {
+  if (!event) {
     return {
       title: 'Event Not Found - ZineMap',
       description: 'The requested event could not be found.',
@@ -38,9 +44,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ pe
   const { permalink } = await params
   const event = await getEvent(permalink)
   const structuredData = event ? generateEventStructuredData(event) : null
-                  
-                  return (
-                    <>
+
+  return (
+    <>
       {structuredData && (
         <script
           type="application/ld+json"

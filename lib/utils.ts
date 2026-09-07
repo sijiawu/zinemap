@@ -52,6 +52,12 @@ export function generateListingPermalink(name: string, city: string): string {
   return generatePermalink(`${name} ${city}`)
 }
 
+/** Remove a standalone edition year from the stable series display name. */
+export function generateEventSeriesName(name: string): string {
+  const withoutYear = name.replace(/\b(?:19|20)\d{2}\b/g, '').replace(/\s{2,}/g, ' ').trim()
+  return withoutYear || name.trim()
+}
+
 /**
  * Format a date string consistently without timezone issues
  * This ensures that dates like "2024-09-06" display as "9/6" regardless of timezone

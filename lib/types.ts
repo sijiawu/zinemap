@@ -70,8 +70,18 @@ export interface Library {
 /** Recurrence frequency for recurring events. Yearly is not supported. */
 export type RecurrenceFrequency = 'weekly' | 'monthly'
 
+export interface EventSeries {
+  id: string
+  name: string
+  created_at: string
+  updated_at?: string
+}
+
 export interface Event {
   id: string
+  /** Optional stable parent grouping annual editions or recurring dates. */
+  series_id?: string | null
+  event_series?: EventSeries | null
   name: string
   venue_name?: string
   city: string

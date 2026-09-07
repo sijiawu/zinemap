@@ -1,5 +1,6 @@
 # Node modules
 node_modules/
+.pnpm-store/
 
 # Next.js build output
 .next/
@@ -39,3 +40,17 @@ yarn.lock
 # pnpm-lock.yaml
 
 *.sql
+!add-event-series-parent.sql
+!attach-zinepulse-series.sql
+!restore-hallozine-pensacola-series.sql
+!restore-festival-overwrite-cohort-a.sql
+!restore-sf-zine-fest-series.sql
+!materialize-festival-occurrence-years.sql
+!attach-already-separate-festival-years.sql
+!ensure-event-series.sql
+!merge-sf-zine-fest-2026-duplicate.sql
+!attach-pikes-peak-2025-series.sql
+!merge-memphis-zine-fest-2026-duplicate.sql
+!attach-miami-2026-series.sql
+!attach-year-pair-festival-series.sql
+!merge-norfolk-zinefest-edit.sql

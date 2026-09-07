@@ -27,6 +27,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -96,16 +97,14 @@ export default function EventsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch events
+        setFetchError(null)
         const { data: eventsData, error: eventsError } = await supabase
           .from('events')
           .select('*')
           .eq('approved', true)
           .order('created_at', { ascending: false })
 
-        if (eventsError) {
-          console.error('Error fetching events:', eventsError)
-        }
+        if (eventsError) throw eventsError
 
         // Batch fetch all event user profiles
         const eventUserIds = (eventsData || []).map(e => e.submitted_by)
@@ -161,6 +160,7 @@ export default function EventsPage() {
       } catch (error) {
         console.error('Error fetching data:', error)
         setEvents([])
+        setFetchError("Events could not be loaded. Please refresh and try again.")
       } finally {
         setLoading(false)
       }
@@ -374,6 +374,14 @@ export default function EventsPage() {
           <p className="text-lg md:text-xl text-stone-600 italic font-gloria">Find zine and small-press festivals, meetups, workshops, and more</p>
         </div>
       </header>
+
+      {fetchError && (
+        <div className="mx-auto mt-6 w-full max-w-7xl px-4">
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {fetchError}
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col max-w-7xl mx-auto px-4 pt-6 w-full min-h-0">

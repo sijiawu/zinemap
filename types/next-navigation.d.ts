@@ -12,4 +12,7 @@ declare module "next/navigation" {
   export function usePathname(): string
   export function useSearchParams(): URLSearchParams
   export function useParams(): Record<string, string | string[]>
+  export function redirect(path: string): never
+  export function permanentRedirect(path: string): never
+  export function notFound(): never
 }
