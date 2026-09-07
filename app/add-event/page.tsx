@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState, useRef } from "react"
 import { ArrowLeft, Calendar, Plus, Check, MapPin, MessageSquare, Tag as TagIcon, Repeat, Image as ImageIcon, X } from "lucide-react"
 import { nanoid } from "nanoid"
@@ -170,6 +170,8 @@ interface AddressSuggestion {
 export default function AddEventPage() {
   const { user, loading } = useSupabaseUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const copyEventId = searchParams.get("copy")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -177,6 +179,9 @@ export default function AddEventPage() {
   const [showRecurringOrganizerDialog, setShowRecurringOrganizerDialog] = useState(false)
   const [posterImage, setPosterImage] = useState<File | null>(null)
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null)
+  const [copySourceLoaded, setCopySourceLoaded] = useState(false)
+  const [copySourceName, setCopySourceName] = useState<string | null>(null)
+  const [copySourceHref, setCopySourceHref] = useState<string | null>(null)
 
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<AddEventFieldErrorKey, string>>
@@ -211,6 +216,46 @@ export default function AddEventPage() {
 
   const [formData, setFormData] = useState<EventFormData>(INITIAL_EVENT_FORM_DATA)
   const [occurrenceDatesError, setOccurrenceDatesError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!copyEventId || copySourceLoaded) return
+
+    const loadCopySource = async () => {
+      try {
+        const { data: source, error: sourceError } = await supabase
+          .from("events")
+          .select("*")
+          .eq("id", copyEventId)
+          .eq("approved", true)
+          .maybeSingle()
+        if (sourceError) throw sourceError
+        if (source) {
+          setCopySourceName(source.name || null)
+          setCopySourceHref(`/event/${source.permalink || source.id}`)
+          setFormData({
+            ...INITIAL_EVENT_FORM_DATA,
+            name: source.name || "",
+            venue_name: source.venue_name || "",
+            city: source.city || "",
+            state: source.state || "",
+            country: source.country || "",
+            address: source.address || "",
+            email: source.email || "",
+            website: source.website || "",
+            social: source.social || "",
+            category: source.category || "festival",
+          })
+        }
+      } catch (copyError) {
+        console.error("Failed to load event to copy:", copyError)
+        setError("Could not load the previous event. You can still enter the new event manually.")
+      } finally {
+        setCopySourceLoaded(true)
+      }
+    }
+
+    loadCopySource()
+  }, [copyEventId, copySourceLoaded])
 
   const recurrenceRule = useMemo(() => {
     const freq = formData.recurrence_frequency
@@ -466,7 +511,10 @@ export default function AddEventPage() {
 
   // Redirect if not logged in
   if (!loading && !user) {
-    router.push("/login")
+    const loginRedirect = copyEventId
+      ? `/login?redirect=${encodeURIComponent(`/add-event?copy=${copyEventId}`)}`
+      : "/login"
+    router.push(loginRedirect)
     return null
   }
 
@@ -556,7 +604,16 @@ export default function AddEventPage() {
     try {
       // Generate ID and permalink for the event
       const id = nanoid(6)
-      const permalink = generateListingPermalink(formData.name, formData.city)
+      const permalinkBase = generateListingPermalink(formData.name, formData.city)
+      const { data: permalinkCollision } = await supabase
+        .from("events")
+        .select("id")
+        .eq("permalink", permalinkBase)
+        .limit(1)
+        .maybeSingle()
+      const permalink = permalinkCollision
+        ? `${permalinkBase}-${id.toLowerCase()}`
+        : permalinkBase
 
       // Geocode the address to get coordinates
       const coordinates = await geocodeAddress(formData.address, formData.city, formData.country)
@@ -582,6 +639,19 @@ export default function AddEventPage() {
         }
         const { data: urlData } = supabase.storage.from('zine-covers').getPublicUrl(fileName)
         posterImageUrl = urlData.publicUrl
+      }
+
+      let seriesId: string | null = null
+      if (copyEventId) {
+        const { data: ensuredSeriesId, error: seriesError } = await supabase.rpc(
+          "ensure_event_series",
+          { source_event_id: copyEventId }
+        )
+        if (seriesError || !ensuredSeriesId) {
+          console.error("Failed to ensure event series:", seriesError)
+          throw new Error("Failed to link this event to a series. Please try again.")
+        }
+        seriesId = ensuredSeriesId as string
       }
 
       const { error } = await supabase
@@ -612,6 +682,7 @@ export default function AddEventPage() {
           approved: false,
           occurrence_dates: sortedOccurrenceDates,
           poster_image: posterImageUrl,
+          ...(seriesId ? { series_id: seriesId } : {}),
         })
 
       if (error) {
@@ -723,10 +794,40 @@ export default function AddEventPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-green-200 to-teal-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <Calendar className="h-8 w-8 text-green-600" />
           </div>
-          <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add an Event to ZineMap</h1>
-          <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
-          </p>
+          <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">
+            {copyEventId && copySourceName
+              ? "Add another date or edition"
+              : "Add an Event to ZineMap"}
+          </h1>
+          {copyEventId && copySourceName && copySourceHref ? (
+            <>
+              <p className="text-xl text-stone-700 mb-3">
+                for{" "}
+                <Link
+                  href={copySourceHref}
+                  className="text-green-700 underline decoration-green-200 hover:text-green-800 hover:decoration-green-400"
+                >
+                  {copySourceName}
+                </Link>
+              </p>
+              <p className="mx-auto max-w-2xl text-left text-lg text-stone-600 leading-relaxed">
+                Use this form to add a new date or edition of{" "}
+                <Link
+                  href={copySourceHref}
+                  className="text-green-700 underline decoration-green-200 hover:text-green-800 hover:decoration-green-400"
+                >
+                  {copySourceName}
+                </Link>
+                . We&apos;ve prefilled the venue, address and contact details from the existing listing.
+                Please review them and update anything that&apos;s changed. Feel free to add a new poster
+                and a note for this edition too.
+              </p>
+            </>
+          ) : (
+            <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
+              Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
+            </p>
+          )}
         </div>
 
         <form noValidate onSubmit={handleSubmit} className="space-y-8">

@@ -18,9 +18,53 @@ import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
 
+function SeriesEventPosterLink({ event }: { event: Event }) {
+  return (
+    <Link
+      href={`/event/${event.permalink || event.id}`}
+      className="group relative block aspect-[3/4] overflow-hidden rounded-xl border border-stone-200 bg-stone-800 shadow-sm transition-shadow hover:shadow-md"
+    >
+      {event.poster_image ? (
+        <img
+          src={event.poster_image}
+          alt={`${event.name} poster`}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-green-700 to-stone-800" />
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-white/80 px-3 py-2.5 backdrop-blur-[2px]">
+        <p className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900 sm:text-base">
+          {event.name}
+        </p>
+        <p className="mt-0.5 text-xs text-stone-800 sm:text-sm">
+          {formatDateReadable(event.start_date)}
+        </p>
+      </div>
+    </Link>
+  )
+}
+
+function SeriesEventsSection({ title, events }: { title: string; events: Event[] }) {
+  if (events.length === 0) return null
+
+  return (
+    <section>
+      <h2 className="mb-3 text-xl font-semibold text-stone-800">{title}</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {events.map((seriesEvent) => (
+          <SeriesEventPosterLink key={seriesEvent.id} event={seriesEvent} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const { user } = useSupabaseUser()
   const [event, setEvent] = useState<Event | null>(null)
+  const [series, setSeries] = useState<{ id: string; name: string } | null>(null)
+  const [siblingEvents, setSiblingEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notes, setNotes] = useState<CommunityNote[]>([])
@@ -70,7 +114,8 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           .select('*')
           .eq('permalink', eventId)
           .eq('approved', true)
-          .single()
+          .limit(1)
+          .maybeSingle()
         
         if (eventByPermalink) {
           eventData = eventByPermalink
@@ -82,7 +127,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
             .select('*')
             .eq('id', eventId)
             .eq('approved', true)
-            .single()
+            .maybeSingle()
           
           eventData = eventById
           eventError = idError
@@ -118,6 +163,28 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         }
 
         setEvent(eventWithUser)
+
+        if (eventData.series_id) {
+          const [{ data: seriesData }, { data: relatedEvents }] = await Promise.all([
+            supabase
+              .from('event_series')
+              .select('id, name')
+              .eq('id', eventData.series_id)
+              .maybeSingle(),
+            supabase
+              .from('events')
+              .select('*')
+              .eq('series_id', eventData.series_id)
+              .eq('approved', true)
+              .neq('id', eventData.id)
+              .order('start_date', { ascending: true }),
+          ])
+          setSeries(seriesData)
+          setSiblingEvents((relatedEvents || []) as Event[])
+        } else {
+          setSeries(null)
+          setSiblingEvents([])
+        }
 
         // Fetch community notes
         const { data: notesData, error: notesError } = await supabase
@@ -632,6 +699,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
     )
   }
 
+  const futureSeriesEvents = siblingEvents.filter((sibling) => !isPastEvent(sibling))
+  const pastSeriesEvents = siblingEvents
+    .filter((sibling) => isPastEvent(sibling))
+    .slice()
+    .reverse()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-stone-50 font-serif">
       {/* Header */}
@@ -723,6 +796,16 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               </div>
               
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-stone-800 mb-2 break-words">{event.name}</h1>
+              {series && siblingEvents.length > 0 && (
+                <p className="mb-3 text-sm font-medium">
+                  <a
+                    href="#other-dates-or-editions"
+                    className="text-green-800 underline decoration-green-200 hover:text-green-900 hover:decoration-green-400"
+                  >
+                    See other dates or editions ↓
+                  </a>
+                </p>
+              )}
               
               <div className="flex items-center text-stone-600 text-lg mb-4 break-words">
                 <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
@@ -773,6 +856,20 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                   <Users className="h-4 w-4 mr-2" />
                   {event && isPastEvent(event) ? `${attendeeCount} went` : `${attendeeCount} going`}
                 </div>
+              </div>
+
+              <div className="mt-3">
+                <Link
+                  href={
+                    user
+                      ? `/add-event?copy=${event.id}`
+                      : `/login?redirect=${encodeURIComponent(`/add-event?copy=${event.id}`)}`
+                  }
+                >
+                  <Button className="bg-[#009035] hover:bg-[#007a2a] text-white">
+                    Add another date or edition
+                  </Button>
+                </Link>
               </div>
               </div>
             </div>
@@ -1129,6 +1226,13 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               </CardContent>
             </Card>
 
+            {series && siblingEvents.length > 0 && (
+              <div id="other-dates-or-editions" className="space-y-8 scroll-mt-24">
+                <SeriesEventsSection title="Future events in this series" events={futureSeriesEvents} />
+                <SeriesEventsSection title="Past events in this series" events={pastSeriesEvents} />
+              </div>
+            )}
+
             {/* Feedback Section */}
             <div id="feedback-section" className="text-center py-6 order-6 lg:order-none">
               <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
@@ -1347,6 +1451,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           />
         </div>
       )}
+
     </div>
   )
 } 

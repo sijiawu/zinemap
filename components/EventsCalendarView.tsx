@@ -232,7 +232,7 @@ export function EventsCalendarView({
         ) : (
           <ul className="space-y-3">
             {displayedEvents.map((event) => (
-              <li key={event.id}>
+              <li key={`${event.id}-${event.start_date}`}>
                 <div
                   role="button"
                   tabIndex={0}
