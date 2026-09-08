@@ -490,7 +490,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
       </div>
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
         {/* Library header */}
         <div className="text-center space-y-4">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200 relative">
@@ -561,11 +561,11 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
             <CardContent className="space-y-4">
               <div className="bg-stone-50 p-4 rounded-lg space-y-3">
                 {library.email && (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0">
                     <Mail className="h-4 w-4 text-stone-400 flex-shrink-0" />
                     <a
                       href={`mailto:${library.email}`}
-                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400"
+                      className="text-stone-700 hover:text-blue-600 transition-colors underline decoration-blue-200 hover:decoration-blue-400 url-break min-w-0"
                     >
                       {library.email}
                     </a>
@@ -669,7 +669,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
             {notes.length > 0 && (
               <div className="space-y-4 mb-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-white">
+                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-white min-w-0 overflow-hidden">
                     {editingNote?.id === note.id ? (
                       // Edit form
                       <form onSubmit={handleUpdateNote} className="space-y-4">
@@ -828,8 +828,10 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                           </div>
                         </div>
                         
-                        <div className="pl-11">
-                          <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        <div className="pl-11 min-w-0">
+                          <p className="text-stone-700 leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {note.text}
+                          </p>
                         </div>
                       </>
                     )}

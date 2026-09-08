@@ -1127,8 +1127,10 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                               )}
                             </div>
                             
-                            <div className="pl-11">
-                              <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                            <div className="pl-11 min-w-0">
+                              <p className="text-stone-700 leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                                {note.text}
+                              </p>
                             </div>
                           </>
                         )}

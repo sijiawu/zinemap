@@ -523,7 +523,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
       </div>
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
         {/* Store header */}
         <div className="text-center space-y-4">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-200 relative">
@@ -594,11 +594,11 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
             <CardContent className="space-y-4">
               <div className="bg-stone-50 p-4 rounded-lg space-y-3">
                 {store.email && (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0">
                     <Mail className="h-4 w-4 text-stone-400 flex-shrink-0" />
                     <a
                       href={`mailto:${store.email}`}
-                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400"
+                      className="text-stone-700 hover:text-rose-600 transition-colors underline decoration-rose-200 hover:decoration-rose-400 url-break min-w-0"
                     >
                       {store.email}
                     </a>
@@ -702,7 +702,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
             {notes.length > 0 && (
               <div className="space-y-4 mb-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-rose-100 hover:border-rose-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-rose-50 hover:to-white">
+                  <div key={note.id} className="group bg-white p-5 rounded-xl border border-rose-100 hover:border-rose-300 hover:shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-rose-50 hover:to-white min-w-0 overflow-hidden">
                     {editingNote?.id === note.id ? (
                       // Edit form
                       <form onSubmit={handleUpdateNote} className="space-y-4">
@@ -856,8 +856,10 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                             </div>
                           )}
                         </div>
-                        <div className="pl-11">
-                          <p className="text-stone-700 leading-relaxed">{note.text}</p>
+                        <div className="pl-11 min-w-0">
+                          <p className="text-stone-700 leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {note.text}
+                          </p>
                         </div>
                       </>
                     )}
