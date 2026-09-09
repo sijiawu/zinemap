@@ -26,6 +26,7 @@ import type { Store as StoreType, Library as LibraryType, Event as EventType } f
 import { useToast } from '@/hooks/use-toast'
 import { PageLoader } from "@/components/loading/PageLoader"
 import { ProfileBadges } from "@/components/ProfileBadges"
+import { EventPosterGrid } from "@/components/EventPosterTile"
 
 const ROLES = [
   'zine maker',
@@ -107,6 +108,7 @@ export default function ProfilePage() {
     state?: string
     country: string
     permalink?: string
+    poster_image?: string | null
   }[]>([])
   const [activities, setActivities] = useState<{
     id: string
@@ -205,7 +207,7 @@ export default function ProfilePage() {
         fetchActivities(user.id),
         supabase.from('event_attendees').select(`
           event_id,
-          events!inner(id, name, category, start_date, end_date, city, state, country, permalink)
+          events!inner(id, name, category, start_date, end_date, city, state, country, permalink, poster_image)
         `).eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('saved_locations').select('entity_type, entity_id').eq('user_id', user.id),
         supabase.from('home_pins').select('id, city, country').eq('user_email', user.email).order('created_at', { ascending: false }),
@@ -228,7 +230,8 @@ export default function ProfilePage() {
           city: item.events.city,
           state: item.events.state,
           country: item.events.country,
-          permalink: item.events.permalink
+          permalink: item.events.permalink,
+          poster_image: item.events.poster_image,
         }))
         setAttendingEvents(events)
       }
@@ -1462,38 +1465,7 @@ export default function ProfilePage() {
                         </Link>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {upcomingEvents.map((event) => (
-                          <Link
-                            key={event.id}
-                            href={`/event/${event.permalink || event.id}`}
-                            className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
-                                  {event.name}
-                                </h3>
-                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                                  <Badge
-                                    className="text-xs bg-green-50 text-[#009035] border-green-200"
-                                  >
-                                    {getEventCategoryDisplay(event.category)}
-                                  </Badge>
-                                  <span className="text-xs text-stone-500">
-                                    {formatDateReadable(event.start_date)}
-                                    {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-stone-600 line-clamp-1">
-                                  {event.city}{event.state && `, ${event.state}`}, {event.country}
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                      <EventPosterGrid events={upcomingEvents} showLocation />
                     )
                   })()}
                 </CardContent>
@@ -1517,38 +1489,7 @@ export default function ProfilePage() {
                         <p className="text-stone-600">Events you've attended will appear here.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {pastEvents.map((event) => (
-                          <Link
-                            key={event.id}
-                            href={`/event/${event.permalink || event.id}`}
-                            className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
-                                  {event.name}
-                                </h3>
-                                <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                                  <Badge
-                                    className="text-xs bg-stone-50 text-stone-600 border-stone-200"
-                                  >
-                                    {getEventCategoryDisplay(event.category)}
-                                  </Badge>
-                                  <span className="text-xs text-stone-500">
-                                    {formatDateReadable(event.start_date)}
-                                    {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-stone-600 line-clamp-1">
-                                  {event.city}{event.state && `, ${event.state}`}, {event.country}
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                      <EventPosterGrid events={pastEvents} showLocation muted />
                     )
                   })()}
                 </CardContent>

@@ -17,33 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
-
-function SeriesEventPosterLink({ event }: { event: Event }) {
-  return (
-    <Link
-      href={`/event/${event.permalink || event.id}`}
-      className="group relative block aspect-[3/4] overflow-hidden rounded-xl border border-stone-200 bg-stone-800 shadow-sm transition-shadow hover:shadow-md"
-    >
-      {event.poster_image ? (
-        <img
-          src={event.poster_image}
-          alt={`${event.name} poster`}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-green-700 to-stone-800" />
-      )}
-      <div className="absolute inset-x-0 bottom-0 bg-white/80 px-3 py-2.5 backdrop-blur-[2px]">
-        <p className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900 sm:text-base">
-          {event.name}
-        </p>
-        <p className="mt-0.5 text-xs text-stone-800 sm:text-sm">
-          {formatDateReadable(event.start_date)}
-        </p>
-      </div>
-    </Link>
-  )
-}
+import { EventPosterTile } from "@/components/EventPosterTile"
 
 function SeriesEventsSection({ title, events }: { title: string; events: Event[] }) {
   if (events.length === 0) return null
@@ -53,7 +27,7 @@ function SeriesEventsSection({ title, events }: { title: string; events: Event[]
       <h2 className="mb-3 text-xl font-semibold text-stone-800">{title}</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {events.map((seriesEvent) => (
-          <SeriesEventPosterLink key={seriesEvent.id} event={seriesEvent} />
+          <EventPosterTile key={seriesEvent.id} event={seriesEvent} />
         ))}
       </div>
     </section>

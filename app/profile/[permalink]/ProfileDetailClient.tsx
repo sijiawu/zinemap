@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft, Store, Library, Pencil } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { UserProfile, Zine } from '@/lib/types'
-import { autoLinkText, isPastEvent, getEventCategoryDisplay, formatDateReadable } from '@/lib/utils'
+import { autoLinkText, isPastEvent } from '@/lib/utils'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { ProfileBadges } from "@/components/ProfileBadges"
+import { EventPosterGrid } from "@/components/EventPosterTile"
 
 export type Activity = {
   id: string
@@ -50,6 +51,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
     state?: string
     country: string
     permalink?: string
+    poster_image?: string | null
   }[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [contributionsPage, setContributionsPage] = useState(1)
@@ -306,8 +308,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
         fetchActivities(profileData.id),
         supabase.from('event_attendees').select(`
           event_id,
-          events!inner(id, name, category, start_date, end_date, city, state, country, permalink)
-        `).eq('user_id', profileData.id).order('created_at', { ascending: false }),
+          events!inner(id, name, category, start_date, end_date, city, state, country, permalink, poster_image)
+        `).eq('user_id', profileData.id).eq('events.moderation_status', 'approved').order('created_at', { ascending: false }),
         supabase.from('home_pins').select('id, city, country').eq('user_email', profileData.email).order('created_at', { ascending: false }),
       ])
 
@@ -331,7 +333,8 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
           city: item.events.city,
           state: item.events.state,
           country: item.events.country,
-          permalink: item.events.permalink
+          permalink: item.events.permalink,
+          poster_image: item.events.poster_image,
         }))
         setAttendingEvents(events)
       }
@@ -555,38 +558,10 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {attendingEvents.filter(event => !isPastEvent(event)).map((event) => (
-                        <Link
-                          key={event.id}
-                          href={`/event/${event.permalink || event.id}`}
-                          className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-[#009035] transition-colors"
-                        >
-                          <div className="flex items-start gap-2">
-                            <Calendar className="h-4 w-4 text-[#009035] mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-[#009035] transition-colors line-clamp-1">
-                                {event.name}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                                <Badge
-                                  className="text-xs bg-green-50 text-[#009035] border-green-200"
-                                >
-                                  {getEventCategoryDisplay(event.category)}
-                                </Badge>
-                                <span className="text-xs text-stone-500">
-                                  {formatDateReadable(event.start_date)}
-                                  {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                                </span>
-                              </div>
-                              <p className="text-xs text-stone-600 line-clamp-1">
-                                {event.city}{event.state && `, ${event.state}`}, {event.country}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
+                    <EventPosterGrid
+                      events={attendingEvents.filter(event => !isPastEvent(event))}
+                      showLocation
+                    />
                   </CardContent>
                 </Card>
               ) : (
@@ -609,38 +584,11 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {attendingEvents.filter(event => isPastEvent(event)).map((event) => (
-                        <Link
-                          key={event.id}
-                          href={`/event/${event.permalink || event.id}`}
-                          className="group p-3 border border-stone-200 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
-                        >
-                          <div className="flex items-start gap-2">
-                            <Calendar className="h-4 w-4 text-stone-500 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-stone-800 text-sm mb-1 group-hover:text-stone-600 transition-colors line-clamp-1">
-                                {event.name}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                                <Badge
-                                  className="text-xs bg-stone-50 text-stone-600 border-stone-200"
-                                >
-                                  {getEventCategoryDisplay(event.category)}
-                                </Badge>
-                                <span className="text-xs text-stone-500">
-                                  {formatDateReadable(event.start_date)}
-                                  {event.start_date !== event.end_date && ` - ${formatDateReadable(event.end_date)}`}
-                                </span>
-                              </div>
-                              <p className="text-xs text-stone-600 line-clamp-1">
-                                {event.city}{event.state && `, ${event.state}`}, {event.country}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
+                    <EventPosterGrid
+                      events={attendingEvents.filter(event => isPastEvent(event))}
+                      showLocation
+                      muted
+                    />
                   </CardContent>
                 </Card>
               ) : (
