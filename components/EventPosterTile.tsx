@@ -60,15 +60,15 @@ export function EventPosterTile({
           )}
         />
       )}
-      <div className="absolute inset-x-0 bottom-0 bg-white/80 px-3 py-2.5 backdrop-blur-[2px]">
-        <p className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900 sm:text-base">
+      <div className="absolute inset-x-0 bottom-0 bg-white/80 px-2 py-2 backdrop-blur-[2px] sm:px-3 sm:py-2.5">
+        <p className="line-clamp-2 text-xs font-semibold leading-snug text-stone-900 sm:text-sm">
           {event.name}
         </p>
-        <p className="mt-0.5 text-xs text-stone-800 sm:text-sm">
+        <p className="mt-0.5 text-[11px] text-stone-800 sm:text-xs">
           {dateLabel(event)}
         </p>
         {location ? (
-          <p className="mt-0.5 line-clamp-1 text-xs text-stone-600">{location}</p>
+          <p className="mt-0.5 line-clamp-1 text-[11px] text-stone-600 sm:text-xs">{location}</p>
         ) : null}
       </div>
     </Link>
@@ -85,7 +85,7 @@ export function EventPosterGrid({
   muted?: boolean
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
       {events.map((event) => (
         <EventPosterTile
           key={event.id}
