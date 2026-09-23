@@ -33,7 +33,7 @@ export function ZineMapAboutHero({
   const countryCount = stats?.countryCount ?? 43
 
   return (
-    <section className="relative overflow-hidden border-b border-stone-200 bg-[#faf8f5]">
+    <section className="relative border-b border-stone-200 bg-[#faf8f5]">
       <div aria-hidden className="absolute inset-0 overflow-hidden opacity-55">
         <div className="zine-cover-track flex h-full w-max">
           {[0, 1].map((panel) => (
