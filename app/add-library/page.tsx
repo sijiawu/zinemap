@@ -71,22 +71,24 @@ export default function AddLibraryPage() {
     }))
   }
 
-  const geocodeAddress = async (address: string, city: string, country: string) => {
+  const geocodeAddress = async (address: string, city: string, country: string): Promise<{latitude: number, longitude: number} | null> => {
     try {
-      const query = `${address}, ${city}, ${country}`
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+      const fullAddress = `${address}, ${city}, ${country}`
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?` +
+        `access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=1`
+      )
+
       const data = await response.json()
-      
-      if (data && data.length > 0) {
-        return {
-          latitude: parseFloat(data[0].lat),
-          longitude: parseFloat(data[0].lon)
-        }
+      if (data.features && data.features.length > 0) {
+        const [longitude, latitude] = data.features[0].center
+        return { latitude, longitude }
       }
+      return null
     } catch (error) {
-      console.error('Geocoding error:', error)
+      console.error('Error geocoding address:', error)
+      return null
     }
-    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
