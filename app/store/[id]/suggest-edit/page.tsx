@@ -357,12 +357,12 @@ export default function SuggestStoreEditPage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <StoreIcon className="h-5 w-5 mr-2 text-rose-500" />
-                Store Details
+                Shop Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="storeName" className="text-stone-700">Store Name *</Label>
+                <Label htmlFor="storeName" className="text-stone-700">Shop Name *</Label>
                 <Input
                   id="storeName"
                   value={formData.storeName}
@@ -545,21 +545,27 @@ export default function SuggestStoreEditPage() {
                     </div>
                   </div>
 
-                  
-
-                   {/* Notes */}
-                   <div>
-                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Additional Notes</h4>
-                     <Textarea
-                       value={formData.notes}
-                       onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                       placeholder="Any additional information about this store's zine policies, atmosphere, or anything else zine makers should know..."
-                       rows={4}
-                       className="w-full"
-                     />
-                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-stone-800 text-xl">
+                <MessageSquare className="h-5 w-5 mr-2 text-rose-500" />
+                Community Note
+              </CardTitle>
+              <p className="text-sm text-stone-600 font-mono">What was it like visiting or working with this place?</p>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="e.g., They prefer email contact first, they're particularly interested in local zines, they have a specific submission process..."
+                rows={4}
+                className="w-full"
+              />
             </CardContent>
           </Card>
 

@@ -182,6 +182,20 @@ export default function AddEventPage() {
   const [copySourceLoaded, setCopySourceLoaded] = useState(false)
   const [copySourceName, setCopySourceName] = useState<string | null>(null)
   const [copySourceHref, setCopySourceHref] = useState<string | null>(null)
+  const [nameMatches, setNameMatches] = useState<Array<{
+    id: string
+    name: string
+    venue_name: string | null
+    city: string | null
+    state: string | null
+    country: string | null
+    permalink: string | null
+    approved: boolean | null
+    category: string | null
+    start_date: string | null
+    end_date: string | null
+  }>>([])
+  const [nameMatchesLoading, setNameMatchesLoading] = useState(false)
 
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<AddEventFieldErrorKey, string>>
@@ -216,6 +230,33 @@ export default function AddEventPage() {
 
   const [formData, setFormData] = useState<EventFormData>(INITIAL_EVENT_FORM_DATA)
   const [occurrenceDatesError, setOccurrenceDatesError] = useState<string | null>(null)
+
+  const handleEventNameBlur = async () => {
+    if (copyEventId) {
+      setNameMatches([])
+      setNameMatchesLoading(false)
+      return
+    }
+
+    const query = formData.name.trim()
+    if (query.length < 3) {
+      setNameMatches([])
+      setNameMatchesLoading(false)
+      return
+    }
+
+    setNameMatchesLoading(true)
+    const { data, error: searchError } = await supabase.rpc("search_events_by_name", {
+      search_name: query,
+    })
+    if (searchError) {
+      console.error("Error searching event names:", searchError)
+      setNameMatches([])
+    } else {
+      setNameMatches((data ?? []).filter((match) => match.id !== copyEventId))
+    }
+    setNameMatchesLoading(false)
+  }
 
   useEffect(() => {
     if (!copyEventId || copySourceLoaded) return
@@ -825,7 +866,7 @@ export default function AddEventPage() {
             </>
           ) : (
             <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-              Know about an upcoming event for zines, indie comics, or other self-published work? Share the details and help others discover it!
+              Do you know or run an event for zines, indie comics, or self-published work? Add it to the map and help others discover it!
             </p>
           )}
         </div>
@@ -849,12 +890,65 @@ export default function AddEventPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange("name", e.target.value)
+                      setNameMatches([])
+                    }}
+                    onBlur={handleEventNameBlur}
                     className={inputClass}
                     placeholder="e.g. Chicago Zine Fest"
                     autoComplete="off"
                   />
                   {fieldErrors.name && <FieldErrorMessage message={fieldErrors.name} />}
+                  {!copyEventId && nameMatchesLoading && formData.name.trim().length >= 3 && (
+                    <p className="text-sm text-stone-400 font-serif">Checking existing events...</p>
+                  )}
+                  {!copyEventId && nameMatches.length > 0 && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
+                      <p className="font-serif text-amber-900">Could one of these be the event you’re adding?</p>
+                      <p className="mt-1 font-serif text-stone-600">
+                        Open a listing to check the date and details. You’re welcome to update it, add a note, or add another date/edition!
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        {nameMatches.map((match) => {
+                          const place = [match.city, match.country].filter(Boolean).join(", ")
+                          const href = match.approved && match.permalink ? `/event/${match.permalink}` : null
+                          const when = match.start_date
+                            ? new Date(`${match.start_date.slice(0, 10)}T00:00:00`).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : null
+                          return (
+                            <li key={match.id} className="font-serif text-stone-700">
+                              <div>
+                                {href ? (
+                                  <Link href={href} className="text-green-700 underline underline-offset-2 hover:text-green-800" target="_blank">
+                                    {match.name}
+                                  </Link>
+                                ) : (
+                                  <span>{match.name}</span>
+                                )}
+                                {when ? <span className="text-stone-500"> · {when}</span> : null}
+                                {place ? <span className="text-stone-500"> · {place}</span> : null}
+                                {match.approved === false ? <span className="text-stone-500"> · pending review</span> : null}
+                              </div>
+                              {match.approved && (
+                                <Link
+                                  href={`/add-event?copy=${match.id}`}
+                                  className="text-green-700 underline underline-offset-2 hover:text-green-800"
+                                >
+                                  Add another date or edition
+                                </Link>
+                              )}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                      <p className="mt-2 font-serif text-stone-600">Not a match? Keep going :)</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Event Type */}
@@ -1383,9 +1477,8 @@ export default function AddEventPage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <TagIcon className="h-5 w-5 mr-2 text-green-500" />
-                Additional Information
+                Community Note
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">Tell us more about this event</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -1394,7 +1487,7 @@ export default function AddEventPage() {
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   className={`${inputClass} min-h-[120px]`}
-                  placeholder="Tell us more about this event... What makes it special? Any important details attendees should know?"
+                  placeholder="Share what’s happening, who it’s for, and any helpful details about attending or taking part."
                   rows={5}
                 />
               </div>

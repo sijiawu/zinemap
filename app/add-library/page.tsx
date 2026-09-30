@@ -26,6 +26,16 @@ export default function AddLibraryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [nameMatches, setNameMatches] = useState<Array<{
+    id: string
+    name: string
+    city: string | null
+    state: string | null
+    country: string | null
+    permalink: string | null
+    approved: boolean | null
+  }>>([])
+  const [nameMatchesLoading, setNameMatchesLoading] = useState(false)
   const [formData, setFormData] = useState({
     libraryName: "",
     city: "",
@@ -60,6 +70,27 @@ export default function AddLibraryPage() {
       ...prev,
       [field]: value
     }))
+  }
+
+  const handleLibraryNameBlur = async () => {
+    const query = formData.libraryName.trim()
+    if (query.length < 3) {
+      setNameMatches([])
+      setNameMatchesLoading(false)
+      return
+    }
+
+    setNameMatchesLoading(true)
+    const { data, error: searchError } = await supabase.rpc('search_libraries_by_name', {
+      search_name: query,
+    })
+    if (searchError) {
+      console.error('Error searching library names:', searchError)
+      setNameMatches([])
+    } else {
+      setNameMatches(data ?? [])
+    }
+    setNameMatchesLoading(false)
   }
 
   const handleTermToggle = (termId: string) => {
@@ -496,7 +527,7 @@ export default function AddLibraryPage() {
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Library to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know a great library with zines or independent publications? Help fellow zinesters discover it!
+            Do you know or run a great library with zines or independent publications? Help fellow zinesters discover it!
           </p>
         </div>
 
@@ -518,11 +549,46 @@ export default function AddLibraryPage() {
                 <Input
                   id="libraryName"
                   value={formData.libraryName}
-                  onChange={(e) => handleInputChange('libraryName', e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange('libraryName', e.target.value)
+                    setNameMatches([])
+                  }}
+                  onBlur={handleLibraryNameBlur}
                   placeholder="e.g., Central Public Library"
                   className="bg-stone-50 border-stone-300 focus:border-blue-400 focus:ring-blue-200 font-serif"
                   required
+                  autoComplete="off"
                 />
+                {nameMatchesLoading && formData.libraryName.trim().length >= 3 && (
+                  <p className="text-sm text-stone-400 font-serif">Checking existing libraries...</p>
+                )}
+                {nameMatches.length > 0 && (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
+                    <p className="font-serif text-amber-900 mb-1">Is this the place you’re adding?</p>
+                    <ul className="space-y-1">
+                      {nameMatches.map((match) => {
+                        const place = [match.city, match.state, match.country].filter(Boolean).join(', ')
+                        const href = match.approved && match.permalink ? `/library/${match.permalink}` : null
+                        return (
+                          <li key={match.id} className="font-serif text-stone-700">
+                            {href ? (
+                              <Link href={href} className="text-blue-700 underline underline-offset-2 hover:text-blue-800" target="_blank">
+                                {match.name}
+                              </Link>
+                            ) : (
+                              <span>{match.name}</span>
+                            )}
+                            {place ? <span className="text-stone-500"> · {place}</span> : null}
+                            {match.approved === false ? <span className="text-stone-500"> · pending review</span> : null}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <p className="mt-2 font-serif text-stone-600">
+                      If so, you can help by updating its listing or sharing what you know in a note! If not, keep going :)
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Country & Address */}
@@ -726,9 +792,9 @@ export default function AddLibraryPage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <MessageSquare className="h-5 w-5 mr-2 text-blue-500" />
-                Add a Community Note
+                Community Note
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">What was it like visiting this library? Got any tips, surprises, or stories about their zine collection?</p>
+              <p className="text-sm text-stone-600 font-mono">What’s this library like? Share a note for anyone hoping to visit or contribute zines!</p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

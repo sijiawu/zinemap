@@ -56,6 +56,7 @@ export default function SuggestEventEditPage() {
     email: "",
     website: "",
     social: "",
+    notes: "",
     category: "festival",
     start_date: "",
     end_date: "",
@@ -104,6 +105,7 @@ export default function SuggestEventEditPage() {
             email: eventData.email || "",
             website: eventData.website || "",
             social: eventData.social || "",
+            notes: eventData.notes || "",
             category: eventData.category || "festival",
             start_date: eventData.start_date || "",
             end_date: eventData.end_date || "",
@@ -286,6 +288,9 @@ export default function SuggestEventEditPage() {
       if (formData.social !== event.social) {
         changes.push(`old social: ${event.social || 'none'}\nnew social: ${formData.social || 'none'}`)
       }
+      if (formData.notes !== (event.notes || "")) {
+        changes.push(`old notes: ${event.notes || 'none'}\nnew notes: ${formData.notes || 'none'}`)
+      }
       if (formData.category !== event.category) {
         changes.push(`old category: ${event.category}\nnew category: ${formData.category}`)
       }
@@ -357,6 +362,7 @@ export default function SuggestEventEditPage() {
         email: formData.email || null,
         website: formData.website || null,
         social: formData.social || null,
+        notes: formData.notes.trim() || null,
         category: formData.category,
         start_date: seriesStartDate,
         end_date: isRecurring ? seriesStartDate : formData.end_date,
@@ -977,6 +983,25 @@ export default function SuggestEventEditPage() {
           </Card>
 
           {/* Submit Button */}
+          <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-stone-800 text-xl">
+                <MessageSquare className="h-5 w-5 mr-2 text-green-500" />
+                Community Note
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                placeholder="Share what’s happening, who it’s for, and any helpful details about attending or taking part."
+                rows={5}
+                className="w-full min-h-[120px]"
+              />
+            </CardContent>
+          </Card>
+
           <div className="pt-6 flex justify-center">
             <Button
               type="submit"

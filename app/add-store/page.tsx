@@ -40,6 +40,16 @@ export default function AddStorePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [nameMatches, setNameMatches] = useState<Array<{
+    id: string
+    name: string
+    city: string | null
+    state: string | null
+    country: string | null
+    permalink: string | null
+    approved: boolean | null
+  }>>([])
+  const [nameMatchesLoading, setNameMatchesLoading] = useState(false)
 
   // Address autocomplete state
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
@@ -74,6 +84,28 @@ export default function AddStorePage() {
     }
     loadCountries()
   }, [])
+
+  const handleStoreNameBlur = async () => {
+    const query = formData.storeName.trim()
+    if (query.length < 3) {
+      setNameMatches([])
+      setNameMatchesLoading(false)
+      return
+    }
+
+    setNameMatchesLoading(true)
+    const { data, error: searchError } = await supabase.rpc('search_stores_by_name', {
+      search_name: query,
+    })
+    if (searchError) {
+      console.error('Error searching shop names:', searchError)
+      setNameMatches([])
+    } else {
+      setNameMatches(data ?? [])
+    }
+    setNameMatchesLoading(false)
+  }
+
   // Handle country search
   const handleCountrySearch = (value: string) => {
     if (!value.trim()) {
@@ -498,8 +530,7 @@ export default function AddStorePage() {
           </div>
           <h1 className="font-gloria text-4xl font-bold text-stone-800 mb-3">Add a Shop to ZineMap</h1>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
-            Know a great indie shop that stocks zines? Help fellow zinesters discover it! Share the details and we'll
-            add it to our community map.
+            Do you know or run a shop that stocks zines? Help fellow zinesters discover it!
           </p>
         </div>
 
@@ -509,9 +540,8 @@ export default function AddStorePage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <StoreIcon className="h-5 w-5 mr-2 text-rose-500" />
-                Store Details
+                Shop Details
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">The basics about this zine-friendly spot</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -523,12 +553,46 @@ export default function AddStorePage() {
                   <Input
                     id="storeName"
                     value={formData.storeName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, storeName: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, storeName: e.target.value }))
+                      setNameMatches([])
+                    }}
+                    onBlur={handleStoreNameBlur}
                     className="bg-stone-50 border-stone-300 focus:border-rose-400 focus:ring-rose-200 font-serif"
                     placeholder="e.g. Quimby's Bookstore"
                     required
                     autoComplete="off"
                   />
+                  {nameMatchesLoading && formData.storeName.trim().length >= 3 && (
+                    <p className="text-sm text-stone-400 font-serif">Checking existing shops...</p>
+                  )}
+                  {nameMatches.length > 0 && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
+                      <p className="font-serif text-amber-900 mb-1">Is this the place you’re adding?</p>
+                      <ul className="space-y-1">
+                        {nameMatches.map((match) => {
+                          const place = [match.city, match.state, match.country].filter(Boolean).join(', ')
+                          const href = match.approved && match.permalink ? `/store/${match.permalink}` : null
+                          return (
+                            <li key={match.id} className="font-serif text-stone-700">
+                              {href ? (
+                                <Link href={href} className="text-rose-700 underline underline-offset-2 hover:text-rose-800" target="_blank">
+                                  {match.name}
+                                </Link>
+                              ) : (
+                                <span>{match.name}</span>
+                              )}
+                              {place ? <span className="text-stone-500"> · {place}</span> : null}
+                              {match.approved === false ? <span className="text-stone-500"> · pending review</span> : null}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                      <p className="mt-2 font-serif text-stone-600">
+                        If so, you can help by updating its listing or sharing what you know in a note! If not, keep going :)
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {/* Country with autocomplete */}
                 <div className="space-y-2 relative">
@@ -781,9 +845,9 @@ export default function AddStorePage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-stone-800 text-xl">
                 <MessageSquare className="h-5 w-5 mr-2 text-rose-500" />
-                Add a Community Note
+                Community Note
               </CardTitle>
-              <p className="text-sm text-stone-600 font-mono">What was it like working with or visiting this place? Got any tips, surprises, or stories?</p>
+              <p className="text-sm text-stone-600 font-mono">What was it like visiting or working with this place?</p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

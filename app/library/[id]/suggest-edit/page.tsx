@@ -507,19 +507,27 @@ export default function SuggestLibraryEditPage() {
                     </div>
                   </div>
 
-                   {/* Notes */}
-                   <div>
-                     <h4 className="font-semibold text-stone-700 mb-3 font-serif">Additional Notes</h4>
-                     <Textarea
-                       value={formData.notes}
-                       onChange={(e) => handleInputChange('notes', e.target.value)}
-                       placeholder="Any additional information about this library's zine collection, policies, or anything else zine makers should know..."
-                       rows={4}
-                       className="w-full"
-                     />
-                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border border-stone-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-stone-800 text-xl">
+                <MessageSquare className="h-5 w-5 mr-2 text-blue-500" />
+                Community Note
+              </CardTitle>
+              <p className="text-sm text-stone-600 font-mono">What’s this library like? Share a note for anyone hoping to visit or contribute zines!</p>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                placeholder="e.g., They have a great zine section in the basement, they're particularly interested in local zines, they have a specific process for donations..."
+                rows={4}
+                className="w-full"
+              />
             </CardContent>
           </Card>
 
