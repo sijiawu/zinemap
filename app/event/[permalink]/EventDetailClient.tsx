@@ -18,6 +18,7 @@ import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { EventPosterTile } from "@/components/EventPosterTile"
+import { EventPosterModal } from "@/components/EventPosterModal"
 
 function SeriesEventsSection({ title, events }: { title: string; events: Event[] }) {
   if (events.length === 0) return null
@@ -1407,25 +1408,13 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         </div>
       )}
 
-      {showPosterModal && event?.poster_image && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 cursor-zoom-out"
-          onClick={() => setShowPosterModal(false)}
-        >
-          <button
-            onClick={() => setShowPosterModal(false)}
-            className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl font-bold leading-none z-10"
-            aria-label="Close"
-          >
-            ×
-          </button>
-          <img
-            src={event.poster_image}
-            alt={`${event.name} poster`}
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+      {event?.poster_image && (
+        <EventPosterModal
+          open={showPosterModal}
+          onClose={() => setShowPosterModal(false)}
+          src={event.poster_image}
+          alt={`${event.name} poster`}
+        />
       )}
 
     </div>

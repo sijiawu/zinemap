@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"
 import { useRouter } from "next/navigation"
 import {
@@ -31,6 +31,7 @@ import {
   getTagCategoryDisplay,
 } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
+import { EventPosterModal } from "@/components/EventPosterModal"
 
 type ListingType = "store" | "library" | "event"
 type ModerationStatus = "pending" | "approved" | "flagged"
@@ -84,6 +85,9 @@ type ModerationHistoryItem = {
   notes?: string | null
   start_date?: string | null
   end_date?: string | null
+  poster_image?: string | null
+  series_name?: string | null
+  series_events?: SeriesEventSummary[] | null
   moderated_at?: string | null
   moderated_by?: string | null
   review_action?: ReviewAction | null
@@ -102,7 +106,118 @@ type LocaleEditRow = {
   created_at: string
   stores?: { name?: string; city?: string; country?: string } | null
   libraries?: { name?: string; city?: string; country?: string } | null
-  events?: { name?: string; city?: string; country?: string } | null
+  events?: {
+    name?: string
+    city?: string
+    country?: string
+    poster_image?: string | null
+    event_series?: {
+      name?: string | null
+      events?: SeriesEventSummary[] | null
+    } | null
+  } | null
+}
+
+type SeriesEventSummary = {
+  id: string
+  name: string
+  start_date?: string | null
+  end_date?: string | null
+  city?: string | null
+  country?: string | null
+  permalink?: string | null
+  moderation_status?: string | null
+}
+
+const SERIES_EVENTS_SELECT =
+  "event_series(name, events(id, name, start_date, end_date, city, country, permalink, moderation_status))"
+
+function EventPosterAndSeries({
+  eventId,
+  name,
+  posterAlt,
+  posterImage,
+  seriesName,
+  seriesEvents,
+}: {
+  eventId?: string | null
+  name: ReactNode
+  posterAlt: string
+  posterImage?: string | null
+  seriesName?: string | null
+  seriesEvents?: SeriesEventSummary[] | null
+}) {
+  const [posterOpen, setPosterOpen] = useState(false)
+  const others = [...(seriesEvents ?? [])]
+    .filter((item) => item.id !== eventId)
+    .sort((a, b) => (a.start_date || "").localeCompare(b.start_date || ""))
+
+  return (
+    <div className="flex items-start gap-3">
+      {posterImage ? (
+        <button type="button" onClick={() => setPosterOpen(true)} className="shrink-0 cursor-zoom-in">
+          <img
+            src={posterImage}
+            alt={`${posterAlt} poster`}
+            className="h-40 w-auto max-w-32 rounded border border-stone-200 bg-stone-50 object-contain"
+          />
+        </button>
+      ) : null}
+      <div className="min-w-0 flex-1">
+        {name}
+        {seriesName ? (
+          <div className="mt-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-normal text-stone-600">
+            <p>Part of event series: {seriesName}</p>
+            {others.length > 0 ? (
+              <div className="mt-2">
+                <p>Other events in the series:</p>
+                <ul className="mt-1 space-y-1">
+                  {others.map((item) => {
+                    const place = [item.city, item.country].filter(Boolean).join(", ")
+                    const when = item.start_date
+                      ? item.end_date && item.end_date !== item.start_date
+                        ? `${formatDateReadable(item.start_date)} – ${formatDateReadable(item.end_date)}`
+                        : formatDateReadable(item.start_date)
+                      : null
+                    const href =
+                      item.moderation_status === "approved" ? `/event/${item.permalink || item.id}` : null
+                    const status =
+                      item.moderation_status === "pending"
+                        ? "pending review"
+                        : item.moderation_status === "flagged"
+                          ? "flagged"
+                          : null
+                    return (
+                      <li key={item.id}>
+                        {href ? (
+                          <Link href={href} target="_blank" className="underline underline-offset-2 hover:text-stone-800">
+                            {item.name}
+                          </Link>
+                        ) : (
+                          <span>{item.name}</span>
+                        )}
+                        {when ? <span> · {when}</span> : null}
+                        {place ? <span> · {place}</span> : null}
+                        {status ? <span> · {status}</span> : null}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      {posterImage ? (
+        <EventPosterModal
+          open={posterOpen}
+          onClose={() => setPosterOpen(false)}
+          src={posterImage}
+          alt={`${posterAlt} poster`}
+        />
+      ) : null}
+    </div>
+  )
 }
 
 type StoreQuickFixForm = {
@@ -361,7 +476,7 @@ export default function AdminPage() {
     setLoadingEvents(true)
     const { data, error: pendingError } = await supabase
       .from("events")
-      .select("*")
+      .select(`*, ${SERIES_EVENTS_SELECT}`)
       .eq("moderation_status", "pending")
       .order("created_at", { ascending: false })
     if (pendingError) {
@@ -386,7 +501,7 @@ export default function AdminPage() {
       const baseSelect = "id, name, city, state, country, address, email, website, notes, permalink, moderated_at, moderated_by, review_action, admin_note, created_at"
       const selectColumns =
         table === "events"
-          ? `${baseSelect}, start_date, end_date`
+          ? `${baseSelect}, start_date, end_date, poster_image, ${SERIES_EVENTS_SELECT}`
           : baseSelect
 
       let query = supabase
@@ -432,6 +547,9 @@ export default function AdminPage() {
       (item): ModerationHistoryItem => ({
         ...item,
         listingType: "event",
+        poster_image: item.poster_image ?? null,
+        series_name: item.event_series?.name ?? null,
+        series_events: item.event_series?.events ?? [],
       })
     )
 
@@ -498,7 +616,7 @@ export default function AdminPage() {
       .select(
         `
         *,
-        events!inner(name, city, country)
+        events!inner(id, name, city, country, poster_image, ${SERIES_EVENTS_SELECT})
       `
       )
       .eq("status", "pending")
@@ -1246,9 +1364,8 @@ export default function AdminPage() {
                 return (
                   <Card key={store.id} className="bg-white border-stone-200">
                     <CardHeader>
-                      <CardTitle className="text-stone-800 flex items-center justify-between">
-                        <span>{store.name}</span>
-                        <Badge variant="outline">Store</Badge>
+                      <CardTitle className="text-stone-800">
+                        {store.name}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -1361,9 +1478,8 @@ export default function AdminPage() {
                 return (
                   <Card key={library.id} className="bg-white border-stone-200">
                     <CardHeader>
-                      <CardTitle className="text-stone-800 flex items-center justify-between">
-                        <span>{library.name}</span>
-                        <Badge variant="outline">Library</Badge>
+                      <CardTitle className="text-stone-800">
+                        {library.name}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -1479,10 +1595,18 @@ export default function AdminPage() {
                 return (
                   <Card key={event.id} className="bg-white border-stone-200">
                     <CardHeader>
-                      <CardTitle className="text-stone-800 flex items-center justify-between">
-                        <span>{event.name}</span>
-                        <Badge variant="outline">Event</Badge>
-                      </CardTitle>
+                      <EventPosterAndSeries
+                        eventId={event.id}
+                        posterAlt={event.name}
+                        posterImage={event.poster_image}
+                        seriesName={(event.event_series as { name?: string | null; events?: SeriesEventSummary[] | null } | null)?.name}
+                        seriesEvents={(event.event_series as { events?: SeriesEventSummary[] | null } | null)?.events}
+                        name={
+                          <CardTitle className="text-stone-800">
+                            {event.name}
+                          </CardTitle>
+                        }
+                      />
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -1603,12 +1727,30 @@ export default function AdminPage() {
                   <CardContent className="py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
-                          <Link href={getListingHref(item)} className="font-semibold text-stone-800 underline underline-offset-2 hover:text-rose-600">
-                            {item.name}
-                          </Link>
-                        </div>
+                        {item.listingType === "event" ? (
+                          <EventPosterAndSeries
+                            eventId={item.id}
+                            posterAlt={item.name}
+                            posterImage={item.poster_image}
+                            seriesName={item.series_name}
+                            seriesEvents={item.series_events}
+                            name={
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
+                                <Link href={getListingHref(item)} className="font-semibold text-stone-800 underline underline-offset-2 hover:text-rose-600">
+                                  {item.name}
+                                </Link>
+                              </div>
+                            }
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
+                            <Link href={getListingHref(item)} className="font-semibold text-stone-800 underline underline-offset-2 hover:text-rose-600">
+                              {item.name}
+                            </Link>
+                          </div>
+                        )}
                         <p className="text-sm text-stone-600 mt-1">
                           {item.city}
                           {item.state ? `, ${item.state}` : ""}, {item.country}
@@ -1686,10 +1828,26 @@ export default function AdminPage() {
                   <CardContent className="py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
-                          <span className="font-semibold text-stone-800">{item.name}</span>
-                        </div>
+                        {item.listingType === "event" ? (
+                          <EventPosterAndSeries
+                            eventId={item.id}
+                            posterAlt={item.name}
+                            posterImage={item.poster_image}
+                            seriesName={item.series_name}
+                            seriesEvents={item.series_events}
+                            name={
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
+                                <span className="font-semibold text-stone-800">{item.name}</span>
+                              </div>
+                            }
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{listingLabel(item.listingType)}</Badge>
+                            <span className="font-semibold text-stone-800">{item.name}</span>
+                          </div>
+                        )}
                         <p className="text-sm text-stone-600 mt-1">{item.city}, {item.country}</p>
                       </div>
                       <div className="text-right text-sm text-stone-600">
@@ -1783,10 +1941,19 @@ export default function AdminPage() {
                 {eventEdits.map((edit) => (
                   <Card key={`event-edit-${edit.id}`} className="bg-white border-stone-200">
                     <CardHeader>
-                      <CardTitle className="text-stone-800 flex items-center gap-2">
-                        <Badge variant="outline">Event Edit</Badge>
-                        {edit.events?.name || "Unknown Event"}
-                      </CardTitle>
+                      <EventPosterAndSeries
+                        eventId={edit.event_id}
+                        posterAlt={edit.events?.name || "Event"}
+                        posterImage={edit.events?.poster_image}
+                        seriesName={edit.events?.event_series?.name}
+                        seriesEvents={edit.events?.event_series?.events}
+                        name={
+                          <CardTitle className="text-stone-800 flex items-center gap-2">
+                            <Badge variant="outline" className="text-sm font-normal">Event Edit</Badge>
+                            {edit.events?.name || "Unknown Event"}
+                          </CardTitle>
+                        }
+                      />
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <p className="text-sm text-stone-600">
