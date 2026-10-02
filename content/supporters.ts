@@ -49,4 +49,11 @@ export const supporters: Supporter[] = [
     width: 420,
     height: 160,
   },
+  {
+    name: "Outlet",
+    logoSrc: "/supporter-logos/Outlet.png",
+    websiteUrl: "https://www.outletpdx.com/",
+    width: 420,
+    height: 160,
+  },
 ];

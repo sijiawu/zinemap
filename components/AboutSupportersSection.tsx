@@ -12,7 +12,7 @@ export default function AboutSupportersSection() {
       <p className="mt-3 max-w-6xl font-serif text-sm leading-relaxed text-stone-700 md:text-lg">
         Thank you to the supporters below for helping ZineMap through donations and in-kind support!
       </p>
-      <div className="mt-3 grid max-w-6xl grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-6 md:gap-x-4 md:gap-y-5">
+      <div className="mt-3 grid max-w-6xl grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-7 md:gap-x-4 md:gap-y-5">
         {supporters.map((supporter) => (
           <Link
             key={supporter.name}
