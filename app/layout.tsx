@@ -55,6 +55,11 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <script
+          defer
+          src="https://umami-alpha-lime.vercel.app/script.js"
+          data-website-id="03c1ef6f-2328-4279-af67-1f87dceb85c7"
+        />
         <Script
           defer
           data-domain="zinemap.com"
