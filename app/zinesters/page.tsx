@@ -175,7 +175,7 @@ export default function ZinestersPage() {
             ${PIN_PROFILE_FIELDS}
           )
         `)
-        .order('updated_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
 
       if (error) throw error
       
@@ -423,13 +423,13 @@ export default function ZinestersPage() {
       openTo: string[]
       pins: HomePin[]
       locationLabels: string[]
-      sortUpdatedAt: number
+      sortCreatedAt: number
     }>()
 
     filteredPins.forEach((pin) => {
       const key = pinOwnerKey(pin)
       const locationLabel = getPinLocationText(pin)
-      const pinUpdatedAt = zinesterSortTimestamp(pin)
+      const pinCreatedAt = zinesterSortTimestamp(pin)
       const existing = byUser.get(key)
 
       if (!existing) {
@@ -441,13 +441,13 @@ export default function ZinestersPage() {
           openTo: pin.user?.open_to || [],
           pins: [pin],
           locationLabels: [locationLabel],
-          sortUpdatedAt: pinUpdatedAt,
+          sortCreatedAt: pinCreatedAt,
         })
         return
       }
 
       existing.pins.push(pin)
-      existing.sortUpdatedAt = Math.max(existing.sortUpdatedAt, pinUpdatedAt)
+      existing.sortCreatedAt = Math.max(existing.sortCreatedAt, pinCreatedAt)
       if (!existing.locationLabels.includes(locationLabel)) {
         existing.locationLabels.push(locationLabel)
       }
@@ -455,7 +455,7 @@ export default function ZinestersPage() {
       existing.openTo = mergeUniquePreserveOrder(existing.openTo, pin.user?.open_to)
     })
 
-    return Array.from(byUser.values()).sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
+    return Array.from(byUser.values()).sort((a, b) => b.sortCreatedAt - a.sortCreatedAt)
   }, [filteredPins])
 
   const filteredPinIds = useMemo(() => new Set(filteredPins.map((pin) => pin.id)), [filteredPins])

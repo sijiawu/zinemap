@@ -892,12 +892,10 @@ export type ZinesterSortablePin = {
   } | null
 }
 
-/** Latest activity timestamp for a zinester (profile or pin update). */
+/** When this pin was created. */
 export function zinesterSortTimestamp(pin: ZinesterSortablePin): number {
-  const times = [pin.user?.updated_at, pin.updated_at, pin.created_at]
-    .filter(Boolean)
-    .map((value) => new Date(value as string).getTime())
-  return times.length ? Math.max(...times) : 0
+  const createdAt = pin.created_at ? Date.parse(pin.created_at) : 0
+  return Number.isNaN(createdAt) ? 0 : createdAt
 }
 
 /** Homepage People carousel: roles/open-to tag and bio required. */
@@ -911,35 +909,33 @@ export function meetsZinesterPeopleDisplayCriteria(
 }
 
 /**
- * Rank zinesters like the /zinesters sidebar (uses profile and pin updated_at), apply
- * People display rules, return top N. Requires the full pin set—not a subset ordered by
- * pin.updated_at only, or recently updated profiles can be missed.
+ * Rank zinesters like the /zinesters sidebar, by pin created_at. Apply People
+ * display rules and return the top N. Uses the full pin set so someone whose
+ * newest pin is older than another person's is not dropped early.
  */
 export function selectFeaturedZinestersFromPins<T extends ZinesterSortablePin>(
   pins: T[],
   limit = 9
 ): T[] {
-  const byUser = new Map<string, { row: T; sortUpdatedAt: number }>()
+  const byUser = new Map<string, { row: T; sortCreatedAt: number }>()
 
   for (const row of pins) {
     if (!row.user_id) continue
     const ts = zinesterSortTimestamp(row)
     const existing = byUser.get(row.user_id)
     if (!existing) {
-      byUser.set(row.user_id, { row, sortUpdatedAt: ts })
+      byUser.set(row.user_id, { row, sortCreatedAt: ts })
       continue
     }
-    existing.sortUpdatedAt = Math.max(existing.sortUpdatedAt, ts)
-    const rowPinTime = new Date(row.updated_at || row.created_at).getTime()
-    const existingPinTime = new Date(existing.row.updated_at || existing.row.created_at).getTime()
-    if (rowPinTime > existingPinTime) {
+    if (ts > existing.sortCreatedAt) {
+      existing.sortCreatedAt = ts
       existing.row = row
     }
   }
 
   return Array.from(byUser.values())
     .filter(({ row }) => meetsZinesterPeopleDisplayCriteria(row.user))
-    .sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
+    .sort((a, b) => b.sortCreatedAt - a.sortCreatedAt)
     .slice(0, limit)
     .map(({ row }) => row)
 }
