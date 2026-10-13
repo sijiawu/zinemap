@@ -108,22 +108,6 @@ if (oldEmail.toLowerCase() === newEmail) {
   process.exit(0)
 }
 
-const { count: homePinCount, error: pinError } = await supabase
-  .from("home_pins")
-  .select("id", { count: "exact", head: true })
-  .eq("user_email", oldEmail)
-
-if (pinError) {
-  fail(`Could not check home pins: ${pinError.message}`)
-}
-
-if ((homePinCount ?? 0) > 0) {
-  fail(
-    `Aborted without changes: this user has ${homePinCount} home pin(s). ` +
-      "Migrate those email references first."
-  )
-}
-
 const { data: profile, error: profileLookupError } = await supabase
   .from("profiles")
   .select("id, email")

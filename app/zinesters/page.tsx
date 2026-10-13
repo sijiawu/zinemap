@@ -253,7 +253,6 @@ export default function ZinestersPage() {
     try {
       const { data, error } = await supabase.from('home_pins').insert({
         user_id: user.id,
-        user_email: user.email,
         latitude: pendingPinLocation.lat,
         longitude: pendingPinLocation.lng,
         color: selectedPinColor,
