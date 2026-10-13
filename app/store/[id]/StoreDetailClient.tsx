@@ -17,6 +17,7 @@ import { SaveButton } from "@/components/SaveButton"
 import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { EntityEditHistory } from "@/components/EntityEditHistory"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -50,7 +51,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
   
   // Store submitter state
-  const [storeSubmitter, setStoreSubmitter] = useState<{ display_name: string | null; email: string } | null>(null)
+  const [storeSubmitter, setStoreSubmitter] = useState<{ display_name: string | null; permalink: string | null } | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
@@ -89,19 +90,27 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
 
           // Fetch store submitter's information
           if (storeData.submitted_by) {
-            const { data: submitterData, error: submitterError } = await supabase
-              .from('profiles')
-              .select('display_name, email')
-              .eq('id', storeData.submitted_by)
-              .single()
+            const [{ data: submitterData, error: submitterError }, { data: matchesContact, error: matchError }] = await Promise.all([
+              supabase
+                .from('profiles')
+                .select('display_name, permalink')
+                .eq('id', storeData.submitted_by)
+                .single(),
+              supabase.rpc('store_submitter_matches_contact', { p_store_id: storeData.id }),
+            ])
 
             if (!submitterError && submitterData) {
-              setStoreSubmitter(submitterData)
-              
-              // Check if submitter is the owner (email matches store email)
-              if (storeData.email && submitterData.email?.toLowerCase() === storeData.email?.toLowerCase()) {
-                setIsOwner(true)
-              }
+              setStoreSubmitter({
+                display_name: submitterData.display_name,
+                permalink: submitterData.permalink ?? null,
+              })
+            }
+
+            if (matchError) {
+              console.error('Failed to check shop staff badge:', matchError)
+              setIsOwner(false)
+            } else {
+              setIsOwner(Boolean(matchesContact))
             }
           }
 
@@ -160,7 +169,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
             if (userIds.length > 0) {
               const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, display_name, email, permalink, profile_image')
+                .select('id, display_name, permalink, profile_image')
                 .in('id', userIds)
               
               if (profilesData) {
@@ -284,7 +293,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -385,7 +394,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -561,7 +570,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                   <span>
                     {' by '}
                     <span className="font-medium">
-                      {storeSubmitter.display_name || storeSubmitter.email?.split('@')[0] || 'Anonymous'}
+                      {storeSubmitter.display_name || 'Anonymous'}
                     </span>
                   </span>
                 )} */}
@@ -814,10 +823,10 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                                       href={`/profile/${note.user.permalink}`}
                                       className="hover:text-rose-600 hover:underline transition-colors"
                                     >
-                                      {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                      {note.user.display_name || 'Anonymous'}
                                     </Link>
                                   ) : (
-                                    note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                    note.user.display_name || 'Anonymous'
                                   )}
                                 </span>
                               )}
@@ -984,9 +993,24 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
           </CardContent>
         </Card>
 
-        {/* Community contribution note */}
-        <div className="text-center pt-8 border-t border-stone-200">
-          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
+        {/* Page history + community contribution note */}
+        <div className="pt-8 border-t border-stone-200 space-y-6">
+          <EntityEditHistory
+            entityType="store"
+            entityId={store.id}
+            createdAt={store.created_at}
+            submitter={
+              storeSubmitter
+                ? {
+                    display_name: storeSubmitter.display_name,
+                    permalink: storeSubmitter.permalink,
+                  }
+                : null
+            }
+          />
+
+          <div className="text-center">
+            <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
             {feedbackSubmitted ? (
               <p className="text-green-600 text-sm">Thank you for your feedback!</p>
             ) : showFeedbackForm ? (
@@ -1071,6 +1095,7 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                 )}
               </p>
             )}
+            </div>
           </div>
         </div>
       </div>

@@ -119,13 +119,13 @@ export default function EventsPage() {
           .select('event_id, user_id, created_at, status')
           .not('event_id', 'is', null)
           .order('created_at', { ascending: false })
-        const eventLastEditsMap = new Map<string, string>()
+        const eventLastEditsMap = new Map<string, { userId: string; submittedAt: string }>()
         for (const edit of allEventEdits || []) {
           if ((edit.status === 'addressed' || edit.status === 'approved') && !eventLastEditsMap.has(edit.event_id)) {
-            eventLastEditsMap.set(edit.event_id, edit.user_id)
+            eventLastEditsMap.set(edit.event_id, { userId: edit.user_id, submittedAt: edit.created_at })
           }
         }
-        const eventEditorIds = Array.from(new Set(eventLastEditsMap.values()))
+        const eventEditorIds = Array.from(new Set(Array.from(eventLastEditsMap.values()).map((edit) => edit.userId)))
         const { data: eventEditorProfiles } = eventEditorIds.length > 0 ? await supabase
           .from('profiles')
           .select('id, display_name, permalink')
@@ -144,15 +144,16 @@ export default function EventsPage() {
           const userData = eventUserMap.get(event.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
-          const lastEditUserId = eventLastEditsMap.get(event.id)
-          const lastEditUserData = lastEditUserId ? eventEditorMap.get(lastEditUserId) : null
+          const lastEdit = eventLastEditsMap.get(event.id)
+          const lastEditUserData = lastEdit ? eventEditorMap.get(lastEdit.userId) : null
 
           return {
             ...event,
             user_name,
             user_permalink,
             last_edit_user_name: lastEditUserData?.display_name ?? undefined,
-            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined,
+            last_edit_at: lastEdit?.submittedAt
           }
         })
 
@@ -784,8 +785,8 @@ export default function EventsPage() {
                                 ) : (
                                   event.last_edit_user_name
                                 )}
-                                {event.updated_at && event.updated_at !== event.created_at && (
-                                  <RelativeDateWithTooltip dateString={event.updated_at} prefix=" · " />
+                                {event.last_edit_at && (
+                                  <RelativeDateWithTooltip dateString={event.last_edit_at} prefix=" · " />
                                 )}
                               </>
                             )}

@@ -135,13 +135,13 @@ export default function LibrariesPage() {
           .select('library_id, user_id, created_at, status')
           .not('library_id', 'is', null)
           .order('created_at', { ascending: false })
-        const libraryLastEditsMap = new Map<string, string>()
+        const libraryLastEditsMap = new Map<string, { userId: string; submittedAt: string }>()
         for (const edit of allLibraryEdits || []) {
           if ((edit.status === 'addressed' || edit.status === 'approved') && !libraryLastEditsMap.has(edit.library_id)) {
-            libraryLastEditsMap.set(edit.library_id, edit.user_id)
+            libraryLastEditsMap.set(edit.library_id, { userId: edit.user_id, submittedAt: edit.created_at })
           }
         }
-        const libraryEditorIds = Array.from(new Set(libraryLastEditsMap.values()))
+        const libraryEditorIds = Array.from(new Set(Array.from(libraryLastEditsMap.values()).map((edit) => edit.userId)))
         const { data: libraryEditorProfiles } = libraryEditorIds.length > 0 ? await supabase
           .from('profiles')
           .select('id, display_name, permalink')
@@ -168,8 +168,8 @@ export default function LibrariesPage() {
           const userData = libraryUserMap.get(library.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
-          const lastEditUserId = libraryLastEditsMap.get(library.id)
-          const lastEditUserData = lastEditUserId ? libraryEditorMap.get(lastEditUserId) : null
+          const lastEdit = libraryLastEditsMap.get(library.id)
+          const lastEditUserData = lastEdit ? libraryEditorMap.get(lastEdit.userId) : null
 
           return {
             ...library,
@@ -177,7 +177,8 @@ export default function LibrariesPage() {
             user_name,
             user_permalink,
             last_edit_user_name: lastEditUserData?.display_name ?? undefined,
-            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined,
+            last_edit_at: lastEdit?.submittedAt
           }
         })
 
@@ -708,8 +709,8 @@ export default function LibrariesPage() {
                                 ) : (
                                   library.last_edit_user_name
                                 )}
-                                {library.updated_at && library.updated_at !== library.created_at && (
-                                  <RelativeDateWithTooltip dateString={library.updated_at} prefix=" · " />
+                                {library.last_edit_at && (
+                                  <RelativeDateWithTooltip dateString={library.last_edit_at} prefix=" · " />
                                 )}
                               </>
                             )}

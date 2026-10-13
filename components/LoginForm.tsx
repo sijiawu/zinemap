@@ -34,16 +34,6 @@ export default function AuthForm() {
       return
     }
     setLoading(true)
-    if (mode === 'signup') {
-      // Check if email is already registered
-      const { data: emailExists } = await supabase.from('profiles').select('email').eq('email', email).single()
-      if (emailExists) {
-        setError('That email is already registered. Please log in instead.')
-        setLoading(false)
-        return
-      }
-    }
-    // Send magic link for both login and signup (if not blocked above)
     const { error: supabaseError } = await supabase.auth.signInWithOtp({ email })
     if (supabaseError) {
       setError(supabaseError.message)

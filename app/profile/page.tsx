@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Edit, Globe, User, FileText, BookOpen, RefreshCw, Calendar, MapPin, X, Image as ImageIcon, Plus, ArrowRight, ArrowLeft, Store, Library, Pencil, Bookmark, Landmark, Clock } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
-import { UserProfile, Zine } from '@/lib/types'
+import { PUBLIC_PROFILE_COLUMNS, UserProfile, Zine } from '@/lib/types'
 import { autoLinkText, generatePermalink, getEventCategoryDisplay } from '@/lib/utils'
 import Link from 'next/link'
 import AddZineModal from '@/components/AddZineModal'
@@ -179,7 +179,7 @@ export default function ProfilePage() {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(PUBLIC_PROFILE_COLUMNS)
         .eq('id', user.id)
         .single()
 
@@ -210,7 +210,7 @@ export default function ProfilePage() {
           events!inner(id, name, category, start_date, end_date, city, state, country, permalink, poster_image)
         `).eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('saved_locations').select('entity_type, entity_id').eq('user_id', user.id),
-        supabase.from('home_pins').select('id, city, country').eq('user_email', user.email).order('created_at', { ascending: false }),
+        supabase.from('home_pins').select('id, city, country').eq('user_id', user.id).order('created_at', { ascending: false }),
       ])
 
       if (zinesRes.error) {

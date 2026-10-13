@@ -881,7 +881,7 @@ export function normalizeUSState(state: string, country: string): string {
 
 /** Pin + profile fields used to rank zinesters (matches /zinesters sidebar). */
 export type ZinesterSortablePin = {
-  user_email: string
+  user_id: string | null
   created_at: string
   updated_at?: string | null
   user?: {
@@ -919,13 +919,14 @@ export function selectFeaturedZinestersFromPins<T extends ZinesterSortablePin>(
   pins: T[],
   limit = 9
 ): T[] {
-  const byEmail = new Map<string, { row: T; sortUpdatedAt: number }>()
+  const byUser = new Map<string, { row: T; sortUpdatedAt: number }>()
 
   for (const row of pins) {
+    if (!row.user_id) continue
     const ts = zinesterSortTimestamp(row)
-    const existing = byEmail.get(row.user_email)
+    const existing = byUser.get(row.user_id)
     if (!existing) {
-      byEmail.set(row.user_email, { row, sortUpdatedAt: ts })
+      byUser.set(row.user_id, { row, sortUpdatedAt: ts })
       continue
     }
     existing.sortUpdatedAt = Math.max(existing.sortUpdatedAt, ts)
@@ -936,7 +937,7 @@ export function selectFeaturedZinestersFromPins<T extends ZinesterSortablePin>(
     }
   }
 
-  return Array.from(byEmail.values())
+  return Array.from(byUser.values())
     .filter(({ row }) => meetsZinesterPeopleDisplayCriteria(row.user))
     .sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
     .slice(0, limit)

@@ -139,13 +139,13 @@ export default function StoresPage() {
           .select('store_id, user_id, created_at, status')
           .not('store_id', 'is', null)
           .order('created_at', { ascending: false })
-        const storeLastEditsMap = new Map<string, string>()
+        const storeLastEditsMap = new Map<string, { userId: string; submittedAt: string }>()
         for (const edit of allStoreEdits || []) {
           if ((edit.status === 'addressed' || edit.status === 'approved') && !storeLastEditsMap.has(edit.store_id)) {
-            storeLastEditsMap.set(edit.store_id, edit.user_id)
+            storeLastEditsMap.set(edit.store_id, { userId: edit.user_id, submittedAt: edit.created_at })
           }
         }
-        const editorIds = Array.from(new Set(storeLastEditsMap.values()))
+        const editorIds = Array.from(new Set(Array.from(storeLastEditsMap.values()).map((edit) => edit.userId)))
         const { data: editorProfiles } = editorIds.length > 0 ? await supabase
           .from('profiles')
           .select('id, display_name, permalink')
@@ -172,8 +172,8 @@ export default function StoresPage() {
           const userData = storeUserMap.get(store.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const user_name = userData.display_name
           const user_permalink = userData.permalink
-          const lastEditUserId = storeLastEditsMap.get(store.id)
-          const lastEditUserData = lastEditUserId ? editorMap.get(lastEditUserId) : null
+          const lastEdit = storeLastEditsMap.get(store.id)
+          const lastEditUserData = lastEdit ? editorMap.get(lastEdit.userId) : null
 
           return {
             ...store,
@@ -181,7 +181,8 @@ export default function StoresPage() {
             user_name,
             user_permalink,
             last_edit_user_name: lastEditUserData?.display_name ?? undefined,
-            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined,
+            last_edit_at: lastEdit?.submittedAt
           }
         })
 
@@ -774,8 +775,8 @@ export default function StoresPage() {
                                 ) : (
                                   store.last_edit_user_name
                                 )}
-                                {store.updated_at && store.updated_at !== store.created_at && (
-                                  <RelativeDateWithTooltip dateString={store.updated_at} prefix=" · " />
+                                {store.last_edit_at && (
+                                  <RelativeDateWithTooltip dateString={store.last_edit_at} prefix=" · " />
                                 )}
                               </>
                             )}

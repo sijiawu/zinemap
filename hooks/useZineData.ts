@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
-import { Zine, Batch, UserProfile } from '@/lib/types'
+import { PUBLIC_PROFILE_COLUMNS, Zine, Batch, UserProfile } from '@/lib/types'
 
 export interface DashboardStats {
   totalZines: number
@@ -41,7 +41,7 @@ export function useZineData(user: User | null, refreshKey: number = 0) {
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
+          .select(PUBLIC_PROFILE_COLUMNS)
           .eq('id', user.id)
           .single()
 

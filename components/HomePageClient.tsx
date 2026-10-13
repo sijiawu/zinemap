@@ -151,14 +151,14 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
         ])
 
         // Build edit maps (most recent per store/library/event)
-        const storeLastEditsMap = new Map<string, { user_id: string }>()
-        const libraryLastEditsMap = new Map<string, { user_id: string }>()
-        const eventLastEditsMap = new Map<string, { user_id: string }>()
+        const storeLastEditsMap = new Map<string, { user_id: string; submitted_at: string }>()
+        const libraryLastEditsMap = new Map<string, { user_id: string; submitted_at: string }>()
+        const eventLastEditsMap = new Map<string, { user_id: string; submitted_at: string }>()
         const allEdits = allEditsResult.data || []
         for (const edit of allEdits) {
-          if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id })
-          if (edit.library_id && !libraryLastEditsMap.has(edit.library_id)) libraryLastEditsMap.set(edit.library_id, { user_id: edit.user_id })
-          if (edit.event_id && !eventLastEditsMap.has(edit.event_id)) eventLastEditsMap.set(edit.event_id, { user_id: edit.user_id })
+          if (edit.store_id && !storeLastEditsMap.has(edit.store_id)) storeLastEditsMap.set(edit.store_id, { user_id: edit.user_id, submitted_at: edit.created_at })
+          if (edit.library_id && !libraryLastEditsMap.has(edit.library_id)) libraryLastEditsMap.set(edit.library_id, { user_id: edit.user_id, submitted_at: edit.created_at })
+          if (edit.event_id && !eventLastEditsMap.has(edit.event_id)) eventLastEditsMap.set(edit.event_id, { user_id: edit.user_id, submitted_at: edit.created_at })
         }
 
         // Single profiles query: all submitters + all editors (deduped)
@@ -184,7 +184,7 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
         // Helper: Enrich item with user and edit info (userMap covers both submitters and editors)
         const enrichItem = <T extends { id: string; submitted_by: string }>(
           item: T,
-          lastEditsMap: Map<string, { user_id: string }>
+          lastEditsMap: Map<string, { user_id: string; submitted_at: string }>
         ) => {
           const userData = userMap.get(item.submitted_by) || { display_name: 'Unknown user', permalink: null }
           const lastEdit = lastEditsMap.get(item.id)
@@ -194,7 +194,8 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
             user_name: userData.display_name,
             user_permalink: userData.permalink,
             last_edit_user_name: lastEditUserData?.display_name ?? undefined,
-            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined
+            last_edit_user_permalink: lastEditUserData?.permalink ?? undefined,
+            last_edit_at: lastEdit?.submitted_at
           }
         }
 
@@ -843,8 +844,8 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                                   ) : (
                                     store.last_edit_user_name
                                   )}
-                                  {store.updated_at && store.updated_at !== store.created_at && (
-                                    <RelativeDateWithTooltip dateString={store.updated_at} prefix=" · " />
+                                  {store.last_edit_at && (
+                                    <RelativeDateWithTooltip dateString={store.last_edit_at} prefix=" · " />
                                   )}
                                 </>
                               )}
@@ -993,8 +994,8 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                                   ) : (
                                     library.last_edit_user_name
                                   )}
-                                  {library.updated_at && library.updated_at !== library.created_at && (
-                                    <RelativeDateWithTooltip dateString={library.updated_at} prefix=" · " />
+                                  {library.last_edit_at && (
+                                    <RelativeDateWithTooltip dateString={library.last_edit_at} prefix=" · " />
                                   )}
                                 </>
                               )}
@@ -1211,8 +1212,8 @@ export default function HomePageClient({ initialStores, initialLibraries, initia
                                   ) : (
                                     event.last_edit_user_name
                                   )}
-                                  {event.updated_at && event.updated_at !== event.created_at && (
-                                    <RelativeDateWithTooltip dateString={event.updated_at} prefix=" · " />
+                                  {event.last_edit_at && (
+                                    <RelativeDateWithTooltip dateString={event.last_edit_at} prefix=" · " />
                                   )}
                                 </>
                               )}

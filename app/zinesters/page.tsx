@@ -31,11 +31,19 @@ const SIDEBAR_SELECT_CLASS =
 
 type ProfileCachePayload = Pick<
   UserProfile,
-  'id' | 'display_name' | 'email' | 'permalink' | 'profile_image' | 'bio' | 'roles' | 'open_to'
+  'id' | 'display_name' | 'permalink' | 'profile_image' | 'bio' | 'roles' | 'open_to'
 >
 
 const PIN_PROFILE_FIELDS =
-  'id, display_name, email, permalink, profile_image, roles, open_to, updated_at'
+  'id, display_name, permalink, profile_image, roles, open_to, updated_at'
+
+function pinOwnerKey(pin: HomePin) {
+  return pin.user_id ?? `pin:${pin.id}`
+}
+
+function isOwnPin(pin: HomePin, userId: string | undefined) {
+  return Boolean(userId && pin.user_id === userId)
+}
 
 const PIN_COLOR_SWATCHES = [
   { name: 'Amber', value: '#f59e0b' },
@@ -78,16 +86,17 @@ function countPinsByNormalizedField(
   return sortCountEntries(counts)
 }
 
-/** One increment per distinct user_email per tag (union tags across pins for that email). */
+/** One increment per distinct user per tag (union tags across pins for that user). */
 function profileTagCountsByUser(pins: HomePin[], field: 'roles' | 'open_to') {
   const tagsPerUser = new Map<string, Set<string>>()
   for (const pin of pins) {
+    if (!pin.user_id) continue
     const tags = pin.user?.[field]
     if (!tags?.length) continue
-    let set = tagsPerUser.get(pin.user_email)
+    let set = tagsPerUser.get(pin.user_id)
     if (!set) {
       set = new Set()
-      tagsPerUser.set(pin.user_email, set)
+      tagsPerUser.set(pin.user_id, set)
     }
     for (const t of tags) set.add(t)
   }
@@ -143,7 +152,7 @@ export default function ZinestersPage() {
   const [appliedNameSearch, setAppliedNameSearch] = useState('')
 
   // Count pins for current user only
-  const userPinCount = user ? pins.filter(pin => pin.user_email === user.email).length : 0
+  const userPinCount = user ? pins.filter(pin => isOwnPin(pin, user.id)).length : 0
 
   // Fetch all pins
   const fetchPins = async () => {
@@ -153,7 +162,7 @@ export default function ZinestersPage() {
         .from('home_pins')
         .select(`
           id,
-          user_email,
+          user_id,
           latitude,
           longitude,
           color,
@@ -162,7 +171,7 @@ export default function ZinestersPage() {
           country,
           created_at,
           updated_at,
-          user:profiles!home_pins_user_email_fkey(
+          user:profiles!home_pins_user_id_fkey(
             ${PIN_PROFILE_FIELDS}
           )
         `)
@@ -193,7 +202,7 @@ export default function ZinestersPage() {
               })
             }
 
-            const fullProfile = await fetchFullProfile(targetPin.user_email)
+            const fullProfile = targetPin.user_id ? await fetchFullProfile(targetPin.user_id) : null
             if (fullProfile) {
               setSelectedPin(prev => prev?.id === targetPin.id ? { ...targetPin, user: fullProfile } : prev)
             }
@@ -243,9 +252,15 @@ export default function ZinestersPage() {
     setShowConfirmModal(false)
     try {
       const { data, error } = await supabase.from('home_pins').insert({
-        user_email: user.email, latitude: pendingPinLocation.lat, longitude: pendingPinLocation.lng,
-        color: selectedPinColor, city: pendingPinLocation.city, state: pendingPinLocation.state, country: pendingPinLocation.country
-      }).select(`id, user_email, latitude, longitude, color, city, state, country, created_at, user:profiles!home_pins_user_email_fkey(${PIN_PROFILE_FIELDS})`).single()
+        user_id: user.id,
+        user_email: user.email,
+        latitude: pendingPinLocation.lat,
+        longitude: pendingPinLocation.lng,
+        color: selectedPinColor,
+        city: pendingPinLocation.city,
+        state: pendingPinLocation.state,
+        country: pendingPinLocation.country,
+      }).select(`id, user_id, latitude, longitude, color, city, state, country, created_at, user:profiles!home_pins_user_id_fkey(${PIN_PROFILE_FIELDS})`).single()
       if (error) throw error
       setPins(prev => [{ ...unwrapPinJoinUser(data as Record<string, unknown>) }, ...prev])
       setIsAddingPin(false)
@@ -297,21 +312,21 @@ export default function ZinestersPage() {
 
 
   const fetchFullProfile = async (
-    userEmail: string,
+    userId: string,
   ): Promise<ProfileCachePayload | null> => {
-    const cached = profileCache[userEmail]
+    const cached = profileCache[userId]
     if (cached) return cached
 
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name, email, permalink, profile_image, bio, roles, open_to')
-        .eq('email', userEmail)
+        .select('id, display_name, permalink, profile_image, bio, roles, open_to')
+        .eq('id', userId)
         .single()
 
       if (error) throw error
       const payload = data as ProfileCachePayload
-      setProfileCache((prev) => ({ ...prev, [userEmail]: payload }))
+      setProfileCache((prev) => ({ ...prev, [userId]: payload }))
       return payload
     } catch (error) {
       console.error('Error fetching full profile:', error)
@@ -401,8 +416,8 @@ export default function ZinestersPage() {
   }, [pins, selectedCountry, selectedState, selectedCity, selectedRole, selectedOpenTo, appliedNameSearch])
 
   const userCards = useMemo(() => {
-    const byEmail = new Map<string, {
-      userEmail: string
+    const byUser = new Map<string, {
+      ownerKey: string
       displayName: string
       profileImage: string
       roles: string[]
@@ -413,14 +428,14 @@ export default function ZinestersPage() {
     }>()
 
     filteredPins.forEach((pin) => {
-      const key = pin.user_email
+      const key = pinOwnerKey(pin)
       const locationLabel = getPinLocationText(pin)
       const pinUpdatedAt = zinesterSortTimestamp(pin)
-      const existing = byEmail.get(key)
+      const existing = byUser.get(key)
 
       if (!existing) {
-        byEmail.set(key, {
-          userEmail: key,
+        byUser.set(key, {
+          ownerKey: key,
           displayName: pin.user?.display_name || 'Anonymous Zinester',
           profileImage: pin.user?.profile_image || '/placeholder-user.jpg',
           roles: pin.user?.roles || [],
@@ -441,7 +456,7 @@ export default function ZinestersPage() {
       existing.openTo = mergeUniquePreserveOrder(existing.openTo, pin.user?.open_to)
     })
 
-    return Array.from(byEmail.values()).sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
+    return Array.from(byUser.values()).sort((a, b) => b.sortUpdatedAt - a.sortUpdatedAt)
   }, [filteredPins])
 
   const filteredPinIds = useMemo(() => new Set(filteredPins.map((pin) => pin.id)), [filteredPins])
@@ -487,7 +502,7 @@ export default function ZinestersPage() {
     
     try {
       // Fetch full profile data if not cached
-      const fullProfile = await fetchFullProfile(pin.user_email)
+      const fullProfile = pin.user_id ? await fetchFullProfile(pin.user_id) : null
       
       setSelectedPin({
         ...pin,
@@ -729,7 +744,9 @@ export default function ZinestersPage() {
 
   useEffect(() => {
     if (selectedPin && !filteredPinIds.has(selectedPin.id)) {
-      const fallbackPin = filteredPins.find((pin) => pin.user_email === selectedPin.user_email)
+      const fallbackPin = selectedPin.user_id
+        ? filteredPins.find((pin) => pin.user_id === selectedPin.user_id)
+        : null
       setSelectedPin(fallbackPin || null)
     }
   }, [filteredPinIds, filteredPins, selectedPin])
@@ -927,10 +944,10 @@ export default function ZinestersPage() {
             <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-2">
               {userCards.map((card) => {
                 const primaryPin = card.pins.find((pin) => pin.id === selectedPin?.id) || card.pins[0]
-                const isActiveUser = selectedPin?.user_email === card.userEmail
+                const isActiveUser = selectedPin ? pinOwnerKey(selectedPin) === card.ownerKey : false
                 return (
                   <button
-                    key={card.userEmail}
+                    key={card.ownerKey}
                     type="button"
                     onClick={() => handlePinClick(primaryPin)}
                     className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
@@ -1056,7 +1073,7 @@ export default function ZinestersPage() {
                 <div className="flex-1 min-w-0">
                   {selectedPin.user?.permalink ? (
                     <a
-                      href={user && selectedPin.user_email === user.email ? '/profile' : `/profile/${selectedPin.user.permalink}`}
+                      href={isOwnPin(selectedPin, user?.id) ? '/profile' : `/profile/${selectedPin.user.permalink}`}
                       className="font-gloria text-lg hover:opacity-80 transition-opacity truncate block"
                       style={{ color: selectedPin.color || DEFAULT_PIN_HEX }}
                     >
@@ -1131,7 +1148,7 @@ export default function ZinestersPage() {
               <div className="flex space-x-2">
                 {selectedPin.user?.permalink && (
                   <a
-                    href={user && selectedPin.user_email === user.email ? '/profile' : `/profile/${selectedPin.user.permalink}`}
+                    href={isOwnPin(selectedPin, user?.id) ? '/profile' : `/profile/${selectedPin.user.permalink}`}
                     className="px-3 py-1 bg-amber-500 text-white rounded text-xs font-gloria hover:bg-amber-600 transition-colors"
                     style={{ backgroundColor: selectedPin.color || DEFAULT_PIN_HEX }}
                   >
@@ -1139,7 +1156,7 @@ export default function ZinestersPage() {
                   </a>
                 )}
                 
-                {user && selectedPin.user_email === user.email && (
+                {isOwnPin(selectedPin, user?.id) && (
                   <button
                     onClick={() => handleDeletePin(selectedPin.id)}
                     className="px-3 py-1 bg-red-500 text-white rounded text-xs font-gloria hover:bg-red-600 transition-colors"

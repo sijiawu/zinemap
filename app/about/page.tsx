@@ -39,9 +39,9 @@ type ZineItem = {
   } | null;
 };
 
-type ZinesterItem = {
+type ZinesterPin = {
   id: string;
-  user_email: string;
+  user_id: string | null;
   city: string | null;
   state: string | null;
   country: string | null;
@@ -228,7 +228,7 @@ async function fetchAboutData() {
     supabase
       .from("home_pins")
       .select(
-        "id,user_email,city,state,country,latitude,longitude,created_at,updated_at,user:profiles!home_pins_user_email_fkey(display_name,permalink,profile_image,roles,open_to,bio,updated_at)"
+        "id,user_id,city,state,country,latitude,longitude,created_at,updated_at,user:profiles!home_pins_user_id_fkey(display_name,permalink,profile_image,roles,open_to,bio,updated_at)"
       ),
     supabase
       .from("stores")
@@ -326,12 +326,27 @@ async function fetchAboutData() {
     }>;
   const zineProfilesMap = new Map(profileRows.map((row) => [row.id, row]));
   const recentZinesterRows = ((zinestersRes.data || []) as Array<
-    Omit<ZinesterItem, "user"> & { user: ZinesterItem["user"] | ZinesterItem["user"][] }
+    Omit<ZinesterPin, "user"> & { user: ZinesterPin["user"] | ZinesterPin["user"][] }
   >).map((row) => ({
     ...row,
     user: Array.isArray(row.user) ? row.user[0] || null : row.user,
   }));
-  const featuredZinesters = selectFeaturedZinestersFromPins(recentZinesterRows, 9);
+  const featuredZinesters = selectFeaturedZinestersFromPins(recentZinesterRows, 9).map((pin) => ({
+    id: pin.id,
+    city: pin.city,
+    state: pin.state,
+    country: pin.country,
+    user: pin.user
+      ? {
+          display_name: pin.user.display_name,
+          permalink: pin.user.permalink,
+          profile_image: pin.user.profile_image,
+          roles: pin.user.roles,
+          open_to: pin.user.open_to,
+          bio: pin.user.bio,
+        }
+      : null,
+  }));
 
   const featuredStoreIds = featuredStoreRows.map((row) => row.id);
   const featuredLibraryIds = featuredLibraryRows.map((row) => row.id);

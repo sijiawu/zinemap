@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Globe, User, BookOpen, MapPin, Calendar, ArrowLeft, Store, Library, Pencil } from "lucide-react"
 import { supabase } from '@/lib/supabaseClient'
-import { UserProfile, Zine } from '@/lib/types'
+import { PUBLIC_PROFILE_COLUMNS, UserProfile, Zine } from '@/lib/types'
 import { autoLinkText, isPastEvent } from '@/lib/utils'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -285,7 +285,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
       // Fetch profile by permalink
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(PUBLIC_PROFILE_COLUMNS)
         .eq('permalink', permalink)
         .single()
 
@@ -310,7 +310,7 @@ export default function ProfileDetailClient({ profileId }: { profileId: string }
           event_id,
           events!inner(id, name, category, start_date, end_date, city, state, country, permalink, poster_image)
         `).eq('user_id', profileData.id).eq('events.moderation_status', 'approved').order('created_at', { ascending: false }),
-        supabase.from('home_pins').select('id, city, country').eq('user_email', profileData.email).order('created_at', { ascending: false }),
+        supabase.from('home_pins').select('id, city, country').eq('user_id', profileData.id).order('created_at', { ascending: false }),
       ])
 
       const allZinesData = zinesRes.data

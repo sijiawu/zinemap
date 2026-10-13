@@ -17,6 +17,7 @@ import { SaveButton } from "@/components/SaveButton"
 import { getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
+import { EntityEditHistory } from "@/components/EntityEditHistory"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -50,7 +51,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
   
   // Library submitter state
-  const [librarySubmitter, setLibrarySubmitter] = useState<{ display_name: string | null; email: string } | null>(null)
+  const [librarySubmitter, setLibrarySubmitter] = useState<{ display_name: string | null; permalink: string | null } | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
@@ -89,19 +90,27 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
 
           // Fetch library submitter's information
           if (libraryData.submitted_by) {
-            const { data: submitterData, error: submitterError } = await supabase
-              .from('profiles')
-              .select('display_name, email')
-              .eq('id', libraryData.submitted_by)
-              .single()
-            
+            const [{ data: submitterData, error: submitterError }, { data: matchesContact, error: matchError }] = await Promise.all([
+              supabase
+                .from('profiles')
+                .select('display_name, permalink')
+                .eq('id', libraryData.submitted_by)
+                .single(),
+              supabase.rpc('library_submitter_matches_contact', { p_library_id: libraryData.id }),
+            ])
+
             if (!submitterError && submitterData) {
-              setLibrarySubmitter(submitterData)
-              
-              // Check if submitter is the owner (email matches library email)
-              if (libraryData.email && submitterData.email?.toLowerCase() === libraryData.email?.toLowerCase()) {
-                setIsOwner(true)
-              }
+              setLibrarySubmitter({
+                display_name: submitterData.display_name,
+                permalink: submitterData.permalink ?? null,
+              })
+            }
+
+            if (matchError) {
+              console.error('Failed to check library staff badge:', matchError)
+              setIsOwner(false)
+            } else {
+              setIsOwner(Boolean(matchesContact))
             }
           }
 
@@ -160,7 +169,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
             if (userIds.length > 0) {
               const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, display_name, email, profile_image, permalink')
+                .select('id, display_name, profile_image, permalink')
                 .in('id', userIds)
               
               if (profilesData) {
@@ -291,7 +300,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, profile_image, permalink')
+            .select('id, display_name, profile_image, permalink')
             .in('id', userIds)
           
           if (profilesData) {
@@ -528,7 +537,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                   <span>
                     {' by '}
                     <span className="font-medium">
-                      {librarySubmitter.display_name || librarySubmitter.email?.split('@')[0] || 'Anonymous'}
+                      {librarySubmitter.display_name || 'Anonymous'}
                     </span>
                   </span>
                 )} */}
@@ -782,10 +791,10 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                                       href={`/profile/${note.user.permalink}`}
                                       className="hover:text-blue-600 hover:underline transition-colors"
                                     >
-                                      {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                      {note.user.display_name || 'Anonymous'}
                                     </Link>
                                   ) : (
-                                    note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                    note.user.display_name || 'Anonymous'
                                   )}
                                 </span>
                               )}
@@ -960,9 +969,24 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
 
 
 
-        {/* Feedback Section */}
-        <div className="text-center py-8">
-          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
+        {/* Page history + feedback */}
+        <div className="py-8 space-y-6">
+          <EntityEditHistory
+            entityType="library"
+            entityId={library.id}
+            createdAt={library.created_at}
+            submitter={
+              librarySubmitter
+                ? {
+                    display_name: librarySubmitter.display_name,
+                    permalink: librarySubmitter.permalink,
+                  }
+                : null
+            }
+          />
+
+          <div className="text-center">
+            <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
             {feedbackSubmitted ? (
               <p className="text-green-600 text-sm">Thank you for your feedback!</p>
             ) : showFeedbackForm ? (
@@ -1047,6 +1071,7 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                 )}
               </p>
             )}
+            </div>
           </div>
         </div>
       </div>

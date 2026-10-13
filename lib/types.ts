@@ -30,6 +30,8 @@ export interface Store {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  /** When the latest approved edit was submitted. */
+  last_edit_at?: string
   moderation_status?: 'pending' | 'approved' | 'flagged'
   admin_note?: string | null
   moderated_by?: string | null
@@ -60,6 +62,8 @@ export interface Library {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  /** When the latest approved edit was submitted. */
+  last_edit_at?: string
   moderation_status?: 'pending' | 'approved' | 'flagged'
   admin_note?: string | null
   moderated_by?: string | null
@@ -81,6 +85,8 @@ export interface Event {
   id: string
   /** Optional stable parent grouping annual editions or recurring dates. */
   series_id?: string | null
+  /** Set when this event was submitted as another date or edition of an existing event. */
+  copied_from_event_id?: string | null
   event_series?: EventSeries | null
   name: string
   venue_name?: string
@@ -112,11 +118,12 @@ export interface Event {
   occurrence_dates?: string[] | null
   user_name?: string
   user_permalink?: string
-  user_email?: string
   attendees_count?: number
   user_is_attending?: boolean
   last_edit_user_name?: string
   last_edit_user_permalink?: string
+  /** When the latest approved edit was submitted. */
+  last_edit_at?: string
   /** Optional poster image URL (similar to zine cover) */
   poster_image?: string | null
   moderation_status?: 'pending' | 'approved' | 'flagged'
@@ -153,7 +160,6 @@ export interface CommunityNote {
   user?: {
     id: string
     display_name: string | null
-    email: string
     permalink: string | null
     profile_image?: string | null
   }
@@ -166,7 +172,6 @@ export interface EventAttendee {
   created_at: string
   user?: {
     display_name: string | null
-    email: string
     permalink: string | null
     profile_image?: string | null
   }
@@ -206,10 +211,14 @@ export interface Batch {
   paid_upfront: boolean | null
 }
 
+/** Profile columns safe to load in the browser. Excludes login email and is_admin. */
+export const PUBLIC_PROFILE_COLUMNS =
+  'id, display_name, site, bio, permalink, profile_image, roles, open_to, created_at, updated_at'
+
 export interface UserProfile {
   id: string
   display_name: string | null
-  email: string
+  email?: string
   site: string | null
   bio: string | null
   permalink: string | null
@@ -218,12 +227,12 @@ export interface UserProfile {
   open_to: string[] | null
   is_admin?: boolean
   created_at: string
-  // Add other profile properties as needed
+  updated_at?: string | null
 }
 
 export interface HomePin {
   id: string
-  user_email: string
+  user_id: string | null
   latitude: number
   longitude: number
   color?: string
@@ -235,7 +244,6 @@ export interface HomePin {
   user?: {
     id: string
     display_name: string | null
-    email: string
     permalink: string | null
     profile_image?: string | null
     bio?: string | null

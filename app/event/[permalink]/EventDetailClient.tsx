@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
+import { EntityEditHistory } from "@/components/EntityEditHistory"
 import { EventPosterTile } from "@/components/EventPosterTile"
 import { EventPosterModal } from "@/components/EventPosterModal"
 
@@ -65,6 +66,22 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [editError, setEditError] = useState<string | null>(null)
   const [deletingNote, setDeletingNote] = useState<CommunityNote | null>(null)
   const [showPosterModal, setShowPosterModal] = useState(false)
+  const [organizerUserIds, setOrganizerUserIds] = useState<Set<string>>(() => new Set())
+
+  const loadOrganizerUserIds = async (id: string) => {
+    const { data, error: organizerError } = await supabase.rpc('event_contact_note_author_ids', {
+      p_event_id: id,
+    })
+    if (organizerError) {
+      console.error('Failed to load event organizer badges:', organizerError)
+      setOrganizerUserIds(new Set())
+      return
+    }
+    const ids = ((data || []) as { user_id: string }[])
+      .map((row) => row.user_id)
+      .filter(Boolean)
+    setOrganizerUserIds(new Set(ids))
+  }
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -126,7 +143,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         // Fetch user profile for the submitter
         const { data: userProfile } = await supabase
           .from('profiles')
-          .select('display_name, permalink, email')
+          .select('display_name, permalink')
           .eq('id', eventData.submitted_by)
           .single()
 
@@ -134,10 +151,10 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           ...eventData,
           user_name: userProfile?.display_name || 'Unknown user',
           user_permalink: userProfile?.permalink,
-          user_email: userProfile?.email
         }
 
         setEvent(eventWithUser)
+        void loadOrganizerUserIds(eventData.id)
 
         if (eventData.series_id) {
           const [{ data: seriesData }, { data: relatedEvents }] = await Promise.all([
@@ -190,7 +207,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           if (userIds.length > 0) {
             const { data: profilesData } = await supabase
               .from('profiles')
-              .select('id, display_name, email, permalink, profile_image')
+              .select('id, display_name, permalink, profile_image')
               .in('id', userIds)
             
             if (profilesData) {
@@ -240,7 +257,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           const userIds = attendeesData.map(attendee => attendee.user_id)
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
 
           // Create a map of user ID to profile data
@@ -260,7 +277,6 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               created_at: attendee.created_at,
               user: {
                 display_name: profile?.display_name || null,
-                email: profile?.email || '',
                 permalink: profile?.permalink || null,
                 profile_image: profile?.profile_image || null
               }
@@ -354,7 +370,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           const userIds = attendeesData.map(attendee => attendee.user_id)
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
 
           // Create a map of user ID to profile data
@@ -374,7 +390,6 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               created_at: attendee.created_at,
               user: {
                 display_name: profile?.display_name || null,
-                email: profile?.email || '',
                 permalink: profile?.permalink || null,
                 profile_image: profile?.profile_image || null
               }
@@ -461,7 +476,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -483,6 +498,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           user: note.user_id && !note.anonymous ? userProfiles[note.user_id] : null
         }))
         setNotes(processedNotes)
+        void loadOrganizerUserIds(event.id)
       }
 
     } catch (error) {
@@ -550,7 +566,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         if (userIds.length > 0) {
           const { data: profilesData } = await supabase
             .from('profiles')
-            .select('id, display_name, email, permalink, profile_image')
+            .select('id, display_name, permalink, profile_image')
             .in('id', userIds)
           
           if (profilesData) {
@@ -572,6 +588,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           user: note.user_id && !note.anonymous ? userProfiles[note.user_id] : null
         }))
         setNotes(processedNotes)
+        if (event?.id) void loadOrganizerUserIds(event.id)
       }
 
       // Reset edit state
@@ -612,6 +629,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
       // Remove from local state
       setNotes(prev => prev.filter(note => note.id !== deletingNote.id))
+      if (event?.id) void loadOrganizerUserIds(event.id)
       
       // Reset user note state if this was their only note
       if (userHasNote) {
@@ -1060,17 +1078,17 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                                           href={`/profile/${note.user.permalink}`}
                                           className="hover:text-green-600 hover:underline transition-colors"
                                         >
-                                          {note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'}
+                                          {note.user.display_name || 'Anonymous'}
                                         </Link>
                                       ) : (
-                                        note.user.display_name || note.user.email?.split('@')[0] || 'Anonymous'
+                                        note.user.display_name || 'Anonymous'
                                       )}
                                     </span>
                                   )}
                                   {note.anonymous && (
                                     <span className="font-medium text-stone-600">Anonymous</span>
                                   )}
-                                  {note.user?.email?.toLowerCase() === event.email?.toLowerCase() && (
+                                  {!note.anonymous && note.user_id && organizerUserIds.has(note.user_id) && (
                                     <Badge variant="outline" className="text-xs border-green-500 text-green-700 bg-green-50">
                                       Event Organizer
                                     </Badge>
@@ -1209,6 +1227,23 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 <SeriesEventsSection title="Past events in this series" events={pastSeriesEvents} />
               </div>
             )}
+
+            <EntityEditHistory
+              entityType="event"
+              entityId={event.id}
+              createdAt={event.created_at}
+              submitter={
+                event.submitted_by
+                  ? {
+                      display_name:
+                        event.user_name && event.user_name !== "Unknown user"
+                          ? event.user_name
+                          : null,
+                      permalink: event.user_permalink ?? null,
+                    }
+                  : null
+              }
+            />
 
             {/* Feedback Section */}
             <div id="feedback-section" className="text-center py-6 order-6 lg:order-none">

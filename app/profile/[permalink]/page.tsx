@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { cache } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { PUBLIC_PROFILE_COLUMNS } from '@/lib/types'
 import { generateProfileMetadata, generateProfileStructuredData } from '@/lib/seo'
 import ProfileDetailClient from './ProfileDetailClient'
 
@@ -8,7 +9,7 @@ import ProfileDetailClient from './ProfileDetailClient'
 const getProfile = cache(async (permalink: string) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PUBLIC_PROFILE_COLUMNS)
     .eq('permalink', permalink)
     .single()
 

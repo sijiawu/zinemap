@@ -26,17 +26,4 @@ export function useSupabaseUser() {
   }, [])
 
   return { user, loading }
-}
-
-export function useLinkProfileId(user: User | null) {
-  useEffect(() => {
-    if (user && user.email && user.id) {
-      // Link the profile row to the auth.users id if not already set
-      supabase
-        .from('profiles')
-        .update({ id: user.id })
-        .eq('email', user.email)
-        .is('id', null)
-    }
-  }, [user])
 } 
