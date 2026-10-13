@@ -17,7 +17,6 @@ import { SaveButton } from "@/components/SaveButton"
 import { sortSplitTagsByCreatorPercentage, getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
-import { EntityEditHistory } from "@/components/EntityEditHistory"
 
 export default function StoreDetailClient({ storeId }: { storeId: string }) {
   const { user } = useSupabaseUser()
@@ -993,24 +992,9 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
           </CardContent>
         </Card>
 
-        {/* Page history + community contribution note */}
-        <div className="pt-8 border-t border-stone-200 space-y-6">
-          <EntityEditHistory
-            entityType="store"
-            entityId={store.id}
-            createdAt={store.created_at}
-            submitter={
-              storeSubmitter
-                ? {
-                    display_name: storeSubmitter.display_name,
-                    permalink: storeSubmitter.permalink,
-                  }
-                : null
-            }
-          />
-
-          <div className="text-center">
-            <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
+        {/* Community contribution note */}
+        <div className="text-center pt-8 border-t border-stone-200">
+          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
             {feedbackSubmitted ? (
               <p className="text-green-600 text-sm">Thank you for your feedback!</p>
             ) : showFeedbackForm ? (
@@ -1095,7 +1079,6 @@ export default function StoreDetailClient({ storeId }: { storeId: string }) {
                 )}
               </p>
             )}
-            </div>
           </div>
         </div>
       </div>

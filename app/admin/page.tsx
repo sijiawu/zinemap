@@ -1208,8 +1208,6 @@ export default function AdminPage() {
             application_deadline?: string | null
             notes?: string | null
             poster_image?: string | null
-            latitude?: number | null
-            longitude?: number | null
             occurrence_dates?: string[] | null
           }
         | undefined
@@ -1236,8 +1234,6 @@ export default function AdminPage() {
             ...(payload.application_deadline !== undefined && { application_deadline: payload.application_deadline }),
             ...(typeof payload.notes === "string" && payload.notes.trim() !== "" && { notes: payload.notes.trim() }),
             ...(payload.poster_image !== undefined && { poster_image: payload.poster_image }),
-            ...(payload.latitude !== undefined && { latitude: payload.latitude }),
-            ...(payload.longitude !== undefined && { longitude: payload.longitude }),
             ...(payload.occurrence_dates !== undefined && { occurrence_dates: payload.occurrence_dates }),
             updated_at: new Date().toISOString(),
           })

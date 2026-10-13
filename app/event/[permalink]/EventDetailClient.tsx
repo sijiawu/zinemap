@@ -17,7 +17,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Link from "next/link"
 import { SaveButton } from "@/components/SaveButton"
 import { PageLoader } from "@/components/loading/PageLoader"
-import { EntityEditHistory } from "@/components/EntityEditHistory"
 import { EventPosterTile } from "@/components/EventPosterTile"
 import { EventPosterModal } from "@/components/EventPosterModal"
 
@@ -1227,23 +1226,6 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 <SeriesEventsSection title="Past events in this series" events={pastSeriesEvents} />
               </div>
             )}
-
-            <EntityEditHistory
-              entityType="event"
-              entityId={event.id}
-              createdAt={event.created_at}
-              submitter={
-                event.submitted_by
-                  ? {
-                      display_name:
-                        event.user_name && event.user_name !== "Unknown user"
-                          ? event.user_name
-                          : null,
-                      permalink: event.user_permalink ?? null,
-                    }
-                  : null
-              }
-            />
 
             {/* Feedback Section */}
             <div id="feedback-section" className="text-center py-6 order-6 lg:order-none">

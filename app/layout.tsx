@@ -57,7 +57,7 @@ export default function RootLayout({
         />
         <script
           defer
-          src="https://analytics.zinemap.com/script.js"
+          src="https://umami-alpha-lime.vercel.app/script.js"
           data-website-id="03c1ef6f-2328-4279-af67-1f87dceb85c7"
         />
         <Script

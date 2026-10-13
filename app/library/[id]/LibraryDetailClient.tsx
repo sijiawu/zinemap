@@ -17,7 +17,6 @@ import { SaveButton } from "@/components/SaveButton"
 import { getTagCategoryDisplay, sortTagsByConfiguredOrder } from "@/lib/utils"
 import { PageLoader } from "@/components/loading/PageLoader"
 import { TagCategoryInfoModalButton } from "@/components/TagCategoryInfoModalButton"
-import { EntityEditHistory } from "@/components/EntityEditHistory"
 
 export default function LibraryDetailClient({ libraryId }: { libraryId: string }) {
   const { user } = useSupabaseUser()
@@ -969,24 +968,9 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
 
 
 
-        {/* Page history + feedback */}
-        <div className="py-8 space-y-6">
-          <EntityEditHistory
-            entityType="library"
-            entityId={library.id}
-            createdAt={library.created_at}
-            submitter={
-              librarySubmitter
-                ? {
-                    display_name: librarySubmitter.display_name,
-                    permalink: librarySubmitter.permalink,
-                  }
-                : null
-            }
-          />
-
-          <div className="text-center">
-            <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
+        {/* Feedback Section */}
+        <div className="text-center py-8">
+          <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm max-w-lg w-full mx-auto">
             {feedbackSubmitted ? (
               <p className="text-green-600 text-sm">Thank you for your feedback!</p>
             ) : showFeedbackForm ? (
@@ -1071,7 +1055,6 @@ export default function LibraryDetailClient({ libraryId }: { libraryId: string }
                 )}
               </p>
             )}
-            </div>
           </div>
         </div>
       </div>

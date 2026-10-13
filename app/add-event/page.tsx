@@ -724,7 +724,6 @@ export default function AddEventPage() {
           occurrence_dates: sortedOccurrenceDates,
           poster_image: posterImageUrl,
           ...(seriesId ? { series_id: seriesId } : {}),
-          ...(copyEventId ? { copied_from_event_id: copyEventId } : {}),
         })
 
       if (error) {

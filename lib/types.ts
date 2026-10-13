@@ -30,8 +30,6 @@ export interface Store {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
-  /** When the latest approved edit was submitted. */
-  last_edit_at?: string
   moderation_status?: 'pending' | 'approved' | 'flagged'
   admin_note?: string | null
   moderated_by?: string | null
@@ -62,8 +60,6 @@ export interface Library {
   user_permalink?: string
   last_edit_user_name?: string
   last_edit_user_permalink?: string
-  /** When the latest approved edit was submitted. */
-  last_edit_at?: string
   moderation_status?: 'pending' | 'approved' | 'flagged'
   admin_note?: string | null
   moderated_by?: string | null
@@ -85,8 +81,6 @@ export interface Event {
   id: string
   /** Optional stable parent grouping annual editions or recurring dates. */
   series_id?: string | null
-  /** Set when this event was submitted as another date or edition of an existing event. */
-  copied_from_event_id?: string | null
   event_series?: EventSeries | null
   name: string
   venue_name?: string
@@ -122,8 +116,6 @@ export interface Event {
   user_is_attending?: boolean
   last_edit_user_name?: string
   last_edit_user_permalink?: string
-  /** When the latest approved edit was submitted. */
-  last_edit_at?: string
   /** Optional poster image URL (similar to zine cover) */
   poster_image?: string | null
   moderation_status?: 'pending' | 'approved' | 'flagged'
