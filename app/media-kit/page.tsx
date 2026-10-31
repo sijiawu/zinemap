@@ -72,6 +72,8 @@ async function fetchLiveMapStats() {
 }
 
 const PROMO_LABELS: Record<string, string> = {
+  'zinemap-poster-EN.pdf': 'ZineMap Poster - 1000 pins (English)',
+  'zinemap-poster-ES.pdf': 'ZineMap Poster - 1000 pins (Spanish)',
   'zinemap-flyer.jpg': 'ZineMap flyer (JPG)',
   'zinemap-card.png': 'ZineMap card (PNG)',
   'riso-card-qr.png': 'Riso print card with QR Code',
@@ -79,7 +81,12 @@ const PROMO_LABELS: Record<string, string> = {
   'the-zinemap-zine-PL.pdf': 'The ZineMap zine (po polsku)',
 };
 
+const POSTER_CREDIT =
+  'Oct 2026. Artwork by Rodolfo Esquivel Tiscareño @mr_robolfo. Dimensions: 210 × 297 mm (A4).';
+
 const PROMO_DETAIL: Record<string, string> = {
+  'zinemap-poster-EN.pdf': `Illustrated ZineMap Poster, ${POSTER_CREDIT}`,
+  'zinemap-poster-ES.pdf': `Póster ilustrado de ZineMap, ${POSTER_CREDIT}`,
   'zinemap-flyer.jpg': 'Dimensions: 210 x 297 mm (A4).',
   'the-zinemap-zine-EN.pdf': 'A Zine about a Map for Zines. English version. Dimensions: 210 × 297 mm (A4).',
   'the-zinemap-zine-PL.pdf': 'Zine o mapie zinów. Polska wersja. Dimensions: 210 × 297 mm (A4).',
@@ -87,13 +94,54 @@ const PROMO_DETAIL: Record<string, string> = {
   'riso-card-qr.png': 'Card design by Pizzeria Press.',
 };
 
+/** Shown first, in this order, when present in the bucket. */
+const PROMO_PIN_FIRST = ['zinemap-poster-EN.pdf', 'zinemap-poster-ES.pdf'] as const;
+
+/**
+ * First-page JPEGs in /public. PDFs can't use Storage image transforms,
+ * and these stay ~10KB instead of downloading the full file.
+ */
+const PROMO_PDF_THUMBS: Record<string, string> = {
+  'zinemap-poster-EN.pdf': '/promo-thumbs/zinemap-poster-EN.jpg',
+  'zinemap-poster-ES.pdf': '/promo-thumbs/zinemap-poster-ES.jpg',
+  'the-zinemap-zine-EN.pdf': '/promo-thumbs/the-zinemap-zine-EN.jpg',
+  'the-zinemap-zine-PL.pdf': '/promo-thumbs/the-zinemap-zine-PL.jpg',
+};
+
+const RASTER_EXT = /\.(jpe?g|png|webp|gif)$/i;
+
+/** Small preview: resized on Supabase's CDN for images, static file for PDFs. */
+function promoThumbnail(name: string, publicUrl: string): string | null {
+  if (RASTER_EXT.test(name)) {
+    const transformed = publicUrl.replace(
+      '/storage/v1/object/public/',
+      '/storage/v1/render/image/public/'
+    );
+    const url = new URL(transformed);
+    url.searchParams.set('width', '160');
+    url.searchParams.set('quality', '55');
+    url.searchParams.set('resize', 'contain');
+    return url.toString();
+  }
+  return PROMO_PDF_THUMBS[name] ?? null;
+}
+
 const PROMO_FALLBACK = [
+  'zinemap-poster-EN.pdf',
+  'zinemap-poster-ES.pdf',
   'the-zinemap-zine-EN.pdf',
   'the-zinemap-zine-PL.pdf',
   'zinemap-card.png',
   'zinemap-flyer.jpg',
   'riso-card-qr.png',
 ] as const;
+
+function orderPromoNames(names: string[]) {
+  const pinFirst = new Set<string>(PROMO_PIN_FIRST);
+  const pinned = PROMO_PIN_FIRST.filter((name) => names.includes(name));
+  const rest = names.filter((name) => !pinFirst.has(name));
+  return [...pinned, ...rest];
+}
 
 function promoLabelFallback(filename: string) {
   const base = filename.replace(/\.[^.]+$/, '').replace(/-/g, ' ');
@@ -127,6 +175,8 @@ async function fetchPromoMaterials() {
     names = fileNames.length ? fileNames : [...PROMO_FALLBACK];
   }
 
+  names = orderPromoNames(names);
+
   const items = names.map((name) => {
     const { data: urlData } = supabase.storage.from('promo-materials').getPublicUrl(name);
     return {
@@ -134,6 +184,7 @@ async function fetchPromoMaterials() {
       label: PROMO_LABELS[name] ?? promoLabelFallback(name),
       href: urlData.publicUrl,
       detail: PROMO_DETAIL[name],
+      thumb: promoThumbnail(name, urlData.publicUrl),
     };
   });
 
@@ -412,13 +463,26 @@ export default async function MediaKitPage() {
                 {promo.items.map((item) => (
                   <li
                     key={item.name}
-                    className="flex flex-col gap-3 p-4 bg-background sm:flex-row sm:items-start sm:justify-between"
+                    className="flex flex-col gap-3 p-4 bg-background sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="space-y-1.5 min-w-0 pr-2">
-                      <p className="text-sm font-medium text-foreground">{item.label}</p>
-                      {item.detail ? (
-                        <p className="text-xs text-stone-500 font-mono tabular-nums">{item.detail}</p>
+                    <div className="flex min-w-0 items-start gap-3 pr-2">
+                      {item.thumb ? (
+                        <img
+                          src={item.thumb}
+                          alt=""
+                          width={48}
+                          height={64}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-16 w-12 shrink-0 rounded-sm border border-stone-200 bg-stone-50 object-contain"
+                        />
                       ) : null}
+                      <div className="space-y-1.5 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{item.label}</p>
+                        {item.detail ? (
+                          <p className="text-xs text-stone-500 font-mono tabular-nums">{item.detail}</p>
+                        ) : null}
+                      </div>
                     </div>
                     <Button asChild variant="outline" size="sm" className="shrink-0 gap-2 self-start">
                       <a href={item.href} download={item.name} target="_blank" rel="noopener noreferrer">
